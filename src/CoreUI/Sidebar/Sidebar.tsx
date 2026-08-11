@@ -50,7 +50,7 @@ interface SidebarProps {
   /** Whether sidebar interactions are locked */
   locked?: boolean;
   /** Optional node rendered in a dedicated area between the nav and the
-   *  login/settings footer (e.g. the global voltage toggle button). */
+   *  login/settings footer (e.g. the global device connection button). */
   controlArea?: React.ReactNode;
 }
 

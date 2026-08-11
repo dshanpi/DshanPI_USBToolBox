@@ -12,6 +12,7 @@ import {
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import type { DisplayCommandRow, DisplayCommandType } from '../hooks/useSpiEngine';
+import { SpiWiringPanel } from '../../SPITool/Components/SpiWiringPanel';
 
 /** SPI 速度下拉选项 —— 与 SPIMasterTab 中的 SPEED_OPTIONS 一致。 */
 const SPI_SPEED_OPTIONS = [
@@ -247,6 +248,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
 
         {/* 分辨率控件已移到 RightPanel（LCD 预览正下方），不再放在硬件参数卡片里 */}
       </div>
+
+      <SpiWiringPanel compact />
 
       {/* 屏幕预设选择栏：内置预设 + 用户预设 + Load / 另存为 / 导入 / 删除。
           位置放在初始化命令表卡片上方，逻辑与 SPI Tool 的预设系统一致。

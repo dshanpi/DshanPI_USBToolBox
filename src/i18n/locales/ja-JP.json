@@ -1076,12 +1076,8 @@
       "description": "SPI ディスプレイ (OLED/TFT) デバッグツール、TTF 多言語レンダリング対応",
       "name": "SPI ディスプレイツール"
     },
-    "voltageControlTool": {
-      "description": "GPIO0 の High/Low で電圧のオン/オフを切り替えます",
-      "name": "電圧制御ツール"
-    },
     "gpioTool": {
-      "description": "CH347 GPIO1～GPIO7 の論理レベルを制御します",
+      "description": "CH347 GPIO0～GPIO7 の論理レベルを制御します",
       "name": "GPIO ツール"
     },
     "massProduction": {
@@ -1089,8 +1085,62 @@
       "name": "マルチデバイス書き込み"
     }
   },
+  "spiWiring": {
+    "title": "配線と IO マッピング",
+    "mapSck": "SCK→SCK",
+    "mapMosi": "MOSI→MOSI",
+    "mapMiso": "MISO→MISO",
+    "mapCs": "CS→CS0",
+    "mapAux": "{{name}}→GPIO{{pin}}",
+    "voltage": "IO 3.3V",
+    "sck": "SCK",
+    "mosi": "MOSI",
+    "miso": "MISO",
+    "cs": "CS",
+    "cs0": "CS0",
+    "gpioPin": "GPIO{{pin}}",
+    "reservationLabel": "SPI · {{names}}",
+    "addMappedLow": "+ {{name}}(GPIO{{pin}}) Low",
+    "addMappedHigh": "+ {{name}}(GPIO{{pin}}) High",
+    "signalOption": "{{name}} (GPIO{{pin}})",
+    "stepMappedLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectStepType": "追加するワークフローステップを選択",
+    "stepGroupData": "データ転送",
+    "stepGroupBus": "SPI チップセレクト制御",
+    "stepGroupControl": "デバイス制御 IO",
+    "stepGroupTiming": "時間制御",
+    "addSelectedStep": "+ 追加",
+    "conflictShort": "ピン競合",
+    "busSignals": "SPI バス信号",
+    "auxSignals": "補助制御 IO",
+    "auxHint": "DC、RST、BL はデバイス制御信号です。必要に応じて再割り当てや追加ができます。",
+    "addSignal": "+ 制御信号を追加",
+    "reset": "既定値に戻す",
+    "enabled": "有効",
+    "signalName": "信号名",
+    "pin": "実ピン",
+    "direction": "方向",
+    "output": "出力",
+    "builtIn": "標準",
+    "remove": "制御信号を削除",
+    "pinConflict": "GPIO{{pin}} が複数の SPI 信号に割り当てられています",
+    "conflictHint": "重複したピン割り当てを解消してください。競合中はハードウェアを操作しません。",
+    "voltageHint": "CH347 の IO 電圧は 3.3V 固定です。互換性と共通 GND を確認してください。",
+    "signalUnavailable": "補助 IO が無効か、割り当てが存在しません",
+    "logLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectSignalFirst": "補助制御信号を選択してください",
+    "stepTitle": "{{name}}（GPIO{{pin}}）のレベルを制御",
+    "auxStepTitle": "選択可能な補助 IO 制御ステップを追加",
+    "addAuxLow": "+ 制御 IO Low",
+    "addAuxHigh": "+ 制御 IO High",
+    "typeAuxLow": "補助 IO Low",
+    "typeAuxHigh": "補助 IO High",
+    "selectSignal": "制御信号を選択",
+    "reservedBySpi": "{{pins}} は SPI が使用中です。SPI 配線パネルで無効化または再割り当てしてください",
+    "reservedSkipped": "SPI 使用中のピンをスキップしました"
+  },
   "gpioTool": {
-    "pageDescription": "CH347 GPIO1～GPIO7 のピンレベルを読み取り、制御します",
+    "pageDescription": "CH347 GPIO0～GPIO7 のピンレベルを読み取り、制御します",
     "connected": "デバイス接続済み",
     "disconnected": "デバイス未接続",
     "connectHint": "右上のデバイスボタンで CH347 を接続してください",
@@ -1101,7 +1151,7 @@
     "readFailed": "GPIO 状態の読み取りに失敗しました：{{error}}",
     "writeFailed": "GPIO の設定に失敗しました：{{error}}",
     "pinSetSuccess": "GPIO{{pin}} を {{level}} に設定しました",
-    "allSetSuccess": "GPIO1～GPIO7 をすべて {{level}} に設定しました",
+    "allSetSuccess": "GPIO0～GPIO7 をすべて {{level}} に設定しました",
     "outputControl": "GPIO 出力制御",
     "outputControlHint": "HIGH または LOW を押すと、対象ピンを出力に設定して直ちにレベルを反映します",
     "allLow": "すべて LOW",
@@ -1116,7 +1166,6 @@
     "output": "出力",
     "low": "LOW",
     "high": "HIGH",
-    "gpio0Hint": "GPIO0 は上部の電圧ボタンで管理され、このツールからは変更されません。",
     "sharedPinHint": "GPIO4/GPIO5 は SPI ディスプレイツールの DC/RST として使われる場合があります。ここでの切り替えは対応する実ピンに直接反映されます。",
     "advanced": {
       "title": "高度な機能",
@@ -1286,22 +1335,6 @@
         "logNoRowsForLoop": "[Adv] ループ対象行が選択されていません",
         "logLoopCompleted": "[Adv] ループ完了: {{n}} 回"
       }
-    },
-    "voltageControl": {
-      "title": "GPIO0 電圧制御",
-      "switchLabel": "GPIO0 出力",
-      "statusHigh": "High",
-      "statusLow": "Low",
-      "hint": "GPIO0 の High は 3.3V、Low は 1.8V に対応します。デバイスを開く時は GPIO0 を High（3.3V）に設定します。",
-      "master": {
-        "scanning": "スキャン中...",
-        "noDevice": "デバイスなし"
-      },
-      "errorSetFailed": "GPIO0 の設定に失敗しました：{{error}}",
-      "voltage3v3": "3.3V",
-      "voltage1v8": "1.8V",
-      "toggleTitle": "GPIO0 電圧切り替え（3.3V High / 1.8V Low）",
-      "toggleTitleOffline": "GPIO0 電圧切り替え（先に CH347 デバイスを接続してください）"
     },
     "deviceConnect": {
       "noDevice": "デバイスなし",

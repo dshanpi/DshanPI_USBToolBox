@@ -168,11 +168,36 @@
   background: var(--color-overlay-subtle);
 }
 
+.gpio-pin-row.reserved-by-spi {
+  background: var(--color-accent-subtle, rgba(88, 166, 255, 0.06));
+}
+
+.gpio-pin-row.reserved-by-spi:hover {
+  background: var(--color-accent-subtle, rgba(88, 166, 255, 0.1));
+}
+
 .gpio-pin-name,
 .gpio-level {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.gpio-pin-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gpio-spi-reservation {
+  overflow: hidden;
+  max-width: 150px;
+  color: var(--color-accent);
+  font-size: 9px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gpio-pin-number {

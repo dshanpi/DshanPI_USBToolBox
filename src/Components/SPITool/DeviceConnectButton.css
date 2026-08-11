@@ -1,5 +1,5 @@
 /* ─── 侧边栏 CH347 设备连接按钮 ───────────────────────
- * 与 .voltage-toggle-btn 视觉对齐（同处 sidebar-control-area），用颜色表达状态：
+ * 位于 sidebar-control-area，用颜色表达状态：
  * 已连接=绿色高亮（success），未连接=中性 surface。点击切换连接。
  */
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invokeCommand } from '../../../Platform/IPC';
 import { loadOledFont, renderTextToSSD1306Bytes, bytesToHex } from '../../../Library/SSD1306';
@@ -8,6 +8,8 @@ import {
   optionalString,
   registerAssistantContributor,
 } from '../../AIAssistant/assistantBridge';
+import { getSpiAuxPinConflicts, getSpiAuxSignal, useSpiAuxPins } from '../spiAuxPins';
+import { SpiWiringPanel } from './SpiWiringPanel';
 
 interface SPIMasterTabProps {
   connected: boolean;
@@ -39,9 +41,12 @@ interface WorkflowStep {
     | 'duplex'
     | 'delay'
     | 'reset_low'
-    | 'reset_high';
+    | 'reset_high'
+    | 'aux_low'
+    | 'aux_high';
   data: string; // hex data for send/duplex, delay µs for delay
   readLen: string; // for duplex
+  signalId?: string; // selected signal for aux_low / aux_high
 }
 
 const SPEED_OPTIONS = [
@@ -197,6 +202,14 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
   presetVariant = 'general',
 }) => {
   const { t } = useTranslation();
+  const { signals: auxSignals } = useSpiAuxPins();
+  const enabledAuxSignals = useMemo(
+    () => auxSignals.filter((signal) => signal.enabled),
+    [auxSignals]
+  );
+  const auxPinConflicts = useMemo(() => getSpiAuxPinConflicts(auxSignals), [auxSignals]);
+  const dcSignal = getSpiAuxSignal('dc', auxSignals);
+  const rstSignal = getSpiAuxSignal('rst', auxSignals);
   // SPI Config
   const [spiMode, setSpiMode] = useState('0');
   const [spiSpeed, setSpiSpeed] = useState('0.46875');
@@ -230,6 +243,7 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
 
   // Workflow steps
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
+  const [stepTypeToAdd, setStepTypeToAdd] = useState<WorkflowStep['type']>('send');
   const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
   const [loopEnabled, setLoopEnabled] = useState(false);
   const [loopCount, setLoopCount] = useState('1');
@@ -339,10 +353,12 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
           txData,
           readLen: Number(readLen),
         },
-        workflow: steps.map(({ type, data, readLen: stepReadLen }) => ({
+        auxiliaryPins: enabledAuxSignals.map(({ id, name, pin }) => ({ id, name, pin })),
+        workflow: steps.map(({ type, data, readLen: stepReadLen, signalId }) => ({
           type,
           data,
           readLen: stepReadLen,
+          signalId,
         })),
         recentLogs: logs.slice(-30),
       }),
@@ -410,6 +426,8 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
           'send',
           'duplex',
           'delay',
+          'aux_low',
+          'aux_high',
         ];
         const nextSteps: WorkflowStep[] = payload.steps.map((raw, index) => {
           const row = asRecord(raw, `steps[${index}]`);
@@ -419,6 +437,7 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
           if (!type || !allowedTypes.includes(type))
             throw new Error(`第 ${index + 1} 行 SPI 类型无效`);
           const data = optionalString(row.data, `steps[${index}].data`) ?? '';
+          const signalId = optionalString(row.signalId, `steps[${index}].signalId`);
           const rowReadLen = optionalNumber(row.readLen, `steps[${index}].readLen`);
           if (
             (type === 'send' || type === 'duplex') &&
@@ -433,6 +452,13 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             throw new Error(`第 ${index + 1} 行延时必须是 0–600000000 微秒的整数`);
           }
           if (
+            (type === 'aux_low' || type === 'aux_high') &&
+            signalId !== undefined &&
+            !enabledAuxSignals.some((signal) => signal.id === signalId)
+          ) {
+            throw new Error(`第 ${index + 1} 行引用了不存在或未启用的辅助 IO`);
+          }
+          if (
             rowReadLen !== undefined &&
             (!Number.isInteger(rowReadLen) || rowReadLen < 1 || rowReadLen > 4096)
           ) {
@@ -443,6 +469,10 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             type,
             data: type === 'send' || type === 'duplex' ? formatHexInput(data) : data,
             readLen: rowReadLen === undefined ? '' : String(Math.trunc(rowReadLen)),
+            signalId:
+              type === 'aux_low' || type === 'aux_high'
+                ? (signalId ?? enabledAuxSignals[0]?.id)
+                : undefined,
           };
         });
         setSteps(nextSteps);
@@ -455,6 +485,7 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
     addLog,
     connected,
     deviceIndex,
+    enabledAuxSignals,
     logs,
     readLen,
     spiBitOrder,
@@ -664,9 +695,22 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
 
   // ─── Workflow ────────────────────────────────────────
 
-  const addStep = useCallback((type: WorkflowStep['type']) => {
-    setSteps((prev) => [...prev, { id: nextStepId++, type, data: '', readLen: '' }]);
-  }, []);
+  const addStep = useCallback(
+    (type: WorkflowStep['type']) => {
+      setSteps((prev) => [
+        ...prev,
+        {
+          id: nextStepId++,
+          type,
+          data: '',
+          readLen: '',
+          signalId:
+            type === 'aux_low' || type === 'aux_high' ? enabledAuxSignals[0]?.id : undefined,
+        },
+      ]);
+    },
+    [enabledAuxSignals]
+  );
 
   const deleteStep = useCallback((id: number) => {
     setSteps((prev) => prev.filter((s) => s.id !== id));
@@ -677,9 +721,12 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
     });
   }, []);
 
-  const updateStep = useCallback((id: number, field: 'data' | 'readLen', val: string) => {
-    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: val } : s)));
-  }, []);
+  const updateStep = useCallback(
+    (id: number, field: 'data' | 'readLen' | 'signalId', val: string) => {
+      setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: val } : s)));
+    },
+    []
+  );
 
   const toggleSelect = useCallback((id: number) => {
     setSelectedSteps((prev) => {
@@ -692,6 +739,33 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
 
   const selectAll = useCallback(() => setSelectedSteps(new Set(steps.map((s) => s.id))), [steps]);
   const deselectAll = useCallback(() => setSelectedSteps(new Set()), []);
+
+  const setAuxLevel = useCallback(
+    async (signalId: string, high: boolean) => {
+      const signal = getSpiAuxSignal(signalId, auxSignals);
+      if (!signal || !signal.enabled) {
+        throw new Error(t('spiWiring.signalUnavailable'));
+      }
+      if (auxPinConflicts.has(signal.pin)) {
+        throw new Error(t('spiWiring.pinConflict', { pin: signal.pin }));
+      }
+      const mask = 1 << signal.pin;
+      await invokeCommand('ch347_gpio_set', {
+        index: deviceIndex,
+        enable: mask,
+        dirOut: mask,
+        dataOut: high ? mask : 0,
+      });
+      addLog(
+        t('spiWiring.logLevel', {
+          name: signal.name,
+          pin: signal.pin,
+          level: high ? 'HIGH' : 'LOW',
+        })
+      );
+    },
+    [addLog, auxPinConflicts, auxSignals, deviceIndex, t]
+  );
 
   // ─── Step execution ──────────────────────────────────
 
@@ -757,42 +831,24 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             break;
           }
           case 'dc_low':
-            // GPIO4=DCX: LOW=command mode. bit4=0x10
-            await invokeCommand('ch347_gpio_set', {
-              index: deviceIndex,
-              enable: 0x10,
-              dirOut: 0x10,
-              dataOut: 0x00,
-            });
-            addLog(t('serialTool.spi.master.logDcLow'));
+            await setAuxLevel('dc', false);
             break;
           case 'dc_high':
-            await invokeCommand('ch347_gpio_set', {
-              index: deviceIndex,
-              enable: 0x10,
-              dirOut: 0x10,
-              dataOut: 0x10,
-            });
-            addLog(t('serialTool.spi.master.logDcHigh'));
+            await setAuxLevel('dc', true);
             break;
           case 'reset_low':
-            // GPIO5=RESET: LOW=reset. bit5=0x20
-            await invokeCommand('ch347_gpio_set', {
-              index: deviceIndex,
-              enable: 0x20,
-              dirOut: 0x20,
-              dataOut: 0x00,
-            });
-            addLog(t('serialTool.spi.master.logRstLow'));
+            await setAuxLevel('rst', false);
             break;
           case 'reset_high':
-            await invokeCommand('ch347_gpio_set', {
-              index: deviceIndex,
-              enable: 0x20,
-              dirOut: 0x20,
-              dataOut: 0x20,
-            });
-            addLog(t('serialTool.spi.master.logRstHigh'));
+            await setAuxLevel('rst', true);
+            break;
+          case 'aux_low':
+            if (!step.signalId) throw new Error(t('spiWiring.selectSignalFirst'));
+            await setAuxLevel(step.signalId, false);
+            break;
+          case 'aux_high':
+            if (!step.signalId) throw new Error(t('spiWiring.selectSignalFirst'));
+            await setAuxLevel(step.signalId, true);
             break;
           case 'delay': {
             const us = parseInt(step.data, 10) || 0;
@@ -807,7 +863,7 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
         addLog(t('serialTool.spi.master.logStepError', { error: (e as Error).message }), true);
       }
     },
-    [deviceIndex, getTransferParams, addLog, t]
+    [deviceIndex, getTransferParams, addLog, setAuxLevel, t]
   );
 
   const runSelected = useCallback(async () => {
@@ -934,7 +990,12 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
     // 持久化时丢掉 id（运行时唯一的），保留 type/data/readLen
     const stripped: SavedPreset = {
       name,
-      steps: steps.map(({ type, data, readLen }) => ({ type, data, readLen })),
+      steps: steps.map(({ type, data, readLen, signalId }) => ({
+        type,
+        data,
+        readLen,
+        signalId,
+      })),
     };
     const next = exists
       ? userPresets.map((p) => (p.name === name ? stripped : p))
@@ -1039,6 +1100,8 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
         </div>
       </div>
 
+      <SpiWiringPanel />
+
       {/* Middle: Workflow (left) + Log (right) */}
       <div className="spi-master-middle">
         {/* Left: Workflow panel */}
@@ -1105,86 +1168,75 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             </div>
           )}
 
-          {/* "+步骤" 工具栏 —— 按类别分组，视觉更整齐。
-              - 数据组：Send（MOSI）/ Duplex（MOSI+MISO）
-              - CS 组：CS Low / CS High
-              - 控制组：DC / RST 各对低高电平
-              - 延时：单独一个
-              用 .spi-step-toolbar / .spi-btn-group 控制对齐和分隔线。
-              CS 在 Single Transfer 面板有直接控制，这里仍保留方便插入到工作流序列中 */}
+          {/* 步骤选择器：用一个分类下拉框代替十多个并列按钮。
+              所有原有步骤仍可使用，DC/RST 选项会显示当前真实 GPIO 映射。 */}
           <div className="spi-step-toolbar">
             <span className="spi-step-toolbar-label">{t('serialTool.spi.master.addStep')}</span>
-            <div className="spi-btn-group">
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('send')}
-                title={t('serialTool.spi.master.stepSendTitle')}
+            <div className="spi-step-picker">
+              <select
+                className="spi-step-type-select"
+                value={stepTypeToAdd}
+                onChange={(event) => setStepTypeToAdd(event.target.value as WorkflowStep['type'])}
+                aria-label={t('spiWiring.selectStepType')}
               >
-                {t('serialTool.spi.master.stepSend')}
-              </button>
+                <optgroup label={t('spiWiring.stepGroupData')}>
+                  <option value="send">{t('serialTool.spi.master.typeSend')}</option>
+                  <option value="duplex">{t('serialTool.spi.master.typeDuplex')}</option>
+                </optgroup>
+                <optgroup label={t('spiWiring.stepGroupBus')}>
+                  <option value="cs_low">{t('serialTool.spi.master.typeCsLow')}</option>
+                  <option value="cs_high">{t('serialTool.spi.master.typeCsHigh')}</option>
+                </optgroup>
+                <optgroup label={t('spiWiring.stepGroupControl')}>
+                  <option value="dc_low">
+                    {t('spiWiring.stepMappedLevel', {
+                      name: 'DC',
+                      pin: dcSignal?.pin ?? '?',
+                      level: 'LOW',
+                    })}
+                  </option>
+                  <option value="dc_high">
+                    {t('spiWiring.stepMappedLevel', {
+                      name: 'DC',
+                      pin: dcSignal?.pin ?? '?',
+                      level: 'HIGH',
+                    })}
+                  </option>
+                  <option value="reset_low">
+                    {t('spiWiring.stepMappedLevel', {
+                      name: 'RST',
+                      pin: rstSignal?.pin ?? '?',
+                      level: 'LOW',
+                    })}
+                  </option>
+                  <option value="reset_high">
+                    {t('spiWiring.stepMappedLevel', {
+                      name: 'RST',
+                      pin: rstSignal?.pin ?? '?',
+                      level: 'HIGH',
+                    })}
+                  </option>
+                  <option value="aux_low" disabled={!enabledAuxSignals.length}>
+                    {t('spiWiring.typeAuxLow')}
+                  </option>
+                  <option value="aux_high" disabled={!enabledAuxSignals.length}>
+                    {t('spiWiring.typeAuxHigh')}
+                  </option>
+                </optgroup>
+                <optgroup label={t('spiWiring.stepGroupTiming')}>
+                  <option value="delay">{t('serialTool.spi.master.typeDelay')}</option>
+                </optgroup>
+              </select>
               <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('duplex')}
-                title={t('serialTool.spi.master.stepDuplexTitle')}
+                type="button"
+                className="spi-step-add-button"
+                onClick={() => addStep(stepTypeToAdd)}
+                disabled={
+                  (stepTypeToAdd === 'aux_low' || stepTypeToAdd === 'aux_high') &&
+                  !enabledAuxSignals.length
+                }
               >
-                {t('serialTool.spi.master.stepDuplex')}
-              </button>
-            </div>
-            <div className="spi-btn-group">
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('cs_low')}
-                title={t('serialTool.spi.master.stepCsLowTitle')}
-              >
-                {t('serialTool.spi.master.stepCsLow')}
-              </button>
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('cs_high')}
-                title={t('serialTool.spi.master.stepCsHighTitle')}
-              >
-                {t('serialTool.spi.master.stepCsHigh')}
-              </button>
-            </div>
-            <div className="spi-btn-group">
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('dc_low')}
-                title={t('serialTool.spi.master.stepDcLowTitle')}
-              >
-                {t('serialTool.spi.master.stepDcLow')}
-              </button>
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('dc_high')}
-                title={t('serialTool.spi.master.stepDcHighTitle')}
-              >
-                {t('serialTool.spi.master.stepDcHigh')}
-              </button>
-            </div>
-            <div className="spi-btn-group">
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('reset_low')}
-                title={t('serialTool.spi.master.stepRstLowTitle')}
-              >
-                {t('serialTool.spi.master.stepRstLow')}
-              </button>
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('reset_high')}
-                title={t('serialTool.spi.master.stepRstHighTitle')}
-              >
-                {t('serialTool.spi.master.stepRstHigh')}
-              </button>
-            </div>
-            <div className="spi-btn-group">
-              <button
-                className="modbus-reg-btn"
-                onClick={() => addStep('delay')}
-                title={t('serialTool.spi.master.stepDelayTitle')}
-              >
-                {t('serialTool.spi.master.stepDelay')}
+                {t('spiWiring.addSelectedStep')}
               </button>
             </div>
           </div>
@@ -1587,7 +1639,17 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                     step.type === 'dc_low' ||
                     step.type === 'dc_high' ||
                     step.type === 'reset_low' ||
-                    step.type === 'reset_high';
+                    step.type === 'reset_high' ||
+                    step.type === 'aux_low' ||
+                    step.type === 'aux_high';
+                  const mappedSignal =
+                    step.type === 'dc_low' || step.type === 'dc_high'
+                      ? dcSignal
+                      : step.type === 'reset_low' || step.type === 'reset_high'
+                        ? rstSignal
+                        : step.type === 'aux_low' || step.type === 'aux_high'
+                          ? getSpiAuxSignal(step.signalId ?? '', auxSignals)
+                          : undefined;
                   return (
                     <tr
                       key={step.id}
@@ -1615,6 +1677,11 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                                       type: e.target.value as WorkflowStep['type'],
                                       data: '',
                                       readLen: '',
+                                      signalId:
+                                        e.target.value === 'aux_low' ||
+                                        e.target.value === 'aux_high'
+                                          ? enabledAuxSignals[0]?.id
+                                          : undefined,
                                     }
                                   : s
                               )
@@ -1631,6 +1698,8 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                           <option value="reset_high">
                             {t('serialTool.spi.master.typeRstHigh')}
                           </option>
+                          <option value="aux_low">{t('spiWiring.typeAuxLow')}</option>
+                          <option value="aux_high">{t('spiWiring.typeAuxHigh')}</option>
                           <option value="delay">{t('serialTool.spi.master.typeDelay')}</option>
                         </select>
                       </td>
@@ -1660,9 +1729,38 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                             </span>
                           </div>
                         )}
-                        {isGpioToggle && (
+                        {(step.type === 'aux_low' || step.type === 'aux_high') && (
+                          <select
+                            className="spi-step-signal-select"
+                            value={step.signalId ?? ''}
+                            onChange={(event) =>
+                              updateStep(step.id, 'signalId', event.target.value)
+                            }
+                          >
+                            <option value="">{t('spiWiring.selectSignal')}</option>
+                            {enabledAuxSignals.map((signal) => (
+                              <option key={signal.id} value={signal.id}>
+                                {t('spiWiring.signalOption', {
+                                  name: signal.name,
+                                  pin: signal.pin,
+                                })}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        {isGpioToggle && step.type !== 'aux_low' && step.type !== 'aux_high' && (
                           <span className="spi-step-noop">
-                            {t('serialTool.spi.master.gpioNoParam')}
+                            {mappedSignal
+                              ? t('spiWiring.stepMappedLevel', {
+                                  name: mappedSignal.name,
+                                  pin: mappedSignal.pin,
+                                  level: step.type.endsWith('high') ? 'HIGH' : 'LOW',
+                                })
+                              : step.type === 'cs_high'
+                                ? 'CS0 → HIGH'
+                                : step.type === 'cs_low'
+                                  ? 'CS0 → LOW'
+                                  : t('spiWiring.signalUnavailable')}
                           </span>
                         )}
                       </td>

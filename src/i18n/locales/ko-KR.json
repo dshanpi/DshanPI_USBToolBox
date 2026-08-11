@@ -1076,12 +1076,8 @@
       "description": "SPI 디스플레이(OLED/TFT) 디버그 도구, TTF 다국어 렌더링 지원",
       "name": "SPI 디스플레이 도구"
     },
-    "voltageControlTool": {
-      "description": "GPIO0 하이/로우 레벨로 전압을 켜거나 끕니다",
-      "name": "전압 제어 도구"
-    },
     "gpioTool": {
-      "description": "CH347 GPIO1-GPIO7의 논리 레벨을 제어합니다",
+      "description": "CH347 GPIO0-GPIO7의 논리 레벨을 제어합니다",
       "name": "GPIO 도구"
     },
     "massProduction": {
@@ -1089,8 +1085,62 @@
       "name": "다중 장치 플래시"
     }
   },
+  "spiWiring": {
+    "title": "배선 및 IO 매핑",
+    "mapSck": "SCK→SCK",
+    "mapMosi": "MOSI→MOSI",
+    "mapMiso": "MISO→MISO",
+    "mapCs": "CS→CS0",
+    "mapAux": "{{name}}→GPIO{{pin}}",
+    "voltage": "IO 3.3V",
+    "sck": "SCK",
+    "mosi": "MOSI",
+    "miso": "MISO",
+    "cs": "CS",
+    "cs0": "CS0",
+    "gpioPin": "GPIO{{pin}}",
+    "reservationLabel": "SPI · {{names}}",
+    "addMappedLow": "+ {{name}}(GPIO{{pin}}) Low",
+    "addMappedHigh": "+ {{name}}(GPIO{{pin}}) High",
+    "signalOption": "{{name}} (GPIO{{pin}})",
+    "stepMappedLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectStepType": "추가할 워크플로 단계 유형 선택",
+    "stepGroupData": "데이터 전송",
+    "stepGroupBus": "SPI 칩 선택 제어",
+    "stepGroupControl": "장치 제어 IO",
+    "stepGroupTiming": "시간 제어",
+    "addSelectedStep": "+ 추가",
+    "conflictShort": "핀 충돌",
+    "busSignals": "SPI 버스 신호",
+    "auxSignals": "보조 제어 IO",
+    "auxHint": "DC, RST, BL은 장치 제어 신호입니다. 필요에 따라 다시 매핑하거나 추가할 수 있습니다.",
+    "addSignal": "+ 제어 신호 추가",
+    "reset": "기본값 복원",
+    "enabled": "사용",
+    "signalName": "신호 이름",
+    "pin": "실제 핀",
+    "direction": "방향",
+    "output": "출력",
+    "builtIn": "기본",
+    "remove": "제어 신호 삭제",
+    "pinConflict": "GPIO{{pin}}이 여러 SPI 신호에 할당되었습니다",
+    "conflictHint": "중복 핀 매핑을 먼저 해결하세요. 충돌 중에는 하드웨어를 제어하지 않습니다.",
+    "voltageHint": "CH347 IO 전압은 3.3V로 고정됩니다. 장치 호환성과 공통 GND를 확인하세요.",
+    "signalUnavailable": "보조 IO가 비활성화되었거나 매핑이 없습니다",
+    "logLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectSignalFirst": "보조 제어 신호를 먼저 선택하세요",
+    "stepTitle": "{{name}}(GPIO{{pin}}) 레벨 제어",
+    "auxStepTitle": "선택 가능한 보조 IO 제어 단계 추가",
+    "addAuxLow": "+ 제어 IO Low",
+    "addAuxHigh": "+ 제어 IO High",
+    "typeAuxLow": "보조 IO Low",
+    "typeAuxHigh": "보조 IO High",
+    "selectSignal": "제어 신호 선택",
+    "reservedBySpi": "{{pins}}은(는) SPI에서 사용 중입니다. SPI 배선 패널에서 비활성화하거나 다시 매핑하세요",
+    "reservedSkipped": "SPI 사용 중인 핀을 건너뛰었습니다"
+  },
   "gpioTool": {
-    "pageDescription": "CH347 GPIO1-GPIO7 핀 레벨을 읽고 제어합니다",
+    "pageDescription": "CH347 GPIO0-GPIO7 핀 레벨을 읽고 제어합니다",
     "connected": "장치 연결됨",
     "disconnected": "장치 연결 안 됨",
     "connectHint": "오른쪽 위 장치 버튼을 사용하여 CH347을 연결하세요",
@@ -1101,7 +1151,7 @@
     "readFailed": "GPIO 상태 읽기 실패: {{error}}",
     "writeFailed": "GPIO 설정 실패: {{error}}",
     "pinSetSuccess": "GPIO{{pin}}을(를) {{level}}로 설정했습니다",
-    "allSetSuccess": "GPIO1-GPIO7을 모두 {{level}}로 설정했습니다",
+    "allSetSuccess": "GPIO0-GPIO7을 모두 {{level}}로 설정했습니다",
     "outputControl": "GPIO 출력 제어",
     "outputControlHint": "HIGH 또는 LOW를 누르면 해당 핀을 출력으로 설정하고 즉시 레벨을 적용합니다",
     "allLow": "모두 LOW",
@@ -1116,7 +1166,6 @@
     "output": "출력",
     "low": "LOW",
     "high": "HIGH",
-    "gpio0Hint": "GPIO0은 상단 전압 버튼에서 관리하며 이 도구에서는 변경하지 않습니다.",
     "sharedPinHint": "GPIO4/GPIO5는 SPI 디스플레이 도구에서 DC/RST로 사용될 수 있습니다. 여기에서 전환하면 해당 하드웨어 핀이 직접 변경됩니다.",
     "advanced": {
       "title": "고급 기능",
@@ -1286,22 +1335,6 @@
         "logNoRowsForLoop": "[Adv] 루프할 행이 선택되지 않음",
         "logLoopCompleted": "[Adv] 루프 완료: {{n}}회"
       }
-    },
-    "voltageControl": {
-      "title": "GPIO0 전압 제어",
-      "switchLabel": "GPIO0 출력",
-      "statusHigh": "High",
-      "statusLow": "Low",
-      "hint": "GPIO0 High는 3.3V, Low는 1.8V에 해당합니다. 장치를 열 때 GPIO0을 High(3.3V)로 설정합니다.",
-      "master": {
-        "scanning": "스캔 중...",
-        "noDevice": "장치 없음"
-      },
-      "errorSetFailed": "GPIO0 설정 실패: {{error}}",
-      "voltage3v3": "3.3V",
-      "voltage1v8": "1.8V",
-      "toggleTitle": "GPIO0 전압 전환 (3.3V High / 1.8V Low)",
-      "toggleTitleOffline": "GPIO0 전압 전환 (먼저 CH347 장치를 연결하세요)"
     },
     "deviceConnect": {
       "noDevice": "장치 없음",

@@ -12,8 +12,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
-const GPIO_PINS = [1, 2, 3, 4, 5, 6, 7] as const;
-const GPIO_CONTROL_MASK = 0xfe;
+const GPIO_PINS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+const GPIO_CONTROL_MASK = 0xff;
 const MAX_DELAY_MS = 86_400_000;
 const MAX_LOOP_COUNT = 1_000_000;
 

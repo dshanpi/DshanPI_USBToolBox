@@ -1076,12 +1076,8 @@
       "description": "SPI 顯示螢幕 (OLED/TFT) 除錯工具，支援 TTF 中文渲染",
       "name": "SPI 點屏工具"
     },
-    "voltageControlTool": {
-      "description": "透過控制 GPIO0 高低電位切換一路電壓的開關",
-      "name": "電壓控制工具"
-    },
     "gpioTool": {
-      "description": "控制 CH347 GPIO1–GPIO7 接腳的高低電位",
+      "description": "控制 CH347 GPIO0–GPIO7 接腳的高低電位",
       "name": "GPIO 工具"
     },
     "massProduction": {
@@ -1089,8 +1085,62 @@
       "name": "多路韌體燒錄"
     }
   },
+  "spiWiring": {
+    "title": "接線與 IO 映射",
+    "mapSck": "SCK→SCK",
+    "mapMosi": "MOSI→MOSI",
+    "mapMiso": "MISO→MISO",
+    "mapCs": "CS→CS0",
+    "mapAux": "{{name}}→GPIO{{pin}}",
+    "voltage": "IO 3.3V",
+    "sck": "SCK",
+    "mosi": "MOSI",
+    "miso": "MISO",
+    "cs": "CS",
+    "cs0": "CS0",
+    "gpioPin": "GPIO{{pin}}",
+    "reservationLabel": "SPI · {{names}}",
+    "addMappedLow": "+ {{name}}(GPIO{{pin}}) Low",
+    "addMappedHigh": "+ {{name}}(GPIO{{pin}}) High",
+    "signalOption": "{{name}} (GPIO{{pin}})",
+    "stepMappedLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectStepType": "選擇要新增的工作流程步驟類型",
+    "stepGroupData": "資料傳輸",
+    "stepGroupBus": "SPI 片選控制",
+    "stepGroupControl": "裝置控制 IO",
+    "stepGroupTiming": "時間控制",
+    "addSelectedStep": "+ 新增",
+    "conflictShort": "腳位衝突",
+    "busSignals": "SPI 匯流排訊號",
+    "auxSignals": "輔助控制 IO",
+    "auxHint": "DC、RST、BL 不是標準 SPI 訊號，可依裝置接線修改或加入更多控制腳。",
+    "addSignal": "+ 新增控制訊號",
+    "reset": "恢復預設",
+    "enabled": "啟用",
+    "signalName": "訊號名稱",
+    "pin": "實際腳位",
+    "direction": "方向",
+    "output": "輸出",
+    "builtIn": "內建",
+    "remove": "刪除控制訊號",
+    "pinConflict": "GPIO{{pin}} 被多個 SPI 訊號使用",
+    "conflictHint": "請先解決重複腳位映射；有衝突時，對應工作流程不會操作硬體。",
+    "voltageHint": "CH347 IO 電壓固定為 3.3V。請確認裝置邏輯電平相容，GND 必須共地。",
+    "signalUnavailable": "輔助 IO 未啟用或映射已不存在",
+    "logLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectSignalFirst": "請先選擇輔助控制訊號",
+    "stepTitle": "控制 {{name}}（GPIO{{pin}}）電平",
+    "auxStepTitle": "新增可選擇訊號的輔助 IO 控制步驟",
+    "addAuxLow": "+ 控制 IO Low",
+    "addAuxHigh": "+ 控制 IO High",
+    "typeAuxLow": "輔助 IO Low",
+    "typeAuxHigh": "輔助 IO High",
+    "selectSignal": "選擇控制訊號",
+    "reservedBySpi": "{{pins}} 已由 SPI 輔助訊號佔用，請先在 SPI 接線面板停用或修改映射",
+    "reservedSkipped": "已略過 SPI 佔用的腳位"
+  },
   "gpioTool": {
-    "pageDescription": "讀取並控制 CH347 的 GPIO1–GPIO7 接腳電位",
+    "pageDescription": "讀取並控制 CH347 的 GPIO0–GPIO7 接腳電位",
     "connected": "裝置已連線",
     "disconnected": "裝置未連線",
     "connectHint": "請先使用右上角的裝置按鈕連線 CH347",
@@ -1101,7 +1151,7 @@
     "readFailed": "GPIO 狀態讀取失敗：{{error}}",
     "writeFailed": "GPIO 設定失敗：{{error}}",
     "pinSetSuccess": "GPIO{{pin}} 已設定為 {{level}}",
-    "allSetSuccess": "GPIO1–GPIO7 已全部設定為 {{level}}",
+    "allSetSuccess": "GPIO0–GPIO7 已全部設定為 {{level}}",
     "outputControl": "GPIO 輸出控制",
     "outputControlHint": "點擊 HIGH 或 LOW 會將對應接腳設為輸出並立即設定電位",
     "allLow": "全部 LOW",
@@ -1116,7 +1166,6 @@
     "output": "輸出",
     "low": "低電位",
     "high": "高電位",
-    "gpio0Hint": "GPIO0 由頂部的電壓按鈕管理，本工具不會修改 GPIO0。",
     "sharedPinHint": "GPIO4/GPIO5 可能由 SPI 點屏工具作為 DC/RST；在此切換會直接改變對應的硬體接腳。",
     "advanced": {
       "title": "進階功能",
@@ -1291,22 +1340,6 @@
         "logNoRowsForLoop": "[Adv] 未選擇循環列",
         "logLoopCompleted": "[Adv] 循環完成: {{n}} 次"
       }
-    },
-    "voltageControl": {
-      "title": "GPIO0 電壓控制",
-      "switchLabel": "GPIO0 輸出",
-      "statusHigh": "高電位",
-      "statusLow": "低電位",
-      "hint": "GPIO0 高電位對應 3.3V，低電位對應 1.8V。打開裝置時預設拉高 GPIO0（3.3V）。",
-      "master": {
-        "scanning": "掃描中...",
-        "noDevice": "無裝置"
-      },
-      "errorSetFailed": "GPIO0 設定失敗：{{error}}",
-      "voltage3v3": "3.3V",
-      "voltage1v8": "1.8V",
-      "toggleTitle": "GPIO0 電壓切換（3.3V 高 / 1.8V 低）",
-      "toggleTitleOffline": "GPIO0 電壓切換（需先連接 CH347 設備）"
     },
     "deviceConnect": {
       "noDevice": "無設備",

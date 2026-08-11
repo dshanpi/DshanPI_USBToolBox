@@ -1112,12 +1112,8 @@
         "requestError": "AI 请求失败：{{error}}"
       }
     },
-    "voltageControlTool": {
-      "description": "通过控制 GPIO0 高低电平切换一路电压的开关",
-      "name": "电压控制工具"
-    },
     "gpioTool": {
-      "description": "控制 CH347 GPIO1–GPIO7 引脚的高低电平",
+      "description": "控制 CH347 GPIO0–GPIO7 引脚的高低电平",
       "name": "GPIO 工具"
     },
     "modbusTool": {
@@ -1129,8 +1125,62 @@
       "name": "多路固件烧写"
     }
   },
+  "spiWiring": {
+    "title": "接线与 IO 映射",
+    "mapSck": "SCK→SCK",
+    "mapMosi": "MOSI→MOSI",
+    "mapMiso": "MISO→MISO",
+    "mapCs": "CS→CS0",
+    "mapAux": "{{name}}→GPIO{{pin}}",
+    "voltage": "IO 3.3V",
+    "sck": "SCK",
+    "mosi": "MOSI",
+    "miso": "MISO",
+    "cs": "CS",
+    "cs0": "CS0",
+    "gpioPin": "GPIO{{pin}}",
+    "reservationLabel": "SPI · {{names}}",
+    "addMappedLow": "+ {{name}}(GPIO{{pin}}) Low",
+    "addMappedHigh": "+ {{name}}(GPIO{{pin}}) High",
+    "signalOption": "{{name}} (GPIO{{pin}})",
+    "stepMappedLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectStepType": "选择要添加的工作流步骤类型",
+    "stepGroupData": "数据传输",
+    "stepGroupBus": "SPI 片选控制",
+    "stepGroupControl": "设备控制 IO",
+    "stepGroupTiming": "时间控制",
+    "addSelectedStep": "+ 添加",
+    "conflictShort": "引脚冲突",
+    "busSignals": "SPI 总线信号",
+    "auxSignals": "辅助控制 IO",
+    "auxHint": "DC、RST、BL 不是标准 SPI 信号，可按设备接线修改或添加更多控制脚。",
+    "addSignal": "+ 添加控制信号",
+    "reset": "恢复默认",
+    "enabled": "启用",
+    "signalName": "信号名称",
+    "pin": "实际引脚",
+    "direction": "方向",
+    "output": "输出",
+    "builtIn": "内置",
+    "remove": "删除控制信号",
+    "pinConflict": "GPIO{{pin}} 被多个 SPI 信号使用",
+    "conflictHint": "请先解决重复引脚映射；存在冲突时，对应工作流不会操作硬件。",
+    "voltageHint": "CH347 IO 电压固定为 3.3V。请确认外设逻辑电平兼容，GND 必须共地。",
+    "signalUnavailable": "辅助 IO 未启用或映射已不存在",
+    "logLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectSignalFirst": "请先选择一个辅助控制信号",
+    "stepTitle": "控制 {{name}}（GPIO{{pin}}）电平",
+    "auxStepTitle": "添加可选择信号的辅助 IO 控制步骤",
+    "addAuxLow": "+ 控制 IO Low",
+    "addAuxHigh": "+ 控制 IO High",
+    "typeAuxLow": "辅助 IO Low",
+    "typeAuxHigh": "辅助 IO High",
+    "selectSignal": "选择控制信号",
+    "reservedBySpi": "{{pins}} 已由 SPI 辅助信号占用，请先在 SPI 接线面板中停用或改映射",
+    "reservedSkipped": "已跳过 SPI 占用的引脚"
+  },
   "gpioTool": {
-    "pageDescription": "读取并控制 CH347 的 GPIO1–GPIO7 引脚电平",
+    "pageDescription": "读取并控制 CH347 的 GPIO0–GPIO7 引脚电平",
     "connected": "设备已连接",
     "disconnected": "设备未连接",
     "connectHint": "请先使用右上角的设备按钮连接 CH347",
@@ -1141,7 +1191,7 @@
     "readFailed": "GPIO 状态读取失败：{{error}}",
     "writeFailed": "GPIO 设置失败：{{error}}",
     "pinSetSuccess": "GPIO{{pin}} 已设置为 {{level}}",
-    "allSetSuccess": "GPIO1–GPIO7 已全部设置为 {{level}}",
+    "allSetSuccess": "GPIO0–GPIO7 已全部设置为 {{level}}",
     "outputControl": "GPIO 输出控制",
     "outputControlHint": "点击 HIGH 或 LOW 会把对应引脚配置为输出并立即设置电平",
     "allLow": "全部 LOW",
@@ -1156,7 +1206,6 @@
     "output": "输出",
     "low": "低电平",
     "high": "高电平",
-    "gpio0Hint": "GPIO0 由顶部的电压按钮管理，本工具不会修改 GPIO0。",
     "sharedPinHint": "GPIO4/GPIO5 可能被 SPI 点屏工具用作 DC/RST；在这里切换会直接改变对应的硬件引脚。",
     "advanced": {
       "title": "高级功能",
@@ -1365,22 +1414,6 @@
       "presetText": "内容",
       "delete": "删除",
       "resetPresets": "恢复默认"
-    },
-    "voltageControl": {
-      "title": "GPIO0 电压控制",
-      "switchLabel": "GPIO0 输出",
-      "statusHigh": "高电平",
-      "statusLow": "低电平",
-      "hint": "GPIO0 高电平对应 3.3V，低电平对应 1.8V。打开设备时默认拉高 GPIO0（3.3V）。",
-      "master": {
-        "scanning": "扫描中...",
-        "noDevice": "无设备"
-      },
-      "errorSetFailed": "GPIO0 设置失败：{{error}}",
-      "voltage3v3": "3.3V",
-      "voltage1v8": "1.8V",
-      "toggleTitle": "GPIO0 电压切换（3.3V 高 / 1.8V 低）",
-      "toggleTitleOffline": "GPIO0 电压切换（需先连接 CH347 设备）"
     },
     "deviceConnect": {
       "noDevice": "无设备",

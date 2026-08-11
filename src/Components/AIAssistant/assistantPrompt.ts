@@ -14,7 +14,7 @@ const ACTION_PROTOCOL = `
 
 ## spi-tool
 - spi.configure: {mode:0|1|2|3, speed:"0.46875"|"0.9375"|"1.875"|"3.75"|"7.5"|"15"|"30"|"60", cs:0, bits:8|16, bitOrder:"MSB"|"LSB", txData?:"AA 55", readLen?:number}
-- spi.workflow.replace: {steps:[{type:"cs_low"|"cs_high"|"dc_low"|"dc_high"|"reset_low"|"reset_high"|"send"|"duplex"|"delay", data?:"十六进制或微秒", readLen?:number}]}
+- spi.workflow.replace: {steps:[{type:"cs_low"|"cs_high"|"dc_low"|"dc_high"|"reset_low"|"reset_high"|"aux_low"|"aux_high"|"send"|"duplex"|"delay", data?:"十六进制或微秒", readLen?:number, signalId?:"辅助IO映射ID"}]}
 
 ## spi-display-tool
 - spi-display.configure: {mode:0|1|2|3, frequencyHz:number, cs:0, bits:8|16, bitOrder:"MSB"|"LSB", width:number, height:number, displayType:"monochrome-page"|"rgb565", rgb565ByteOrder?:"big"|"little", columnOffset?:number, rowOffset?:number}

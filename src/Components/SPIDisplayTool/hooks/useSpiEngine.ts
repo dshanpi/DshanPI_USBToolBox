@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { invokeCommand } from '../../../Platform/IPC';
 import { sharedDevice } from '../../SPITool/sharedDevice';
+import { getSpiAuxPinConflicts, getSpiAuxSignal, useSpiAuxPins } from '../../SPITool/spiAuxPins';
 
 /** 命令表中一行的类型。映射到 SPI 总线上的 DC 电平 + 数据位。 */
 export type DisplayCommandType = 'cmd' | 'data' | 'delay' | 'cs' | 'dc' | 'rst' | 'bl' | 'fill';
@@ -115,6 +116,10 @@ const SPI_CS0_ENABLE_MASK = 0x0001;
  */
 export function useSpiEngine(props: UseSpiEngineProps) {
   const { deviceIndex, connected, connectionSession, log } = props;
+  const { signals: auxSignals } = useSpiAuxPins();
+  const dcSignal = getSpiAuxSignal('dc', auxSignals);
+  const rstSignal = getSpiAuxSignal('rst', auxSignals);
+  const blSignal = getSpiAuxSignal('bl', auxSignals);
   /** SPI 是否已 init 过 —— 避免每次 write 都重新 init（参考 CH347Demo CH347SpiStream 行为） */
   const configuredRef = useRef(false);
   /** 当前 CS 电平：null=未知，false=LOW，true=HIGH */
@@ -284,51 +289,37 @@ export function useSpiEngine(props: UseSpiEngineProps) {
     [deviceIndex, enqueue]
   );
 
-  /** 设置 DC (GPIO4) 电平。0=命令模式(LOW), 1=数据模式(HIGH)。 */
-  const setDc = useCallback(
-    async (level: 0 | 1): Promise<void> => {
+  /** 按共享映射设置辅助控制 IO，SPI 工具和点屏工具始终使用同一组实际引脚。 */
+  const setMappedAux = useCallback(
+    async (signalId: 'dc' | 'rst' | 'bl', level: 0 | 1): Promise<void> => {
+      const signal = getSpiAuxSignal(signalId, auxSignals);
+      if (!signal || !signal.enabled) {
+        throw new Error(`${signalId.toUpperCase()} 辅助 IO 未启用`);
+      }
+      if (getSpiAuxPinConflicts(auxSignals).has(signal.pin)) {
+        throw new Error(`GPIO${signal.pin} 存在重复映射，请先解决引脚冲突`);
+      }
+      const mask = 1 << signal.pin;
       await enqueue(() =>
         invokeCommand('ch347_gpio_set', {
           index: deviceIndex,
-          enable: 0x10,
-          dirOut: 0x10,
-          dataOut: level === 1 ? 0x10 : 0x00,
+          enable: mask,
+          dirOut: mask,
+          dataOut: level === 1 ? mask : 0,
         })
       );
     },
-    [deviceIndex, enqueue]
+    [auxSignals, deviceIndex, enqueue]
   );
 
-  /** 设置 RST (GPIO5) 电平。0=复位中(LOW), 1=正常运行(HIGH)。 */
-  const setRst = useCallback(
-    async (level: 0 | 1): Promise<void> => {
-      await enqueue(() =>
-        invokeCommand('ch347_gpio_set', {
-          index: deviceIndex,
-          enable: 0x20,
-          dirOut: 0x20,
-          dataOut: level === 1 ? 0x20 : 0x00,
-        })
-      );
-    },
-    [deviceIndex, enqueue]
-  );
+  /** 设置 DC 电平。0=命令模式(LOW), 1=数据模式(HIGH)。 */
+  const setDc = useCallback((level: 0 | 1) => setMappedAux('dc', level), [setMappedAux]);
 
-  /** 设置背光 BL/PWM (GPIO6) 电平。0=背光关(LOW), 1=背光常亮(HIGH)。
-   *  ST7796U2 等RGB屏的 PWM 引脚接 CH347 的 GPIO6，高电平=常亮（参考 chapter4-1.md）。 */
-  const setBl = useCallback(
-    async (level: 0 | 1): Promise<void> => {
-      await enqueue(() =>
-        invokeCommand('ch347_gpio_set', {
-          index: deviceIndex,
-          enable: 0x40,
-          dirOut: 0x40,
-          dataOut: level === 1 ? 0x40 : 0x00,
-        })
-      );
-    },
-    [deviceIndex, enqueue]
-  );
+  /** 设置 RST 电平。0=复位中(LOW), 1=正常运行(HIGH)。 */
+  const setRst = useCallback((level: 0 | 1) => setMappedAux('rst', level), [setMappedAux]);
+
+  /** 设置背光 BL/PWM 电平。0=背光关(LOW), 1=背光常亮(HIGH)。 */
+  const setBl = useCallback((level: 0 | 1) => setMappedAux('bl', level), [setMappedAux]);
 
   /**
    * 硬件复位脉冲：拉低 RST → 等待 → 拉高 RST → 等待。
@@ -465,13 +456,13 @@ export function useSpiEngine(props: UseSpiEngineProps) {
               await setCs(level, cfg.cs);
               log(`#${i + 1} cs: CS${cfg.cs} ${level === 1 ? 'HIGH (无效)' : 'LOW (有效)'}`);
             } else if (row.type === 'dc') {
-              // 显式设 DC(GPIO4) 电平：LOW=命令模式, HIGH=数据模式
+              // 按接线面板中的映射设置 DC 电平：LOW=命令模式, HIGH=数据模式
               // 大小写不敏感比较；非法值按 LOW 处理
               const level = String(row.data).toUpperCase() === 'HIGH' ? 1 : 0;
               await setDc(level);
               log(`#${i + 1} dc: ${level === 1 ? 'HIGH (数据)' : 'LOW (命令)'}`);
             } else if (row.type === 'bl') {
-              // 设背光 PWM(GPIO6) 电平：LOW=背光关, HIGH=背光常亮
+              // 按接线面板中的映射设置背光电平：LOW=背光关, HIGH=背光常亮
               const level = String(row.data).toUpperCase() === 'HIGH' ? 1 : 0;
               await setBl(level);
               log(`#${i + 1} bl: ${level === 1 ? 'HIGH (on)' : 'LOW (off)'}`);
@@ -583,7 +574,7 @@ export function useSpiEngine(props: UseSpiEngineProps) {
               }
               log(`#${i + 1} fill: done (${count} pixels)`);
             } else if (row.type === 'rst') {
-              // 显式设 RST(GPIO5) 电平：LOW=复位中, HIGH=正常运行
+              // 按接线面板中的映射设置 RST 电平：LOW=复位中, HIGH=正常运行
               // 复位通常需配合 delay 行：rst LOW → delay → rst HIGH
               const level = String(row.data).toUpperCase() === 'HIGH' ? 1 : 0;
               await setRst(level);
@@ -612,9 +603,9 @@ export function useSpiEngine(props: UseSpiEngineProps) {
             log(
               `GPIO 读回: DIR=0x${gpio.direction.toString(16).padStart(2, '0')}, ` +
                 `DATA=0x${gpio.data.toString(16).padStart(2, '0')} ` +
-                `(GPIO4/DC=${(gpio.data & 0x10) !== 0 ? 'H' : 'L'}, ` +
-                `GPIO5/RST=${(gpio.data & 0x20) !== 0 ? 'H' : 'L'}, ` +
-                `GPIO6/BLK=${(gpio.data & 0x40) !== 0 ? 'H' : 'L'})`
+                `(GPIO${dcSignal?.pin ?? '?'}/DC=${dcSignal ? ((gpio.data & (1 << dcSignal.pin)) !== 0 ? 'H' : 'L') : '?'}, ` +
+                `GPIO${rstSignal?.pin ?? '?'}/RST=${rstSignal ? ((gpio.data & (1 << rstSignal.pin)) !== 0 ? 'H' : 'L') : '?'}, ` +
+                `GPIO${blSignal?.pin ?? '?'}/BL=${blSignal ? ((gpio.data & (1 << blSignal.pin)) !== 0 ? 'H' : 'L') : '?'})`
             );
           } catch (e) {
             log(`GPIO 读回失败: ${(e as Error).message}`, true);
@@ -627,6 +618,8 @@ export function useSpiEngine(props: UseSpiEngineProps) {
     },
     [
       connected,
+      blSignal,
+      dcSignal,
       deviceIndex,
       enqueue,
       ensureConfigured,
@@ -637,6 +630,7 @@ export function useSpiEngine(props: UseSpiEngineProps) {
       setBl,
       writeBytes,
       log,
+      rstSignal,
     ]
   );
 

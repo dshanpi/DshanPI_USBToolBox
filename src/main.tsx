@@ -11,7 +11,6 @@ import { GPIOToolPage } from './Components/GPIOTool';
 import { ModbusToolPage } from './Components/ModbusTool';
 import { PythonTestToolPage } from './Components/PythonTestTool';
 import { AIAssistant, type AssistantToolId } from './Components/AIAssistant';
-import { VoltageToggleButton } from './Components/VoltageControlTool';
 import { DeviceConnectButton } from './Components/SPITool';
 import { Settings, AppSettings, loadSettings } from './Settings';
 import { authService, AuthUserInfo } from './Services';
@@ -105,7 +104,7 @@ const AppContent: React.FC = () => {
         id: 'gpio-tool',
         name: t('tools.gpioTool.name', 'GPIO Tool'),
         icon: faToggleOn,
-        description: t('tools.gpioTool.description', 'Control CH347 GPIO1-GPIO7 levels'),
+        description: t('tools.gpioTool.description', 'Control CH347 GPIO0-GPIO7 levels'),
       },
       {
         id: 'spi-display-tool',
@@ -371,10 +370,7 @@ const AppContent: React.FC = () => {
         authUserName={authUser?.name ?? null}
         sidebarLocked={isWorking}
         controlArea={
-          <>
-            <DeviceConnectButton />
-            <VoltageToggleButton />
-          </>
+          <DeviceConnectButton />
         }
       >
         {renderAllTools()}

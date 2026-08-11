@@ -1127,12 +1127,8 @@
         "requestError": "AI request failed: {{error}}"
       }
     },
-    "voltageControlTool": {
-      "description": "Toggle a voltage rail on/off by driving GPIO0 high/low",
-      "name": "Voltage Control Tool"
-    },
     "gpioTool": {
-      "description": "Control the logic levels of CH347 GPIO1-GPIO7",
+      "description": "Control the logic levels of CH347 GPIO0-GPIO7",
       "name": "GPIO Tool"
     },
     "modbusTool": {
@@ -1144,8 +1140,62 @@
       "name": "Multi-Device Flash"
     }
   },
+  "spiWiring": {
+    "title": "Wiring & IO Mapping",
+    "mapSck": "SCK→SCK",
+    "mapMosi": "MOSI→MOSI",
+    "mapMiso": "MISO→MISO",
+    "mapCs": "CS→CS0",
+    "mapAux": "{{name}}→GPIO{{pin}}",
+    "voltage": "IO 3.3V",
+    "sck": "SCK",
+    "mosi": "MOSI",
+    "miso": "MISO",
+    "cs": "CS",
+    "cs0": "CS0",
+    "gpioPin": "GPIO{{pin}}",
+    "reservationLabel": "SPI · {{names}}",
+    "addMappedLow": "+ {{name}}(GPIO{{pin}}) Low",
+    "addMappedHigh": "+ {{name}}(GPIO{{pin}}) High",
+    "signalOption": "{{name}} (GPIO{{pin}})",
+    "stepMappedLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectStepType": "Select the workflow step type to add",
+    "stepGroupData": "Data transfer",
+    "stepGroupBus": "SPI chip-select control",
+    "stepGroupControl": "Device control IO",
+    "stepGroupTiming": "Timing",
+    "addSelectedStep": "+ Add",
+    "conflictShort": "Pin conflict",
+    "busSignals": "SPI bus signals",
+    "auxSignals": "Auxiliary control IO",
+    "auxHint": "DC, RST and BL are device control signals. Remap them or add more control pins as needed.",
+    "addSignal": "+ Add control signal",
+    "reset": "Reset defaults",
+    "enabled": "Enabled",
+    "signalName": "Signal",
+    "pin": "Physical pin",
+    "direction": "Direction",
+    "output": "Output",
+    "builtIn": "Built-in",
+    "remove": "Remove control signal",
+    "pinConflict": "GPIO{{pin}} is assigned to multiple SPI signals",
+    "conflictHint": "Resolve duplicate pin mappings first. Conflicting workflow steps will not access hardware.",
+    "voltageHint": "CH347 IO voltage is fixed at 3.3V. Verify device compatibility and connect a common GND.",
+    "signalUnavailable": "The auxiliary IO is disabled or no longer exists",
+    "logLevel": "{{name}} (GPIO{{pin}}) → {{level}}",
+    "selectSignalFirst": "Select an auxiliary control signal first",
+    "stepTitle": "Control {{name}} (GPIO{{pin}}) level",
+    "auxStepTitle": "Add a workflow step for a selectable auxiliary IO",
+    "addAuxLow": "+ Control IO Low",
+    "addAuxHigh": "+ Control IO High",
+    "typeAuxLow": "Aux IO Low",
+    "typeAuxHigh": "Aux IO High",
+    "selectSignal": "Select control signal",
+    "reservedBySpi": "{{pins}} is reserved by SPI. Disable or remap it in the SPI wiring panel first",
+    "reservedSkipped": "SPI-reserved pins were skipped"
+  },
   "gpioTool": {
-    "pageDescription": "Read and control CH347 GPIO1-GPIO7 pin levels",
+    "pageDescription": "Read and control CH347 GPIO0-GPIO7 pin levels",
     "connected": "Device connected",
     "disconnected": "Device not connected",
     "connectHint": "Connect a CH347 using the device button in the top-right corner",
@@ -1156,7 +1206,7 @@
     "readFailed": "Failed to read GPIO state: {{error}}",
     "writeFailed": "Failed to set GPIO: {{error}}",
     "pinSetSuccess": "GPIO{{pin}} set to {{level}}",
-    "allSetSuccess": "GPIO1-GPIO7 all set to {{level}}",
+    "allSetSuccess": "GPIO0-GPIO7 all set to {{level}}",
     "outputControl": "GPIO output control",
     "outputControlHint": "HIGH or LOW configures the selected pin as an output and applies the level immediately",
     "allLow": "All LOW",
@@ -1171,7 +1221,6 @@
     "output": "Output",
     "low": "LOW",
     "high": "HIGH",
-    "gpio0Hint": "GPIO0 is managed by the voltage button at the top and is never modified by this tool.",
     "sharedPinHint": "GPIO4/GPIO5 may be used as DC/RST by the SPI Display Tool. Switching them here directly changes those hardware pins.",
     "advanced": {
       "title": "Advanced control",
@@ -1380,22 +1429,6 @@
       "presetText": "Text",
       "delete": "Delete",
       "resetPresets": "Reset to defaults"
-    },
-    "voltageControl": {
-      "title": "GPIO0 Voltage Control",
-      "switchLabel": "GPIO0 Output",
-      "statusHigh": "HIGH",
-      "statusLow": "LOW",
-      "hint": "GPIO0 high selects 3.3V and low selects 1.8V. GPIO0 is driven high (3.3V) by default when the device is opened.",
-      "master": {
-        "scanning": "Scanning...",
-        "noDevice": "No device"
-      },
-      "errorSetFailed": "GPIO0 set failed: {{error}}",
-      "voltage3v3": "3.3V",
-      "voltage1v8": "1.8V",
-      "toggleTitle": "Toggle GPIO0 voltage (3.3V high / 1.8V low)",
-      "toggleTitleOffline": "Toggle GPIO0 voltage (connect a CH347 device first)"
     },
     "deviceConnect": {
       "noDevice": "No device",
