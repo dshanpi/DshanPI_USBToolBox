@@ -1,0 +1,687 @@
+/* ─── Page root: natural flow, scrollable ────────────── */
+
+.modbus-tool-page-root .page-container {
+  max-width: none !important;
+  width: 100%;
+  /* padding-top / page-header 间距沿用 PageContainer 默认值，
+     使「Modbus 工具」标题位置与串口/I2C/SPI 工具的左上角标题保持一致。 */
+}
+
+.modbus-tool-page-root .proto-top-bar {
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: 8px;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* ─── Modbus Master layout ───────────────────────────── */
+
+.modbus-master-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modbus-master-middle {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Log area inside config (fixed height, scrollable) ── */
+
+.modbus-tool-page-root .i2c-log-area {
+  max-height: 200px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modbus-tool-page-root .i2c-log-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* ─── Read/Write Definition Panel ──────────────────── */
+
+.modbus-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modbus-def-panel {
+  width: 250px;
+  min-width: 220px;
+  flex-shrink: 0;
+  background: var(--color-crust);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modbus-def-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modbus-def-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.modbus-def-field label {
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-overlay1);
+  letter-spacing: 0.3px;
+}
+
+.modbus-def-input {
+  padding: 5px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modbus-def-input:focus {
+  border-color: var(--color-accent);
+}
+
+.modbus-scan-row {
+  display: flex;
+  gap: 8px;
+}
+
+.modbus-def-checks {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modbus-check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.modbus-check-label input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  width: 13px;
+  height: 13px;
+}
+
+.modbus-def-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Data Table Panel ─────────────────────────────── */
+
+.modbus-data-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-crust);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+  padding: 10px;
+  min-height: 300px;
+  max-height: 55vh;
+}
+
+.modbus-view-select {
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 10px;
+  font-family: inherit;
+  outline: none;
+}
+
+.modbus-data-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.modbus-data-table-wrap::-webkit-scrollbar {
+  width: 4px;
+}
+.modbus-data-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 3px;
+}
+
+.modbus-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+.modbus-data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-mantle);
+  padding: 4px 6px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-overlay1);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.modbus-data-table td {
+  padding: 2px 6px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.2);
+  vertical-align: middle;
+  line-height: 1.3;
+}
+
+.modbus-data-table tr:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+.modbus-tbl-row-active {
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+.modbus-tbl-addr {
+  color: var(--color-overlay1);
+  font-size: 10px;
+  text-align: center;
+}
+
+.modbus-tbl-val {
+  text-align: center;
+  font-size: 12px;
+}
+
+/* Fix table-layout for consistent column widths */
+.modbus-data-panel .modbus-data-table {
+  table-layout: fixed;
+}
+
+.modbus-data-panel .modbus-data-table th:first-child,
+.modbus-data-panel .modbus-data-table td:first-child {
+  width: 48px;
+  text-align: center;
+}
+
+.modbus-data-panel .modbus-data-table th:last-child,
+.modbus-data-panel .modbus-data-table td:last-child {
+  width: 70px;
+  text-align: center;
+}
+
+.modbus-tbl-name {
+  color: var(--color-overlay0);
+  font-size: 12px;
+}
+
+.modbus-tbl-val {
+  width: 140px;
+}
+
+.modbus-tbl-input {
+  padding: 2px 4px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.modbus-tbl-input:focus {
+  border-color: var(--color-accent);
+}
+
+.modbus-add-input {
+  width: 40px;
+  padding: 2px 4px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.modbus-add-input:focus {
+  border-color: var(--color-accent);
+}
+
+.modbus-tbl-empty {
+  color: var(--color-overlay0);
+  font-style: italic;
+}
+
+.modbus-data-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 120px;
+  font-size: 12px;
+  color: var(--color-overlay0);
+  font-style: italic;
+}
+
+.modbus-scan-status {
+  font-size: 11px;
+  color: var(--color-accent);
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ─── Message Preview ──────────────────────────────── */
+
+.modbus-msg-panel {
+  flex-shrink: 0;
+  background: var(--color-crust);
+  border-radius: 8px;
+  border: 1px solid var(--color-surface0);
+  margin-top: 4px;
+}
+
+.modbus-msg-panel.collapsed {
+  padding: 0;
+}
+
+.modbus-msg-header {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.modbus-msg-header:hover {
+  background: rgba(56, 189, 248, 0.04);
+  border-radius: 8px;
+}
+
+.modbus-msg-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 14px 10px;
+}
+
+.modbus-msg-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.modbus-msg-label {
+  color: var(--color-overlay1);
+  white-space: nowrap;
+  min-width: 130px;
+  font-weight: 500;
+}
+
+.modbus-msg-code {
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 11px;
+  color: var(--color-text);
+  background: var(--color-base);
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex: 1;
+  word-break: break-all;
+  letter-spacing: 0.5px;
+}
+
+.modbus-msg-pre {
+  margin: 0;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 11px;
+  color: var(--color-text);
+  background: var(--color-base);
+  padding: 4px 10px;
+  border-radius: 4px;
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-all;
+  letter-spacing: 0.5px;
+  user-select: text;
+  cursor: text;
+  min-height: 20px;
+  line-height: 1.6;
+}
+
+.modbus-msg-pre::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+/* ─── Response data view ────────────────────────────── */
+
+.modbus-response-view {
+  flex-shrink: 0;
+  background: var(--color-crust);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+  padding: 10px 14px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.modbus-response-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+}
+
+.modbus-response-content {
+  margin: 0;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 12px;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.modbus-response-view::-webkit-scrollbar {
+  width: 4px;
+}
+.modbus-response-view::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 3px;
+}
+
+/* ─── Slave simulator tables ────────────────────────── */
+
+.modbus-slave-section {
+  margin-top: 4px;
+}
+
+.modbus-slave-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+}
+
+.modbus-slave-table-wrap {
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--color-crust);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+}
+
+.modbus-slave-table-wrap::-webkit-scrollbar {
+  width: 4px;
+}
+.modbus-slave-table-wrap::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 3px;
+}
+
+.modbus-register-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+.modbus-register-table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-mantle);
+  padding: 5px 6px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-overlay1);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.modbus-register-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--color-surface0);
+  vertical-align: middle;
+}
+
+.modbus-reg-addr {
+  color: var(--color-overlay0);
+  width: 36px;
+}
+
+.modbus-reg-val {
+  width: 32px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.modbus-reg-val.on {
+  color: var(--color-success);
+}
+
+.modbus-reg-val.off {
+  color: var(--color-overlay0);
+}
+
+.modbus-reg-hex {
+  color: var(--color-accent);
+  width: 58px;
+}
+
+.modbus-reg-dec {
+  color: var(--color-text);
+  width: 48px;
+}
+
+.modbus-reg-btn {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.modbus-reg-btn:hover {
+  background: var(--color-surface1);
+  color: var(--color-text);
+}
+
+.modbus-reg-input {
+  width: 64px;
+  padding: 3px 5px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+}
+
+.modbus-reg-input:focus {
+  border-color: var(--color-accent);
+}
+
+/* ─── Serial-style config row (mirrors SerialTool.css) ─── */
+
+.serial-config-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.config-label {
+  font-size: 10px;
+  color: var(--color-accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.config-select {
+  padding: 5px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  min-width: 80px;
+}
+
+.config-select:hover,
+.config-select:focus {
+  border-color: var(--color-accent);
+}
+
+.config-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.config-port-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.config-port-row .config-select {
+  flex: 1;
+  min-width: 180px;
+  width: 180px;
+}
+
+.config-btn-icon {
+  padding: 5px 10px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.config-btn-icon:hover:not(:disabled) {
+  background: var(--color-surface1);
+}
+
+.config-btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-btn-icon.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.config-connect {
+  display: flex;
+  align-items: flex-end;
+}
+
+.config-btn-open {
+  padding: 6px 20px;
+  background: var(--color-success);
+  color: var(--color-base);
+  border: 1px solid var(--color-success);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.config-btn-open:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.config-btn-open:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-btn-close {
+  padding: 6px 20px;
+  background: var(--color-error);
+  color: var(--color-base);
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.config-btn-close:hover {
+  opacity: 0.85;
+}

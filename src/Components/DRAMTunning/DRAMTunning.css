@@ -1,0 +1,532 @@
+.dram-tunning {
+  display: flex;
+  height: 100%;
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dram-sidebar {
+  width: 260px;
+  background: var(--color-mantle);
+  border-right: 1px solid var(--color-surface0);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.dram-section {
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.dram-config-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-bottom: none;
+}
+
+.dram-config-section .section-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.dram-section .section-header {
+  padding: 12px 16px;
+  background: var(--color-crust);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+}
+
+.dram-section .section-body {
+  padding: 12px 16px;
+}
+
+/* Device list */
+.dram-device-list {
+  margin-top: 8px;
+  min-height: 48px;
+  max-height: 80px;
+  overflow-y: auto;
+  background: var(--color-base);
+  border-radius: 6px;
+  scrollbar-width: none;
+}
+
+.dram-device-list::-webkit-scrollbar {
+  display: none;
+}
+
+.dram-device-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.dram-device-item:last-child {
+  border-bottom: none;
+}
+
+.dram-device-item:hover {
+  background: var(--color-surface0);
+}
+
+.dram-device-item.selected {
+  background: var(--color-surface0);
+  border-left: 3px solid var(--color-accent);
+  padding-left: 9px;
+}
+
+.device-name {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.device-info {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-overlay0);
+}
+
+.device-mode {
+  color: var(--color-success);
+}
+
+.device-status {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.status-timeout {
+  background-color: var(--color-error-dim, color-mix(in srgb, var(--color-error) 15%, transparent));
+  color: var(--color-error);
+}
+
+/* Firmware info */
+.dram-firmware-info {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--color-base);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.firmware-path {
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.firmware-addrs {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  color: var(--color-overlay0);
+  font-family: monospace;
+  font-size: 11px;
+}
+
+/* Buttons */
+.dram-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dram-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.dram-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dram-btn-primary {
+  background: var(--color-accent);
+  color: var(--color-base);
+}
+
+.dram-btn-secondary {
+  background: var(--color-surface1);
+  color: var(--color-text);
+}
+
+.dram-btn-secondary:hover:not(:disabled) {
+  background: var(--color-surface2);
+}
+
+.dram-btn-danger {
+  background: transparent;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.dram-btn-danger:hover:not(:disabled) {
+  background: var(--color-error);
+  color: var(--color-base);
+}
+
+.dram-btn-block {
+  width: 100%;
+}
+
+.dram-config-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dram-config-actions .dram-btn {
+  flex: 1;
+}
+
+.dram-actions-section .section-body {
+  padding: 12px 16px;
+}
+
+/* Field groups */
+.dram-field-group {
+  margin-bottom: 14px;
+}
+
+.dram-field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.dram-field-desc {
+  font-size: 12px;
+  color: var(--color-overlay0);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.dram-field-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-overlay0);
+  margin-left: 4px;
+}
+
+.dram-input,
+.dram-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family: 'Consolas', 'Monaco', monospace;
+  box-sizing: border-box;
+}
+
+.dram-input:focus,
+.dram-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.dram-input-sm,
+.dram-select-sm {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+/* Fields grid */
+.dram-fields-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Bitfield card */
+.dram-bitfield-card {
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.dram-bitfield-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.dram-bitfield-title {
+  flex: 1;
+}
+
+.dram-bitfield-title .dram-field-desc {
+  margin-bottom: 2px;
+}
+
+.dram-bitfield-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dram-bitfield-hex {
+  font-size: 13px;
+  font-family: 'Consolas', monospace;
+  color: var(--color-accent);
+  background: var(--color-surface0);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.dram-bitfield-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.dram-bitfield-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dram-bitfield-label {
+  font-size: 12px;
+  color: var(--color-overlay0);
+}
+
+/* Main area */
+.dram-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Config container - left/right split */
+.dram-config-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 1px;
+  background: var(--color-surface0);
+}
+
+.dram-config-left {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-mantle);
+}
+
+.dram-config-right {
+  width: 320px;
+  overflow-y: auto;
+  background: var(--color-mantle);
+}
+
+/* Raw params panel */
+.dram-raw-params {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dram-raw-params .section-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.dram-raw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dram-raw-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dram-raw-label {
+  font-size: 12px;
+  font-family: 'Consolas', monospace;
+  color: var(--color-overlay0);
+  min-width: 36px;
+}
+
+.dram-raw-input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: 'Consolas', monospace;
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  background: var(--color-base);
+  color: var(--color-text);
+}
+
+.dram-raw-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Result display */
+.dram-result-empty,
+.dram-result-error,
+.dram-result {
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.dram-result-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dram-empty {
+  text-align: center;
+  color: var(--color-overlay0);
+  font-size: 13px;
+  padding: 16px;
+}
+
+.result-header {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.result-header-success {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success);
+}
+
+.result-header-error {
+  background: color-mix(in srgb, var(--color-error) 15%, transparent);
+  color: var(--color-error);
+}
+
+.result-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--color-overlay0);
+  margin-bottom: 12px;
+}
+
+.result-error-msg {
+  padding: 12px;
+  color: var(--color-error);
+  font-size: 13px;
+}
+
+.result-table-container {
+  overflow-x: auto;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.result-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--color-crust);
+  color: var(--color-subtext0);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.result-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-surface0);
+}
+
+.result-table tr.result-changed td {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  font-weight: 500;
+}
+
+/* Log panel */
+.dram-log-container {
+  height: 200px;
+  border-top: 1px solid var(--color-surface0);
+  flex-direction: column;
+}
+
+.dram-log-container .section-header {
+  padding: 10px 16px;
+  background: var(--color-crust);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+}
+
+.dram-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: 'Consolas', monospace;
+}
+
+.dram-log-entry {
+  padding: 2px 0;
+  line-height: 1.5;
+}
+
+.log-time {
+  color: var(--color-overlay0);
+  margin-right: 6px;
+}
+
+.log-level {
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.log-info .log-level {
+  color: var(--color-accent);
+}
+
+.log-okay .log-level {
+  color: var(--color-success);
+}
+
+.log-warn .log-level {
+  color: var(--color-warning);
+}
+
+.log-erro .log-level {
+  color: var(--color-error);
+}

@@ -1,0 +1,70 @@
+/* ─── 侧边栏电压切换按钮 ───────────────────────────────
+ * 放置在 Sidebar footer 顶部（登录按钮之上）。宽度/圆角与 .sidebar-footer-btn
+ * 视觉对齐，但用独立的电压配色：3.3V=暖色高亮（使能），1.8V=中性（未使能）。
+ */
+
+.voltage-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  /* 1.8V（未使能）状态：中性 surface */
+  background-color: var(--color-surface0);
+  color: var(--color-subtext1);
+}
+
+/* 3.3V（使能）态：暖色高亮 + 轻微发光，传达"高压输出中" */
+.voltage-toggle-btn--on {
+  background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-peach, #fab387) 100%);
+  color: var(--color-base);
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px var(--color-warning-subtle, rgba(245, 166, 35, 0.25)),
+    0 2px 8px var(--color-warning-subtle, rgba(245, 166, 35, 0.25));
+}
+
+.voltage-toggle-btn:hover:not(.voltage-toggle-btn--disabled) {
+  background-color: var(--color-surface1);
+}
+
+.voltage-toggle-btn--on:hover:not(.voltage-toggle-btn--disabled) {
+  filter: brightness(1.06);
+}
+
+.voltage-toggle-btn-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.voltage-toggle-btn-label {
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* 设备未连接或指令进行中：置灰且不可点击 */
+.voltage-toggle-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 折叠侧边栏：只显示图标，隐藏电压文字，按钮缩成方形 */
+.sidebar--collapsed .voltage-toggle-btn {
+  padding: 10px;
+}
+
+.sidebar--collapsed .voltage-toggle-btn-label {
+  display: none;
+}

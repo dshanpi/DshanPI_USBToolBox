@@ -1,0 +1,104 @@
+/**
+ * useModalDialog 配套样式 —— 自定义模态弹窗（取代浏览器原生 prompt/confirm/alert）。
+ *
+ * 类名前缀沿用 spi-modal（早期实现在 SPITool.css 里），这样 SPI Tool 老代码无需改动；
+ * 新组件只要 import 这个 CSS 就能用 useModalDialog。
+ *
+ * 配色用项目主题 CSS 变量，自动适配浅/深色主题。
+ */
+
+.spi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-modal-overlay, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: spi-modal-fade-in 0.1s ease-out;
+}
+
+.spi-modal {
+  background: var(--color-base);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+  box-shadow: 0 8px 32px var(--color-shadow-md, rgba(0, 0, 0, 0.3));
+  min-width: 320px;
+  max-width: 440px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: spi-modal-slide-in 0.12s ease-out;
+}
+
+@keyframes spi-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes spi-modal-slide-in {
+  from { transform: translateY(-12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.spi-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.spi-modal-message {
+  font-size: 12px;
+  color: var(--color-subtext1);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.spi-modal-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--color-mantle);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.spi-modal-input:focus { border-color: var(--color-accent); }
+
+.spi-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.spi-modal-btn {
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+  color: var(--color-text);
+  transition: background 0.12s;
+}
+.spi-modal-btn:hover { background: var(--color-surface1); }
+
+.spi-modal-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text, #fff);
+  border-color: transparent;
+}
+.spi-modal-btn.primary:hover { filter: brightness(1.1); }
+
+.spi-modal-btn.danger {
+  background: var(--color-error, #f85149);
+  color: #fff;
+  border-color: transparent;
+}
+.spi-modal-btn.danger:hover { filter: brightness(1.1); }

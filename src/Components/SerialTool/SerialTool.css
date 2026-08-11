@@ -1,0 +1,2323 @@
+/* ─── Page root: force full-height flex chain ────────── */
+
+.serial-tool-page-root {
+  height: 100%;
+}
+
+.serial-tool-page-root .page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.serial-tool-page-root .page-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── Main serial tool layout ────────────────────────── */
+
+/* Multi-session workbench */
+
+.serial-workbench {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto,
+    sans-serif;
+}
+
+.serial-workbench-main-row {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.serial-monitor-workbench {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.serial-multi-send-host {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+.serial-settings-host {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.serial-settings-host .serial-settings-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.serial-session-multi-controls,
+.serial-session-settings-controls {
+  display: none;
+}
+
+.serial-session-multi-controls.active,
+.serial-session-settings-controls.active {
+  display: contents;
+}
+
+.serial-session-bar {
+  display: flex;
+  align-items: stretch;
+  min-height: 38px;
+  padding: 4px 6px 0;
+  gap: 8px;
+  background: var(--color-mantle);
+  border-bottom: 1px solid var(--color-surface0);
+  flex-shrink: 0;
+}
+
+.serial-tabs {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.serial-tab,
+.serial-new-tab,
+.serial-layout-btn,
+.serial-pane-expand,
+.serial-empty-pane {
+  font-family: inherit;
+}
+
+.serial-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+  flex: 0 0 150px;
+  box-sizing: border-box;
+  padding: 0 7px 0 11px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--color-subtext0);
+  cursor: pointer;
+}
+
+.serial-tab:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.serial-tab.active {
+  background: var(--color-base);
+  border-color: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.serial-tab.unread:not(.active) {
+  background: var(--color-accent-subtle);
+  color: var(--color-warning);
+  box-shadow: inset 0 -2px 0 var(--color-warning);
+}
+
+.serial-tab-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--color-overlay0);
+}
+
+.serial-tab-led.connected {
+  background: var(--color-success);
+  box-shadow: 0 0 5px var(--color-success);
+}
+
+.serial-tab-led.connecting {
+  background: var(--color-warning);
+  animation: serial-led-pulse 1s ease-in-out infinite;
+}
+
+@keyframes serial-led-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.serial-tab-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 12px;
+}
+
+.serial-tab-activity {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--color-warning);
+  box-shadow: 0 0 6px var(--color-warning);
+  animation: serial-led-pulse 1s ease-in-out infinite;
+}
+
+.serial-tab-close {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  color: var(--color-overlay1);
+  flex: 0 0 auto;
+}
+
+.serial-tab-close:hover {
+  color: var(--color-error);
+  background: var(--color-surface1);
+}
+
+.serial-new-tab,
+.serial-layout-btn,
+.serial-pane-expand {
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-overlay1);
+  cursor: pointer;
+}
+
+.serial-new-tab {
+  width: 31px;
+  height: 31px;
+  margin-bottom: 2px;
+  border-radius: 7px;
+  flex: 0 0 auto;
+}
+
+.serial-new-tab:hover,
+.serial-layout-btn:hover,
+.serial-pane-expand:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.serial-layout-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  padding-bottom: 4px;
+}
+
+.serial-layout-btn {
+  width: 30px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.serial-layout-btn.active {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+}
+
+.serial-workspace {
+  flex: 1;
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+  gap: 5px;
+  padding: 5px;
+  overflow: hidden;
+  background: var(--color-mantle);
+}
+
+.serial-workspace--single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+}
+
+.serial-workspace--split-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.serial-workspace--split-rows {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.serial-workspace--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.serial-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 9px;
+}
+
+.serial-workspace--single .serial-pane {
+  border: 0;
+  border-radius: 0;
+}
+
+.serial-pane.active:not(.serial-pane--hidden) {
+  border-color: var(--color-accent);
+}
+
+.serial-workspace--single .serial-pane.active {
+  border-color: transparent;
+}
+
+.serial-pane--hidden {
+  display: none;
+}
+
+.serial-pane-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 6px 0 10px;
+  color: var(--color-subtext1);
+  background: var(--color-base);
+  border-bottom: 1px solid var(--color-surface0);
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+.serial-pane-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.serial-pane-expand {
+  width: 24px;
+  height: 22px;
+  border-radius: 5px;
+}
+
+.serial-empty-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  border: 1px dashed var(--color-surface1);
+  border-radius: 9px;
+  background: var(--color-base);
+  color: var(--color-overlay1);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.serial-empty-pane:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.serial-session--compact .serial-monitor-section {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.serial-session--compact .serial-monitor-toolbar {
+  min-width: 0;
+  padding: 6px 8px;
+  gap: 8px;
+}
+
+.serial-session--compact .serial-monitor-actions {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.serial-session--compact .serial-action-btn {
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .serial-session-bar {
+    gap: 3px;
+  }
+
+  .serial-layout-btn {
+    width: 26px;
+  }
+
+  .serial-tab {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    flex-basis: 120px;
+  }
+
+  .serial-session--compact .serial-option-inline {
+    display: none;
+  }
+}
+
+.serial-tool {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', Roboto,
+    sans-serif;
+  overflow: hidden;
+}
+
+/* ─── Main row: monitor + multi-send ─────────────────── */
+
+.serial-main-row {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+}
+
+/* ─── Monitor Section (fills remaining space) ────────── */
+
+.serial-monitor-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  margin: 8px 4px 4px 8px;
+  background: var(--color-crust);
+  border-radius: 14px;
+  border: 1px solid var(--color-surface0);
+  overflow: hidden;
+}
+
+.serial-monitor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.serial-monitor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--color-mantle);
+  border-bottom: 1px solid var(--color-surface0);
+  flex-shrink: 0;
+}
+
+.serial-monitor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-subtext1);
+}
+
+.status-led {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-overlay0);
+  flex-shrink: 0;
+}
+
+.status-led.active {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+}
+
+.serial-monitor-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.serial-action-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 12px;
+  border-radius: 16px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: inherit;
+}
+
+.serial-action-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.serial-action-btn.active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.serial-action-btn.warning {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+.serial-log-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--color-mantle);
+  border-bottom: 1px solid var(--color-surface0);
+  flex-shrink: 0;
+}
+
+.serial-log-search,
+.serial-log-select {
+  height: 26px;
+  box-sizing: border-box;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+}
+
+.serial-log-search {
+  flex: 1 1 190px;
+  min-width: 130px;
+  padding: 3px 8px;
+}
+
+.serial-log-select {
+  flex: 0 1 auto;
+  padding: 3px 6px;
+}
+
+.serial-log-search:focus,
+.serial-log-select:focus {
+  border-color: var(--color-accent);
+}
+
+.serial-log-count {
+  color: var(--color-overlay1);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.serial-log-export {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.serial-log-export .serial-action-btn {
+  border-color: var(--color-surface0);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+/* ─── Display Area ───────────────────────────────────── */
+
+.serial-monitor-display {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  background: var(--color-crust);
+  min-height: 0;
+  outline: none;
+  cursor: text;
+  position: relative;
+  user-select: text;
+}
+
+.serial-monitor-display.interactive:focus {
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.serial-monitor-display.paused {
+  box-shadow: inset 0 0 0 1px var(--color-warning);
+}
+
+.serial-paused-banner {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: fit-content;
+  margin: 0 0 8px auto;
+  padding: 4px 9px;
+  border: 1px solid var(--color-warning);
+  border-radius: 12px;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.serial-monitor-display ::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.serial-monitor-display .serial-output::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.serial-output {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family:
+    'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, 'Microsoft YaHei', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* ─── ANSI color classes (theme-aware) ───────────────── */
+
+/* Foreground */
+.af0 {
+  color: var(--color-base);
+}
+.af1 {
+  color: var(--color-error);
+}
+.af2 {
+  color: var(--color-success);
+}
+.af3 {
+  color: var(--color-warning);
+}
+.af4 {
+  color: var(--color-accent);
+}
+.af5 {
+  color: #cba6f7;
+}
+.af6 {
+  color: #94e2d5;
+}
+.af7 {
+  color: var(--color-text);
+}
+.af8 {
+  color: var(--color-overlay0);
+}
+.af9 {
+  color: #e78284;
+}
+.af10 {
+  color: #40a02b;
+}
+.af11 {
+  color: #df8e1d;
+}
+.af12 {
+  color: var(--color-accent);
+}
+.af13 {
+  color: #ca9ee6;
+}
+.af14 {
+  color: #81c8be;
+}
+.af15 {
+  color: var(--color-text);
+}
+
+/* Background */
+.ab0 {
+  background-color: var(--color-base);
+}
+.ab1 {
+  background-color: var(--color-error);
+}
+.ab2 {
+  background-color: var(--color-success);
+}
+.ab3 {
+  background-color: var(--color-warning);
+}
+.ab4 {
+  background-color: var(--color-accent);
+}
+.ab5 {
+  background-color: #cba6f7;
+}
+.ab6 {
+  background-color: #94e2d5;
+}
+.ab7 {
+  background-color: var(--color-text);
+}
+
+/* Attributes */
+.ab {
+  font-weight: bold;
+}
+.au {
+  text-decoration: underline;
+}
+
+/* ─── Keyword highlight classes ─────────────────────── */
+
+.serial-output .kw-red {
+  color: var(--color-error);
+  font-weight: bold;
+}
+.serial-output .kw-yellow {
+  color: var(--color-warning);
+  font-weight: bold;
+}
+.serial-output .kw-green {
+  color: var(--color-success);
+}
+.serial-output .kw-cyan {
+  color: #81c8be;
+}
+.serial-output .kw-blue {
+  color: var(--color-accent);
+}
+.serial-output .kw-magenta {
+  color: #ca9ee6;
+}
+
+/* Light theme: use darker, more saturated colors for readability */
+[data-theme='light'] .serial-output .af1,
+[data-theme='light'] .serial-output .af9 {
+  color: #d20f39;
+}
+[data-theme='light'] .serial-output .af2,
+[data-theme='light'] .serial-output .af10 {
+  color: #1a7f1a;
+}
+[data-theme='light'] .serial-output .af3,
+[data-theme='light'] .serial-output .af11 {
+  color: #b8600a;
+}
+[data-theme='light'] .serial-output .af4,
+[data-theme='light'] .serial-output .af12 {
+  color: #1e5fa8;
+}
+[data-theme='light'] .serial-output .af5,
+[data-theme='light'] .serial-output .af13 {
+  color: #7c3aed;
+}
+[data-theme='light'] .serial-output .af6,
+[data-theme='light'] .serial-output .af14 {
+  color: #0d7a6e;
+}
+
+[data-theme='light'] .serial-output .kw-red {
+  color: #d20f39;
+  font-weight: bold;
+}
+[data-theme='light'] .serial-output .kw-yellow {
+  color: #b8600a;
+  font-weight: bold;
+}
+[data-theme='light'] .serial-output .kw-green {
+  color: #1a7f1a;
+}
+[data-theme='light'] .serial-output .kw-cyan {
+  color: #0d7a6e;
+}
+[data-theme='light'] .serial-output .kw-blue {
+  color: #1e5fa8;
+}
+[data-theme='light'] .serial-output .kw-magenta {
+  color: #7c3aed;
+}
+
+.serial-placeholder {
+  color: var(--color-overlay0);
+  font-style: italic;
+  font-size: 13px;
+  padding: 30px;
+  text-align: center;
+}
+
+.serial-error {
+  background: var(--color-error-subtle);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ─── Context menu ───────────────────────────────────── */
+
+.serial-context-menu {
+  position: absolute;
+  z-index: 100;
+  background: var(--color-mantle);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 120px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.context-menu-item:hover:not(:disabled) {
+  background: var(--color-surface0);
+}
+
+.context-menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.context-menu-sep {
+  height: 1px;
+  background: var(--color-surface0);
+  margin: 3px 8px;
+}
+
+/* ─── Inline toolbar options ─────────────────────────── */
+
+.serial-option-inline {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.serial-option-inline input[type='checkbox'] {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+/* ─── Settings Section (Bottom bar, 3 rows) ──────────── */
+
+.serial-settings-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 8px 8px 8px;
+  background: var(--color-mantle);
+  border-radius: 14px;
+  border: 1px solid var(--color-surface0);
+  padding: 10px 14px;
+  position: relative;
+}
+
+.serial-settings-section.collapsed {
+  padding: 6px 8px;
+  gap: 0;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.settings-collapse-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background-color: var(--color-surface0);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-subtext1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.settings-collapse-btn:hover {
+  background-color: var(--color-surface1);
+  color: var(--color-text);
+}
+
+.serial-settings-section.collapsed .settings-collapse-btn {
+  position: static;
+}
+
+/* ─── Config area (stacked vertically in sidebar) ────── */
+
+.serial-settings {
+  display: flex;
+  flex-direction: column;
+}
+
+.serial-config-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.config-label {
+  font-size: 10px;
+  color: var(--color-accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.config-select {
+  padding: 5px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  min-width: 80px;
+}
+
+.config-select:hover {
+  border-color: var(--color-accent);
+}
+
+.config-select:focus {
+  border-color: var(--color-accent);
+}
+
+.config-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.config-port-row {
+  display: flex;
+  gap: 4px;
+}
+
+.config-port-row .config-select {
+  flex: 1;
+  min-width: 310px;
+  width: 310px;
+}
+
+.config-btn-icon {
+  padding: 5px 10px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.config-btn-icon:hover:not(:disabled) {
+  background: var(--color-surface1);
+}
+
+.config-btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-btn-icon.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.config-connect {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ─── Receive framing, encoding and configuration profiles ── */
+
+.serial-feature-settings {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.serial-receive-config,
+.serial-profile-config {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 0;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  background: var(--color-crust);
+  border: 1px solid var(--color-surface0);
+  border-radius: 7px;
+}
+
+.serial-receive-config {
+  flex: 1.4 1 620px;
+}
+
+.serial-profile-config {
+  flex: 1 1 500px;
+}
+
+.feature-settings-title {
+  align-self: center;
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-right: 2px;
+}
+
+.feature-field {
+  display: flex;
+  flex: 1 1 105px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 82px;
+  color: var(--color-overlay1);
+  font-size: 9px;
+}
+
+.feature-field--number {
+  flex: 0.7 1 82px;
+}
+
+.feature-field--delimiter {
+  flex: 1.4 1 150px;
+}
+
+.feature-field select,
+.feature-field > input,
+.profile-name-input,
+.profile-select {
+  height: 25px;
+  box-sizing: border-box;
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+}
+
+.feature-field select,
+.feature-field > input {
+  width: 100%;
+}
+
+.feature-field select:focus,
+.feature-field > input:focus,
+.profile-name-input:focus,
+.profile-select:focus {
+  border-color: var(--color-accent);
+}
+
+.feature-field > input.invalid {
+  border-color: var(--color-error);
+}
+
+.feature-input-with-unit {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.feature-input-with-unit:focus-within {
+  border-color: var(--color-accent);
+}
+
+.feature-input-with-unit input {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 5px;
+  background: transparent;
+  border: 0;
+  color: var(--color-text);
+  font-family: monospace;
+  font-size: 11px;
+  outline: none;
+}
+
+.feature-input-with-unit > span {
+  padding-right: 5px;
+  color: var(--color-overlay0);
+  font-size: 9px;
+}
+
+.feature-checkbox {
+  align-self: center;
+  white-space: nowrap;
+  padding: 4px 2px;
+}
+
+.profile-name-input {
+  flex: 1 1 130px;
+  min-width: 100px;
+}
+
+.profile-select {
+  flex: 1 1 150px;
+  min-width: 120px;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.profile-action-btn {
+  height: 25px;
+  padding: 3px 9px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.profile-action-btn:hover:not(:disabled) {
+  background: var(--color-surface1);
+}
+
+.profile-action-btn.primary {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.profile-action-btn.danger {
+  color: var(--color-error);
+}
+
+.profile-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Display and send-processing options ─────────────── */
+
+.serial-display-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.serial-option-toolbar {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.serial-option-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(88px, 1fr));
+  flex: 1 1 520px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.serial-option-buttons .serial-toggle-btn {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.checksum-inline-preview {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  flex: 1 1 340px;
+  min-width: 180px;
+  min-height: 28px;
+  padding: 3px 8px;
+  box-sizing: border-box;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.checksum-inline-preview .checksum-data-bytes {
+  white-space: nowrap;
+}
+
+.checksum-inline-preview::-webkit-scrollbar {
+  height: 3px;
+}
+
+.checksum-inline-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.checksum-inline-preview::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 2px;
+}
+
+/* ─── Checksum config ────────────────────────────────── */
+
+.checksum-data-pre {
+  color: var(--color-overlay1);
+}
+
+.checksum-data-range {
+  color: var(--color-warning);
+  font-weight: 600;
+  background: var(--color-warning-subtle);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.checksum-config {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 6px 8px;
+  background: var(--color-crust);
+  border: 1px solid var(--color-surface0);
+  border-radius: 7px;
+}
+
+.checksum-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checksum-enable {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checksum-enable input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.checksum-preview {
+  font-size: 11px;
+  color: var(--color-success);
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+}
+
+.checksum-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1 1 540px;
+  min-width: 0;
+}
+
+.checksum-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 100px;
+  min-width: 0;
+}
+
+.checksum-field--wide {
+  flex: 3 1 240px;
+}
+
+.checksum-field--type {
+  flex: 1.6 1 160px;
+}
+
+.checksum-field--offset {
+  flex: 0.7 1 72px;
+}
+
+.checksum-field--select {
+  flex: 1 1 100px;
+}
+
+.checksum-field-label {
+  font-size: 9px;
+  color: var(--color-overlay1);
+  white-space: nowrap;
+}
+
+.checksum-select {
+  width: 100%;
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.checksum-select:focus {
+  border-color: var(--color-accent);
+}
+
+.checksum-offset {
+  width: 100%;
+  padding: 3px 4px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: monospace;
+  outline: none;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.checksum-offset:focus {
+  border-color: var(--color-accent);
+}
+
+.checksum-bottom-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  flex: 0 1 auto;
+  padding-bottom: 1px;
+}
+
+@media (max-width: 720px) {
+  .serial-option-buttons {
+    grid-template-columns: repeat(2, minmax(88px, 1fr));
+  }
+
+  .checksum-bottom-row {
+    flex: 1 1 100%;
+  }
+}
+
+.checksum-preview-only {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checksum-preview-only input[type='checkbox'] {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.checksum-manual-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checksum-manual-toggle input[type='checkbox'] {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: var(--color-warning);
+}
+
+.checksum-hex-input {
+  width: 100%;
+  padding: 3px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.checksum-hex-input:focus {
+  border-color: var(--color-warning);
+}
+
+.checksum-note {
+  font-size: 10px;
+  color: var(--color-overlay0);
+}
+
+.checksum-data-preview {
+  background: var(--color-crust);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.checksum-data-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.checksum-data-label {
+  font-size: 10px;
+  color: var(--color-overlay0);
+  min-width: 28px;
+  font-weight: 600;
+}
+
+.checksum-data-bytes {
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.checksum-data-result {
+  border-top: 1px dashed var(--color-surface0);
+  padding-top: 3px;
+}
+
+.checksum-data-cs {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.checksum-data-bytesize {
+  font-size: 10px;
+  color: var(--color-overlay0);
+}
+
+.checksum-data-offset {
+  font-size: 10px;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+.serial-toggle-btn {
+  flex: 1;
+  padding: 5px 0;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-overlay1);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  font-family: inherit;
+}
+
+.serial-toggle-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.serial-toggle-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.serial-toggle-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.config-btn-open {
+  padding: 6px 20px;
+  background: var(--color-success);
+  color: var(--color-base);
+  border: 1px solid var(--color-success);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.config-btn-open:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.config-btn-open:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.config-btn-close {
+  padding: 6px 20px;
+  background: var(--color-error);
+  color: var(--color-base);
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.config-btn-close:hover {
+  opacity: 0.85;
+}
+
+/* ─── Send Panel ─────────────────────────────────────── */
+
+.serial-send-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.send-panel-header {
+  display: none;
+}
+
+.send-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.send-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.preset-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.preset-btn {
+  padding: 3px 10px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  font-family: inherit;
+}
+
+.preset-btn:hover:not(:disabled) {
+  background: var(--color-surface1);
+  border-color: var(--color-accent);
+}
+
+.preset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preset-add-btn {
+  background: transparent;
+  border-style: dashed;
+  color: var(--color-overlay1);
+  font-size: 13px;
+  padding: 3px 7px;
+}
+
+.preset-add-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.preset-delete-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: var(--color-error);
+  color: var(--color-base);
+  border: none;
+  border-radius: 50%;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.preset-manage-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-overlay1);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.preset-manage-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+/* ─── Preset add form ────────────────────────────────── */
+
+.preset-add-form {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.preset-add-input {
+  width: 70px;
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  outline: none;
+  font-family: inherit;
+}
+
+.preset-add-input:focus {
+  border-color: var(--color-accent);
+}
+
+.preset-add-confirm {
+  padding: 2px 6px;
+  background: var(--color-success);
+  color: var(--color-base);
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.preset-add-cancel {
+  padding: 2px 6px;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 3px;
+  color: var(--color-overlay1);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* ─── Manage mode actions ────────────────────────────── */
+
+.preset-manage-actions {
+  display: flex;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.preset-manage-reset {
+  padding: 2px 10px;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-overlay1);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.preset-manage-reset:hover {
+  background: var(--color-surface0);
+  color: var(--color-error);
+}
+
+.send-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.send-text-input {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, 'Microsoft YaHei', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.send-text-input:focus {
+  border-color: var(--color-accent);
+}
+
+.send-text-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.send-btn {
+  padding: 8px 14px;
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.send-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.send-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.send-options-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.send-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.send-option input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.send-repeat-btn {
+  padding: 3px 12px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.send-repeat-btn:hover:not(:disabled) {
+  background: var(--color-surface1);
+}
+
+.send-repeat-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.send-repeat-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.send-timed-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.send-timed-label {
+  font-size: 11px;
+  color: var(--color-overlay1);
+}
+
+.timed-ms-input {
+  width: 52px;
+  padding: 3px 4px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: monospace;
+  outline: none;
+  text-align: center;
+}
+
+.timed-ms-input:focus {
+  border-color: var(--color-accent);
+}
+
+.timed-ms-input:disabled {
+  opacity: 0.5;
+}
+
+.timed-unit {
+  font-size: 11px;
+  color: var(--color-overlay1);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────── */
+
+.serial-monitor-display::-webkit-scrollbar {
+  width: 5px;
+}
+
+.serial-monitor-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.serial-monitor-display::-webkit-scrollbar-thumb {
+  background: var(--color-surface1);
+  border-radius: 4px;
+}
+
+.serial-monitor-display::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface2);
+}
+
+.serial-settings-section::-webkit-scrollbar {
+  width: 4px;
+}
+
+.serial-settings-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.serial-settings-section::-webkit-scrollbar-thumb {
+  background: var(--color-surface0);
+  border-radius: 4px;
+}
+
+/* ─── Multi-Send Panel (Right sidebar) ───────────────── */
+
+.multi-send-panel {
+  width: 225px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 8px 8px 4px 4px;
+  background: var(--color-mantle);
+  border-radius: 14px;
+  border: 1px solid var(--color-surface0);
+  padding: 10px;
+  gap: 5px;
+  overflow-y: auto;
+}
+
+.multi-send-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.multi-send-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.multi-send-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.multi-send-count {
+  font-size: 11px;
+  color: var(--color-overlay1);
+}
+
+/* ─── Collapse button ─────────────────────────────────── */
+
+.multi-send-collapse-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background-color: var(--color-surface0);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-subtext1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.multi-send-collapse-btn:hover {
+  background-color: var(--color-surface1);
+  color: var(--color-text);
+}
+
+/* ─── Collapsed state ─────────────────────────────────── */
+
+.multi-send-panel.collapsed {
+  width: 36px;
+  padding: 10px 6px;
+  gap: 8px;
+  align-items: center;
+}
+
+.multi-send-panel.collapsed .multi-send-collapse-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.multi-send-collapsed-title {
+  writing-mode: vertical-rl;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-accent);
+  white-space: nowrap;
+  letter-spacing: 2px;
+}
+
+/* ─── Item list ──────────────────────────────────────── */
+
+.multi-send-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.multi-send-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.multi-send-row.active {
+  background: var(--color-accent-subtle);
+}
+
+.multi-send-index {
+  width: 22px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--color-overlay1);
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.multi-send-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, 'Microsoft YaHei', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.multi-send-input:focus {
+  border-color: var(--color-accent);
+}
+
+.multi-send-input:disabled {
+  opacity: 0.4;
+}
+
+.multi-send-row-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.multi-send-row-btn:hover:not(:disabled) {
+  background: var(--color-surface0);
+}
+
+.multi-send-row-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.multi-send-remove:hover:not(:disabled) {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+/* ─── Add button ─────────────────────────────────────── */
+
+.multi-send-add-btn {
+  width: 100%;
+  padding: 5px 0;
+  background: transparent;
+  border: 1px dashed var(--color-surface0);
+  border-radius: 6px;
+  color: var(--color-overlay1);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.multi-send-add-btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.multi-send-add-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ─── Controls ───────────────────────────────────────── */
+
+.multi-send-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.multi-send-option {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.multi-send-option input[type='checkbox'] {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.multi-send-delay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delay-label {
+  font-size: 10px;
+  color: var(--color-overlay1);
+}
+
+.delay-input {
+  width: 50px;
+  padding: 3px 4px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: monospace;
+  outline: none;
+  text-align: center;
+}
+
+.delay-input:focus {
+  border-color: var(--color-accent);
+}
+
+.delay-unit {
+  font-size: 10px;
+  color: var(--color-overlay1);
+}
+
+/* ─── Action buttons ─────────────────────────────────── */
+
+.multi-send-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.multi-send-action-btn {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+  font-family: inherit;
+  border: 1px solid transparent;
+}
+
+.multi-send-action-btn.send-all {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+.multi-send-action-btn.cycle {
+  background: var(--color-surface0);
+  color: var(--color-text);
+  border-color: var(--color-surface0);
+}
+
+.multi-send-action-btn.cycle.active {
+  background: var(--color-error);
+  color: var(--color-base);
+  border-color: var(--color-error);
+}
+
+.multi-send-action-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.multi-send-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── File actions ───────────────────────────────────── */
+
+.multi-send-file-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.multi-send-file-btn {
+  flex: 1;
+  padding: 4px 0;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-overlay1);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: inherit;
+}
+
+.multi-send-file-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+/* ─── Multi-send scrollbar ───────────────────────────── */
+
+.multi-send-panel::-webkit-scrollbar,
+.multi-send-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.multi-send-panel::-webkit-scrollbar-track,
+.multi-send-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.multi-send-panel::-webkit-scrollbar-thumb,
+.multi-send-list::-webkit-scrollbar-thumb {
+  background: var(--color-surface0);
+  border-radius: 4px;
+}

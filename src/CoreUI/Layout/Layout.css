@@ -1,0 +1,29 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--color-base);
+}
+
+.layout-main {
+  flex: 1;
+  overflow: auto;
+  background-color: var(--color-base);
+  position: relative;
+}
+
+.tool-panels-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.tool-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+}

@@ -1,0 +1,135 @@
+/* ─── 侧边栏 CH347 设备连接按钮 ───────────────────────
+ * 与 .voltage-toggle-btn 视觉对齐（同处 sidebar-control-area），用颜色表达状态：
+ * 已连接=绿色高亮（success），未连接=中性 surface。点击切换连接。
+ */
+
+.device-connect-control {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+}
+
+.device-connect-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  /* 未连接默认态：中性 surface */
+  background-color: var(--color-surface0);
+  color: var(--color-subtext1);
+}
+
+.device-connect-control .device-connect-btn {
+  width: auto;
+  min-width: 0;
+  flex: 1;
+}
+
+.device-refresh-btn {
+  width: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-surface1);
+  border-radius: 8px;
+  background: var(--color-surface0);
+  color: var(--color-subtext1);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.device-refresh-btn:hover:not(:disabled) {
+  background: var(--color-surface1);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.device-refresh-btn:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.device-refresh-icon--spinning {
+  animation: device-refresh-spin 0.8s linear infinite;
+}
+
+@keyframes device-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 已连接态：绿色高亮 + 轻微发光，传达"设备在线" */
+.device-connect-btn--online {
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-green, #40a02b) 100%);
+  color: var(--color-base);
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px var(--color-success-subtle, rgba(64, 160, 43, 0.25)),
+    0 2px 8px var(--color-success-subtle, rgba(64, 160, 43, 0.25));
+}
+
+.device-connect-btn:hover:not(.device-connect-btn--disabled) {
+  background-color: var(--color-surface1);
+}
+
+.device-connect-btn--online:hover:not(.device-connect-btn--disabled) {
+  filter: brightness(1.06);
+}
+
+.device-connect-btn-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.device-connect-btn-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+}
+
+/* 无设备时置灰且不可点击 */
+.device-connect-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 折叠侧边栏：只显示图标，隐藏设备名 */
+.sidebar--collapsed .device-connect-btn {
+  padding: 10px;
+}
+
+.sidebar--collapsed .device-connect-btn-label {
+  display: none;
+}
+
+.sidebar--collapsed .device-connect-control--empty .device-connect-btn {
+  display: none;
+}
+
+.sidebar--collapsed .device-connect-control--empty .device-refresh-btn {
+  width: 100%;
+  flex-basis: 100%;
+  min-height: 38px;
+}

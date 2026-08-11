@@ -1,0 +1,192 @@
+/**
+ * AI 聊天组件样式。类名前缀 aic- (ai-chat)。
+ */
+
+.aic-root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-mantle, var(--color-surface0));
+  border: 1px solid var(--color-surface1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.aic-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+}
+.aic-header svg { color: var(--color-accent, #58a6ff); }
+.aic-sub { font-size: 11px; font-weight: 400; color: var(--color-subtext0); }
+
+.aic-nokey {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--color-warning, #d29922);
+  background: var(--color-warning-subtle, rgba(210,153,34,0.12));
+  border-radius: 4px;
+}
+.aic-nokey svg { flex-shrink: 0; }
+
+.aic-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aic-empty {
+  color: var(--color-subtext0);
+  font-size: 12px;
+  line-height: 1.8;
+  text-align: center;
+  margin: auto;
+}
+.aic-empty em {
+  display: inline-block;
+  color: var(--color-accent, #58a6ff);
+  font-style: normal;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+}
+
+.aic-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+}
+.aic-user { align-self: flex-end; align-items: flex-end; }
+.aic-assistant { align-self: flex-start; align-items: flex-start; }
+
+.aic-msg-role {
+  font-size: 10px;
+  color: var(--color-subtext0);
+  padding: 0 4px;
+}
+
+.aic-msg-body {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+.aic-user .aic-msg-body {
+  background: var(--color-accent, #1f6feb);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px 10px 2px 10px;
+  max-width: 90%;
+}
+.aic-assistant .aic-msg-body {
+  max-width: 100%;
+}
+
+.aic-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aic-code-block {
+  margin: 6px 0;
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-base);
+}
+.aic-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--color-surface0);
+  border-bottom: 1px solid var(--color-surface1);
+}
+.aic-code-lang {
+  font-size: 10px;
+  color: var(--color-subtext0);
+  text-transform: uppercase;
+  font-family: 'Consolas', monospace;
+}
+.aic-apply-btn {
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-accent, #58a6ff);
+  color: var(--color-accent, #58a6ff);
+  background: transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.aic-apply-btn:hover { background: var(--color-accent-subtle, rgba(31,111,235,0.15)); }
+
+.aic-code-block pre {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-text);
+  overflow-x: auto;
+}
+.aic-code-block code { font-family: inherit; }
+
+.aic-cursor {
+  display: inline-block;
+  color: var(--color-accent, #58a6ff);
+  animation: aic-blink 1s steps(2) infinite;
+}
+@keyframes aic-blink { 50% { opacity: 0; } }
+
+.aic-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+}
+.aic-input {
+  flex: 1;
+  resize: none;
+  padding: 8px 10px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.aic-input:focus { outline: none; border-color: var(--color-accent, var(--color-primary)); }
+
+.aic-btn {
+  width: 38px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.1s;
+}
+.aic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.aic-send { background: var(--color-accent, #1f6feb); }
+.aic-send:hover:not(:disabled) { filter: brightness(1.1); }
+.aic-stop { background: var(--color-error, #f85149); }
+.aic-stop:hover { filter: brightness(1.1); }

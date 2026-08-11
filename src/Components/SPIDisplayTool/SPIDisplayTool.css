@@ -1,0 +1,1821 @@
+/**
+ * SPI 点屏工具 —— 三栏式布局样式表
+ *
+ * 布局规格参考用户提供的设计说明书：
+ *   - 总宽度 98vw / max 1400px / 高度 96vh / max 820px
+ *   - 左右栏各 30%、中间 40%（基于 grid template）
+ *   - 主题色采用项目 CSS 变量（--color-surface, --color-text 等），
+ *     卡片细节（边框、圆角、激活态）参考 GitHub Dark 风格
+ *
+ * 类名前缀：sdt- (spi-display-tool)
+ */
+
+/* ─── 根容器 ─────────────────────────────────────── */
+
+/* SPI 点屏工具被嵌套在 PageContainer 内（外层有 padding: 24px + page-header 约 60-80px）。
+   早期用 height: 96vh 会让 96vh + 外层 padding + 标题栏 > 100vh，导致整个工具顶部被裁切，
+   看起来"边界框上面缺一块"。现在改成：
+     - height: 100% 跟随 PageContainer 给定的可用高度
+     - max-height/min-height 都去掉，由外层决定能展示多高
+     - 顶部加点 margin 让外层 page-header 下面有视觉间隙
+   width 也从 98% 改成 100% —— 居中对齐由外层 PageContainer 的 max-width:1400px 处理。 */
+.spi-display-tool {
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  min-height: 600px;
+  margin: 0 auto;
+  display: grid;
+  /* 左侧命令区保持可用宽度，中间显示内容扩展到 38%；右侧预览与日志适度收窄。 */
+  grid-template-columns: minmax(0, 34fr) minmax(0, 38fr) minmax(0, 28fr);
+  gap: 12px;
+  padding: 8px;
+  box-sizing: border-box;
+  font-family:
+    'Segoe UI',
+    'Microsoft YaHei',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: var(--color-text);
+  background: var(--color-base);
+  border-radius: 16px;
+  /* 不再 overflow: hidden —— 让 .sdt-panel 自己处理边框/阴影，避免外层裁掉顶部边框 */
+}
+
+/* ─── 列面板 ─────────────────────────────────────── */
+
+.sdt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--color-mantle, var(--color-surface0));
+  border: 1px solid var(--color-surface1);
+  border-radius: 8px;
+  /* overflow: hidden 会让顶部边框的圆角"看起来被裁切"，改成 auto —— 内部超出时滚动，
+     边框始终完整可见。配合 min-width: 0 让 grid 子项不强制撑开父容器。 */
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ─── 通用卡片 ───────────────────────────────────── */
+
+.sdt-card {
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdt-card.flex-grow {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── 区块标题 ───────────────────────────────────── */
+
+.sdt-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-surface1);
+  margin-bottom: 4px;
+}
+
+.sdt-section-title svg {
+  color: var(--color-accent, var(--color-primary));
+}
+
+.sdt-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-subtext1);
+}
+
+.sdt-card-title-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* ─── 表单行（label + 控件） ────────────────────── */
+
+.sdt-form-row {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.sdt-form-row > label {
+  color: var(--color-subtext1);
+  font-size: 11px;
+}
+
+.sdt-input,
+.sdt-select {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.sdt-input:focus,
+.sdt-select:focus {
+  outline: none;
+  border-color: var(--color-accent, var(--color-primary));
+  box-shadow: 0 0 0 2px var(--color-accent-subtle, rgba(31, 111, 235, 0.2));
+}
+
+.sdt-input.mono {
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.sdt-input-with-suffix {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sdt-input-with-suffix .sdt-input {
+  flex: 1;
+}
+
+.sdt-input-suffix {
+  font-size: 11px;
+  color: var(--color-subtext0);
+  white-space: nowrap;
+}
+
+.sdt-resolution-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdt-resolution-row .sdt-input {
+  width: 60px;
+}
+
+/* ─── 按钮 ───────────────────────────────────────── */
+
+.sdt-btn {
+  padding: 6px 12px;
+  background: var(--color-surface1);
+  color: var(--color-text);
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.1s;
+}
+
+.sdt-btn:hover:not(:disabled) {
+  background: var(--color-surface2);
+}
+
+.sdt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sdt-btn.primary {
+  background: var(--color-accent, #1f6feb);
+  color: #fff;
+  border-color: transparent;
+}
+
+.sdt-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.sdt-btn.success {
+  background: var(--color-success, #3fb950);
+  color: #fff;
+  border-color: transparent;
+}
+
+.sdt-btn.success:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.sdt-btn.danger {
+  background: var(--color-error, #f85149);
+  color: #fff;
+  border-color: transparent;
+}
+
+.sdt-btn.danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.sdt-btn.small {
+  padding: 3px 8px;
+  font-size: 11px;
+}
+
+.sdt-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── 命令表 ─────────────────────────────────────── */
+
+.sdt-cmd-table-wrap {
+  flex: 1;
+  min-height: 0;
+  /* 极窄面板时横向滚动，不能再以压缩“类型”列为代价硬塞进容器。 */
+  overflow: auto;
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  background: var(--color-base);
+}
+
+.sdt-cmd-table {
+  width: 100%;
+  min-width: 380px;
+  border-collapse: collapse;
+  /* 固定列布局：长 Hex 字符串只占数据列，不参与其它列的宽度计算。 */
+  table-layout: fixed;
+  font-size: 11px;
+}
+
+.sdt-cmd-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface0);
+  color: var(--color-subtext1);
+  font-weight: 500;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-surface1);
+  z-index: 1;
+  /* 防止列标题（如"数据 (Hex/µs)"）换行成两行 */
+  white-space: nowrap;
+}
+
+/* 表头里的"Clear"按钮 —— 比单行删除（.del-btn）更显眼，作为危险操作的视觉提示 */
+.sdt-cmd-table thead th .del-btn {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.sdt-cmd-table thead th .del-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sdt-cmd-table tbody td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-surface0);
+  vertical-align: middle;
+}
+
+.sdt-cmd-table tbody tr:hover {
+  background: var(--color-surface0);
+}
+
+.sdt-cmd-table .sdt-input,
+.sdt-cmd-table .sdt-select {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 22px 3px 6px;
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid transparent;
+  /* 给下拉箭头留空间，否则文字被箭头挡住 */
+  appearance: auto;
+}
+
+/* 类型列固定为 92px，扣除单元格内边距及原生下拉箭头后仍能完整显示中文类型。 */
+.sdt-cmd-table .col-type .sdt-select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sdt-cmd-table .sdt-input:focus,
+.sdt-cmd-table .sdt-select:focus {
+  background: var(--color-base);
+  border-color: var(--color-surface2);
+}
+
+.sdt-cmd-table .row-num {
+  color: var(--color-subtext0);
+  width: 34px;
+  text-align: center;
+  font-size: 10px;
+}
+
+/* colgroup 与单元格使用同一组类，固定三列；数据列自动占满剩余空间。 */
+.sdt-cmd-table .col-type {
+  width: 92px;
+}
+.sdt-cmd-table .col-data {
+  width: auto;
+}
+.sdt-cmd-table .col-actions {
+  width: 56px;
+  text-align: center;
+}
+
+.sdt-cmd-table .del-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-subtext0);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.sdt-cmd-table .del-btn:hover {
+  background: var(--color-error-subtle, rgba(248, 81, 73, 0.15));
+  color: var(--color-error, #f85149);
+}
+
+.sdt-cmd-empty {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--color-subtext0);
+  font-size: 11px;
+}
+
+/* ─── 中间面板 Tab ────────────────────────────── */
+
+.sdt-tab-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-surface0);
+  border-radius: 6px;
+}
+
+.sdt-tab-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 6px;
+  background: transparent;
+  color: var(--color-subtext1);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.sdt-tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface1);
+}
+
+.sdt-tab-btn.active {
+  background: var(--color-accent, #1f6feb);
+  color: #fff;
+}
+
+/* ─── Tab 内容容器 ───────────────────────────────── */
+
+.sdt-tab-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdt-toolbar-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+
+.sdt-toolbar-row label {
+  color: var(--color-subtext1);
+}
+
+.sdt-toolbar-row .sdt-spacer {
+  flex: 1;
+}
+
+/* 文本输入区 */
+.sdt-textarea {
+  flex: 1;
+  min-height: 80px;
+  padding: 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: 'Consolas', 'Microsoft YaHei', monospace;
+  font-size: 13px;
+  resize: none;
+}
+
+.sdt-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent, var(--color-primary));
+}
+
+/* ─── 图片拖拽区 ─────────────────────────────────── */
+
+.sdt-image-drop {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-surface2);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--color-surface0);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  text-align: center;
+}
+
+.sdt-image-drop:hover,
+.sdt-image-drop.dragging {
+  border-color: var(--color-accent, var(--color-primary));
+  background: var(--color-accent-subtle, rgba(31, 111, 235, 0.1));
+}
+
+.sdt-image-drop .icon {
+  font-size: 36px;
+  color: var(--color-subtext0);
+  margin-bottom: 8px;
+}
+
+.sdt-image-drop .hint {
+  font-size: 13px;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.sdt-image-drop .sub-hint {
+  font-size: 11px;
+  color: var(--color-subtext0);
+}
+
+.sdt-image-drop img.preview {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  margin-bottom: 8px;
+  background: #000;
+  border: 1px solid var(--color-surface1);
+}
+
+/* ─── 视频区 ─────────────────────────────────────── */
+
+.sdt-video-pick {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--color-surface2);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--color-surface0);
+  text-align: center;
+}
+
+.sdt-video-pick .icon {
+  font-size: 32px;
+  color: var(--color-subtext0);
+  margin-bottom: 6px;
+}
+
+.sdt-video-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--color-subtext0);
+}
+
+.sdt-progress-bar {
+  height: 6px;
+  background: var(--color-surface1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sdt-progress-fill {
+  height: 100%;
+  background: var(--color-accent, #1f6feb);
+  transition: width 0.2s;
+}
+
+.sdt-progress-info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.sdt-range {
+  flex: 1;
+  min-width: 80px;
+  accent-color: var(--color-accent, #1f6feb);
+}
+
+/* ─── 绘制画布 ───────────────────────────────────── */
+
+.sdt-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sdt-canvas-wrap canvas {
+  /* 显示尺寸由 DrawTab 的 ResizeObserver 通过 style.width/height 设置，
+     这里只控制光标和像素硬边渲染。max-width/height 兜底防止溢出 */
+  max-width: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+  image-rendering: pixelated;
+  /* 黑色边框让画布边界更清晰 —— 不管分辨率多大都能看清绘制范围 */
+  border: 1px solid var(--color-surface2);
+  box-sizing: border-box;
+}
+
+.sdt-canvas-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-subtext0);
+  padding: 4px 8px;
+  background: var(--color-surface0);
+  border-top: 1px solid var(--color-surface1);
+}
+
+/* ─── 屏幕测试图案 ───────────────────────────────── */
+
+.sdt-test-tab {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdt-test-pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 5px;
+}
+
+.sdt-test-pattern-btn {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid var(--color-surface1);
+  border-radius: 5px;
+  background: var(--color-base);
+  color: var(--color-subtext1);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.sdt-test-pattern-btn:hover:not(:disabled) {
+  border-color: var(--color-surface2);
+  color: var(--color-text);
+  background: var(--color-surface0);
+}
+
+.sdt-test-pattern-btn.active {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface0));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 32%, transparent);
+}
+
+.sdt-test-pattern-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sdt-test-swatch {
+  width: 25px;
+  height: 20px;
+  flex: 0 0 25px;
+  border: 1px solid color-mix(in srgb, var(--color-overlay0) 55%, transparent);
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.sdt-test-scan-settings {
+  display: grid;
+  grid-template-columns: auto minmax(110px, 1fr) minmax(140px, 1.2fr);
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-surface1);
+  border-radius: 5px;
+  background: var(--color-surface0);
+}
+
+.sdt-test-scan-settings label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-subtext1);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.sdt-test-scan-settings .sdt-range {
+  min-width: 45px;
+}
+
+.sdt-test-value {
+  width: 42px;
+  flex: 0 0 42px;
+  color: var(--color-text);
+  font-family: 'Consolas', monospace;
+  text-align: right;
+}
+
+.sdt-test-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sdt-test-actions .sdt-spacer {
+  flex: 1;
+}
+
+.sdt-test-selection {
+  overflow: hidden;
+  color: var(--color-subtext1);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sdt-test-preview {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-surface1);
+  border-radius: 5px;
+  background:
+    linear-gradient(45deg, #171717 25%, transparent 25%) 0 0 / 12px 12px,
+    linear-gradient(45deg, transparent 75%, #171717 75%) 0 0 / 12px 12px,
+    linear-gradient(45deg, transparent 75%, #171717 75%) -6px 6px / 12px 12px,
+    linear-gradient(45deg, #171717 25%, #0d0d0d 25%) -6px 6px / 12px 12px;
+}
+
+.sdt-test-preview canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid var(--color-surface2);
+  background: #000;
+  image-rendering: pixelated;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.32);
+}
+
+.sdt-test-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--color-surface1);
+  color: var(--color-subtext0);
+  font-size: 10px;
+}
+
+@media (max-width: 1250px) {
+  .sdt-test-scan-settings {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── 颜色取色器 ─────────────────────────────────── */
+
+.sdt-color-input {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ─── LCD 预览 ───────────────────────────────────── */
+
+.sdt-lcd-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+}
+
+.sdt-lcd-screen {
+  position: relative;
+  background: #000;
+  border: 2px solid var(--color-surface2);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  min-height: 120px;
+}
+
+.sdt-lcd-screen canvas {
+  max-width: 100%;
+  max-height: 100%;
+  image-rendering: pixelated;
+}
+
+.sdt-lcd-watermark {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  font-family: 'Consolas', monospace;
+}
+
+.sdt-lcd-placeholder {
+  color: var(--color-subtext0);
+  text-align: center;
+  font-size: 11px;
+}
+
+.sdt-lcd-placeholder .icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 4px;
+  opacity: 0.5;
+}
+
+.sdt-lcd-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-subtext0);
+}
+
+.sdt-status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  background: var(--color-surface2);
+}
+
+.sdt-status-dot.connected {
+  background: var(--color-success, #3fb950);
+}
+.sdt-status-dot.error {
+  background: var(--color-error, #f85149);
+}
+
+/* ─── 日志控制台 ─────────────────────────────────── */
+
+.sdt-log-console {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sdt-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--color-surface0);
+  border-bottom: 1px solid var(--color-surface1);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 日志头部的按钮组（复制 / 清空） */
+.sdt-log-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.sdt-log-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  /* 允许鼠标拖选文本拷贝 —— 与 SerialTool/I2CTool 等日志区一致 */
+  user-select: text;
+  cursor: text;
+}
+
+.sdt-log-list .log-line {
+  display: flex;
+  gap: 8px;
+}
+
+/* 鼠标选中的日志文字高亮（覆盖默认的浅色选中态，深色主题下更醒目） */
+.sdt-log-list .log-line::selection,
+.sdt-log-list .log-time::selection,
+.sdt-log-list .log-msg::selection {
+  background: var(--color-accent, #1f6feb);
+  color: #fff;
+}
+.sdt-log-list::selection {
+  background: var(--color-accent, #1f6feb);
+  color: #fff;
+}
+.sdt-log-list .log-time {
+  color: var(--color-subtext0);
+  flex-shrink: 0;
+}
+.sdt-log-list .log-msg.info {
+  color: var(--color-info, #58a6ff);
+}
+.sdt-log-list .log-msg.success {
+  color: var(--color-success, #3fb950);
+}
+.sdt-log-list .log-msg.error {
+  color: var(--color-error, #f85149);
+}
+.sdt-log-list .log-msg.muted {
+  color: var(--color-subtext1);
+}
+
+/* ─── 顶部连接条 ─────────────────────────────────── */
+
+.sdt-top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sdt-top-bar .device-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-surface2);
+}
+
+.sdt-top-bar .device-led.online {
+  background: var(--color-success, #3fb950);
+}
+
+/* ─── 滚动条美化 ─────────────────────────────────── */
+
+.sdt-cmd-table-wrap::-webkit-scrollbar,
+.sdt-log-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sdt-cmd-table-wrap::-webkit-scrollbar-track,
+.sdt-log-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sdt-cmd-table-wrap::-webkit-scrollbar-thumb,
+.sdt-log-list::-webkit-scrollbar-thumb {
+  background: var(--color-surface2);
+  border-radius: 4px;
+}
+
+.sdt-cmd-table-wrap::-webkit-scrollbar-thumb:hover,
+.sdt-log-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-overlay0);
+}
+
+/* ─── 响应式：极窄屏 ─────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .spi-display-tool {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+}
+
+/* ─── 硬件参数：SPI 参数 grid（3×2 排列：Mode/Speed/CS、Bits/BitOrder/Init） ─── */
+
+.sdt-spi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sdt-spi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sdt-spi-field label {
+  font-size: 10px;
+  color: var(--color-subtext1);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sdt-spi-field .sdt-select,
+.sdt-spi-field .sdt-btn {
+  width: 100%;
+  font-size: 11px;
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+.sdt-spi-field .sdt-btn {
+  height: 26px;
+}
+
+/* ─── 屏幕预设栏 —— 在初始化命令表上方，UI 风格与 SPI Tool 的 .spi-preset-bar 对齐 ─── */
+
+.sdt-preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.sdt-preset-bar-label {
+  font-size: 10px;
+  color: var(--color-subtext1);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.sdt-preset-bar-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+}
+.sdt-preset-bar-select:focus {
+  border-color: var(--color-accent);
+}
+
+.sdt-preset-bar-btn {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--color-surface1);
+  color: var(--color-text);
+  border: 1px solid var(--color-surface2);
+  transition: background 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sdt-preset-bar-btn:hover:not(:disabled) {
+  background: var(--color-surface2);
+}
+.sdt-preset-bar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sdt-preset-bar-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text, #fff);
+  border-color: transparent;
+}
+.sdt-preset-bar-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.sdt-preset-bar-btn.danger {
+  background: transparent;
+  color: var(--color-error, #f85149);
+  border-color: var(--color-error, #f85149);
+}
+.sdt-preset-bar-btn.danger:hover {
+  background: var(--color-error-subtle, rgba(248, 81, 73, 0.12));
+}
+
+/* ─── 分辨率控件（放在 LCD 预览下方，与预览区形成视觉关联） ─── */
+
+.sdt-resolution-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-surface0);
+}
+
+.sdt-resolution-control > label {
+  font-size: 10px;
+  color: var(--color-subtext1);
+  font-weight: 500;
+}
+
+.sdt-resolution-control .sdt-select {
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+.sdt-resolution-control .sdt-resolution-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sdt-resolution-control .sdt-input {
+  width: 60px;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+
+/* ─── 命令表底部"添加"按钮 ─────────────────────── */
+
+.sdt-add-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 0;
+  margin-top: 4px;
+  background: transparent;
+  border: 1px dashed var(--color-surface1);
+  border-radius: 4px;
+  color: var(--color-subtext1);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
+}
+.sdt-add-row-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+  border-color: var(--color-surface2);
+}
+
+/* 全刷/局刷 切换（仅 RGB 屏 displayType==='rgb565' 时显示） */
+.sdt-content-title {
+  flex-wrap: wrap;
+}
+
+.sdt-content-tools {
+  min-width: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sdt-rotation-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-subtext1);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sdt-rotation-control .sdt-select {
+  width: 68px;
+  min-width: 68px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+.sdt-refresh-toggle {
+  display: inline-flex;
+  gap: 4px;
+}
+.sdt-refresh-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-family: inherit;
+  border-radius: 14px;
+  border: 1px solid var(--color-surface1);
+  background: transparent;
+  color: var(--color-overlay1);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.sdt-refresh-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+.sdt-refresh-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text, #fff);
+  border-color: transparent;
+}
+
+.sdt-refresh-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.sdt-refresh-btn:disabled:hover {
+  background: var(--color-base);
+  color: var(--color-subtext1);
+}
+
+.sdt-clear-screen-btn {
+  white-space: nowrap;
+  background: transparent;
+  color: var(--color-subtext1);
+}
+
+.sdt-clear-screen-btn:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface0);
+}
+
+/* ─── 视觉细节优化（不改变原有布局与操作结构） ───────────────────── */
+
+.spi-display-tool {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.sdt-panel {
+  border-color: color-mix(in srgb, var(--color-surface2) 58%, transparent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sdt-card,
+.sdt-preset-bar,
+.sdt-lcd-preview,
+.sdt-log-console,
+.sdt-cmd-table-wrap {
+  border-color: color-mix(in srgb, var(--color-surface2) 52%, transparent);
+}
+
+.sdt-section-title {
+  border-bottom-color: color-mix(in srgb, var(--color-surface2) 48%, transparent);
+  font-weight: 650;
+}
+
+.sdt-input,
+.sdt-select,
+.sdt-preset-bar-select,
+.sdt-textarea {
+  border-color: color-mix(in srgb, var(--color-surface2) 66%, transparent);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.sdt-input:hover,
+.sdt-select:hover,
+.sdt-preset-bar-select:hover,
+.sdt-textarea:hover {
+  border-color: var(--color-surface2);
+}
+
+.sdt-btn,
+.sdt-preset-bar-btn {
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    filter 0.15s ease;
+}
+
+.sdt-btn:focus-visible,
+.sdt-preset-bar-btn:focus-visible,
+.sdt-tab-btn:focus-visible,
+.sdt-refresh-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.sdt-tab-bar {
+  border: 1px solid color-mix(in srgb, var(--color-surface2) 42%, transparent);
+}
+
+.sdt-tab-btn.active {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface0));
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+.sdt-cmd-table thead th {
+  background: var(--color-mantle, var(--color-surface0));
+  border-bottom-color: color-mix(in srgb, var(--color-surface2) 58%, transparent);
+}
+
+.sdt-cmd-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.sdt-cmd-table tbody tr:hover {
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface0));
+}
+
+.sdt-refresh-btn {
+  border-radius: 4px;
+}
+
+.sdt-lcd-screen {
+  border-color: color-mix(in srgb, var(--color-surface2) 78%, #111);
+}
+
+/* ─── 内容制作与发送调试工作区 ───────────────────── */
+
+.sdt-tab-form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sdt-advanced-panel {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--color-surface2) 48%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface0) 58%, transparent);
+  overflow: hidden;
+}
+
+.sdt-advanced-panel > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  color: var(--color-subtext1);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.sdt-advanced-panel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sdt-advanced-panel > summary::before {
+  content: '›';
+  color: var(--color-subtext0);
+  font-size: 15px;
+  line-height: 10px;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+}
+
+.sdt-advanced-panel[open] > summary {
+  color: var(--color-text);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-surface2) 42%, transparent);
+}
+
+.sdt-advanced-panel[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.sdt-advanced-content {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px;
+}
+
+.sdt-advanced-content.sdt-toolbar-row {
+  flex-direction: row;
+}
+
+.sdt-advanced-hint {
+  color: var(--color-subtext0);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.sdt-select.compact {
+  width: 72px;
+}
+
+.sdt-check {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 4px !important;
+  white-space: nowrap;
+}
+
+.sdt-check input {
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.sdt-parameter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  padding: 7px;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-surface2) 54%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-surface0) 75%, transparent);
+}
+
+.sdt-parameter-grid > label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sdt-parameter-grid .sdt-input,
+.sdt-parameter-grid .sdt-select {
+  min-width: 0;
+  height: 27px;
+  padding: 3px 5px;
+}
+
+.sdt-region-editor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 6px 8px;
+  border: 1px solid color-mix(in srgb, var(--color-surface2) 55%, transparent);
+  border-radius: 6px;
+  background: var(--color-surface0);
+  font-size: 10px;
+}
+
+.sdt-region-mode {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sdt-region-editor > label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-subtext1);
+}
+
+.sdt-region-editor .sdt-input {
+  width: 52px;
+  padding: 3px 4px;
+}
+
+.sdt-region-address {
+  margin-left: auto;
+  color: var(--color-subtext0);
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: Consolas, 'Courier New', monospace;
+}
+
+/* 图片编辑器显示最终经过缩放、裁剪和颜色处理后的画布。 */
+.sdt-image-editor {
+  min-height: 170px;
+  padding: 10px;
+  cursor: default;
+  overflow: hidden;
+}
+
+.sdt-image-editor canvas {
+  display: block;
+  max-width: 100%;
+  max-height: min(280px, 42vh);
+  border: 1px solid var(--color-surface2);
+  background: #000;
+  cursor: grab;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.sdt-image-editor canvas:active {
+  cursor: grabbing;
+}
+
+.sdt-drop-placeholder {
+  width: 100%;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--color-subtext1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sdt-drop-placeholder small {
+  color: var(--color-subtext0);
+}
+
+/* 视频画面和时间轴。 */
+.sdt-video-pick video {
+  display: block;
+  max-width: 100%;
+  max-height: min(270px, 38vh);
+  background: #000;
+}
+
+.sdt-video-seek {
+  width: 100%;
+  accent-color: var(--color-accent);
+}
+
+.sdt-video-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 可放大的绘制画布及像素网格。 */
+.sdt-canvas-wrap {
+  overflow: auto;
+  padding: 10px;
+  justify-content: safe center;
+  align-items: safe center;
+}
+
+.sdt-draw-canvas-frame {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 1px;
+  min-height: 1px;
+}
+
+.sdt-draw-canvas-frame canvas {
+  display: block;
+  max-width: none;
+  max-height: none;
+  border: 1px solid var(--color-surface2);
+  touch-action: none;
+}
+
+.sdt-pixel-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+  background-size: var(--pixel-x) var(--pixel-y);
+}
+
+.sdt-draw-tools {
+  padding-bottom: 2px;
+}
+
+.sdt-tool-btn {
+  padding: 4px 7px;
+  border: 1px solid var(--color-surface1);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-subtext1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sdt-tool-btn.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+/* 右侧待发送/已发送预览、发送状态和历史。 */
+.sdt-right-panel {
+  gap: 8px;
+}
+
+.sdt-preview-switch {
+  margin-left: auto;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 5px;
+  background: var(--color-surface0);
+}
+
+.sdt-preview-switch button {
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-subtext0);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.sdt-preview-switch button.active {
+  background: var(--color-surface2);
+  color: var(--color-text);
+}
+
+.sdt-lcd-screen.selectable canvas {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sdt-compare-badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #f9e2af;
+  font-size: 9px;
+  pointer-events: none;
+}
+
+.sdt-preview-region-note {
+  padding: 3px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-error, #f38ba8) 10%, transparent);
+  color: var(--color-subtext1);
+  font-size: 9px;
+}
+
+.sdt-transfer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--color-surface2) 55%, transparent);
+  border-radius: 5px;
+  background: var(--color-base);
+}
+
+.sdt-transfer-head,
+.sdt-transfer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.sdt-transfer-head .state.success {
+  color: var(--color-success);
+}
+
+.sdt-transfer-head .state.error,
+.sdt-transfer-head .state.cancelled {
+  color: var(--color-error);
+}
+
+.sdt-transfer-head .state.sending {
+  color: var(--color-accent);
+}
+
+.sdt-transfer-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+.sdt-transfer-error {
+  color: var(--color-error);
+  font-size: 9px;
+}
+
+.sdt-content-library {
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-base);
+}
+
+.sdt-library-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border: 0;
+  background: var(--color-surface0);
+  color: var(--color-subtext1);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.sdt-library-body {
+  max-height: 210px;
+  overflow: auto;
+  padding: 5px;
+}
+
+.sdt-library-label {
+  padding: 4px 2px;
+  color: var(--color-subtext0);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.sdt-library-empty {
+  padding: 7px;
+  color: var(--color-subtext0);
+  font-size: 10px;
+}
+
+.sdt-history-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) repeat(5, 22px);
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.sdt-history-item:hover {
+  background: var(--color-surface0);
+}
+
+.sdt-history-item > canvas,
+.sdt-history-item > img {
+  width: 32px;
+  height: 24px;
+  object-fit: contain;
+  background: #000;
+  border: 1px solid var(--color-surface1);
+}
+
+.sdt-history-item > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sdt-history-item strong,
+.sdt-history-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sdt-history-item strong {
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.sdt-history-item small {
+  color: var(--color-subtext0);
+  font-size: 8px;
+}
+
+.sdt-history-item > button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-subtext0);
+  cursor: pointer;
+}
+
+.sdt-history-item > button:hover {
+  background: var(--color-surface2);
+  color: var(--color-text);
+}
+
+.sdt-history-item:has(img) {
+  grid-template-columns: 34px minmax(0, 1fr) repeat(2, 22px);
+}
+
+.sdt-parameter-compare {
+  margin-top: 5px;
+  padding: 5px;
+  border-top: 1px solid var(--color-surface1);
+}
+
+.sdt-parameter-compare > div:not(.sdt-library-label):not(.sdt-library-empty) {
+  display: grid;
+  grid-template-columns: minmax(68px, 1fr) minmax(58px, 1fr) minmax(58px, 1fr);
+  gap: 4px;
+  padding: 2px;
+  color: var(--color-subtext1);
+  font-size: 8px;
+}
+
+.sdt-parameter-compare code {
+  overflow: hidden;
+  color: var(--color-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .spi-display-tool {
+    grid-template-columns: minmax(330px, 34fr) minmax(390px, 40fr) minmax(280px, 26fr);
+    overflow-x: auto;
+  }
+
+  .sdt-parameter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+  }
+}

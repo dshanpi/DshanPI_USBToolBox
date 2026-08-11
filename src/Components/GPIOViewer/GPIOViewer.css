@@ -1,0 +1,742 @@
+.gpio-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-base);
+  overflow: hidden;
+}
+
+.gpio-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, var(--color-surface1) 0%, var(--color-surface0) 100%);
+  border-bottom: 1px solid var(--color-base);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gpio-device-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gpio-label {
+  color: var(--color-overlay0);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gpio-device-selector select {
+  padding: 6px 10px;
+  background: var(--color-text-subtle);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 180px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cdd6f4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  padding-right: 30px;
+}
+
+.gpio-device-selector select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.gpio-device-name {
+  padding: 6px 10px;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 6px;
+  color: var(--color-accent);
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 180px;
+  display: inline-block;
+}
+
+.gpio-small-btn {
+  padding: 6px 12px;
+  background: var(--color-accent-subtle);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-accent);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gpio-small-btn:hover:not(:disabled) {
+  background: var(--color-accent-muted);
+}
+
+.gpio-small-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-root-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.gpio-root-btn:hover:not(:disabled) {
+  background: var(--color-error-muted);
+}
+
+.gpio-root-btn.root-yes {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+  cursor: default;
+}
+
+.gpio-root-btn.root-no {
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.gpio-root-btn:disabled {
+  opacity: 0.7;
+}
+
+.gpio-chip-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gpio-chip-name {
+  padding: 4px 10px;
+  background: var(--color-surface1);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.gpio-refresh-btn {
+  padding: 6px 16px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-base);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: auto;
+}
+
+.gpio-refresh-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.gpio-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-multi-edit-btn {
+  padding: 6px 12px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-base);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpio-multi-edit-btn:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.gpio-multi-edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-clear-selection-btn {
+  padding: 6px 12px;
+  background: var(--color-text-subtle);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gpio-clear-selection-btn:hover {
+  background: var(--color-surface1);
+}
+
+.gpio-error-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--color-error-subtle);
+  border-bottom: 1px solid var(--color-error-border);
+  color: var(--color-error);
+  font-size: 13px;
+}
+
+.gpio-error-bar button {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.gpio-error-bar button:hover {
+  background: var(--color-error-muted);
+}
+
+.gpio-table-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.gpio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.gpio-table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-surface0);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-surface1);
+  z-index: 1;
+}
+
+.gpio-th-checkbox {
+  width: 40px;
+}
+
+.gpio-th-checkbox input {
+  cursor: pointer;
+}
+
+.gpio-table th:nth-child(1) {
+  width: 40px;
+  text-align: center;
+}
+
+.gpio-table th:nth-child(2) {
+  width: 80px;
+}
+
+.gpio-table th:nth-child(3) {
+  width: 80px;
+}
+
+.gpio-table th:nth-child(4) {
+  width: 160px;
+}
+
+.gpio-table th:nth-child(5) {
+  width: 80px;
+}
+
+.gpio-table th:nth-child(6) {
+  width: 100px;
+}
+
+.gpio-table th:nth-child(7) {
+  width: 100px;
+}
+
+.gpio-table th:nth-child(8) {
+  width: 100px;
+}
+
+.gpio-table th:nth-child(9) {
+  width: 80px;
+}
+
+.gpio-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-surface0);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gpio-checkbox {
+  text-align: center;
+}
+
+.gpio-checkbox input {
+  cursor: pointer;
+}
+
+.gpio-table tr:hover {
+  background: var(--color-text-subtle);
+}
+
+.gpio-pin-name {
+  font-weight: 600;
+  color: var(--color-accent) !important;
+}
+
+.gpio-gpio-id {
+  color: var(--color-subtext0);
+}
+
+.gpio-function {
+  font-weight: 500;
+}
+
+.gpio-function-gpio_in {
+  color: var(--color-success);
+}
+
+.gpio-function-gpio_out {
+  color: var(--color-warning);
+}
+
+.gpio-function-eint {
+  color: var(--color-error);
+}
+
+.gpio-pull {
+  font-size: 12px;
+}
+
+.gpio-pull-pull-up {
+  color: var(--color-success);
+}
+
+.gpio-pull-pull-down {
+  color: var(--color-warning);
+}
+
+.gpio-pull-pull-disable {
+  color: var(--color-subtext0);
+}
+
+.gpio-data {
+  font-weight: 500;
+}
+
+.gpio-data-high {
+  color: var(--color-success);
+}
+
+.gpio-data-low {
+  color: var(--color-error);
+}
+
+.gpio-data-function {
+  color: var(--color-subtext0);
+}
+
+.gpio-config-btn {
+  padding: 4px 12px;
+  background: var(--color-accent-subtle);
+  border: none;
+  border-radius: 4px;
+  color: var(--color-accent);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpio-config-btn:hover:not(:disabled) {
+  background: var(--color-accent-muted);
+}
+
+.gpio-config-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--color-overlay0);
+}
+
+.gpio-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: var(--color-surface0);
+  border-top: 1px solid var(--color-base);
+  color: var(--color-overlay0);
+  font-size: 12px;
+  min-height: 28px;
+  gap: 12px;
+}
+
+.gpio-statusbar-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.gpio-statusbar-text {
+  white-space: nowrap;
+  color: var(--color-subtext0);
+}
+
+.gpio-statusbar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--color-surface1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.gpio-statusbar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.2s ease;
+}
+
+.gpio-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.gpio-modal {
+  background: var(--color-base);
+  border: 1px solid var(--color-surface1);
+  border-radius: 12px;
+  min-width: 400px;
+  max-width: 500px;
+  box-shadow: 0 8px 24px var(--color-shadow-lg);
+}
+
+.gpio-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-surface1);
+}
+
+.gpio-modal-header h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.gpio-modal-close {
+  background: none;
+  border: none;
+  color: var(--color-overlay0);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.gpio-modal-close:hover {
+  background: var(--color-text-subtle);
+  color: var(--color-text);
+}
+
+.gpio-modal-content {
+  padding: 16px 18px;
+}
+
+.gpio-config-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.gpio-config-row label {
+  flex: 0 0 80px;
+  color: var(--color-subtext0);
+  font-size: 13px;
+}
+
+.gpio-config-row select {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--color-text-subtle);
+  border: 1px solid var(--color-surface1);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gpio-config-row select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.gpio-reg-info {
+  padding: 12px 18px;
+  background: var(--color-surface0);
+  border-top: 1px solid var(--color-surface1);
+}
+
+.gpio-reg-info h4 {
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.gpio-reg-info pre {
+  margin: 0;
+  padding: 8px;
+  background: var(--color-base);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--color-text);
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.gpio-reg-info button {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: var(--color-accent-subtle);
+  border: none;
+  border-radius: 4px;
+  color: var(--color-accent);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gpio-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--color-surface1);
+}
+
+.gpio-btn-cancel {
+  padding: 8px 16px;
+  background: var(--color-text-subtle);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gpio-btn-cancel:hover {
+  background: var(--color-surface1);
+}
+
+.gpio-btn-confirm {
+  padding: 8px 16px;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-base);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gpio-btn-confirm:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.gpio-btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-row-editing {
+  background: var(--color-accent-subtle) !important;
+}
+
+.gpio-row-editing:hover {
+  background: var(--color-accent-subtle) !important;
+}
+
+.gpio-row-changed {
+  animation: gpio-row-highlight 2s ease-out;
+}
+
+@keyframes gpio-row-highlight {
+  0% {
+    background: var(--color-warning-subtle);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+.gpio-function-edit,
+.gpio-pull-edit,
+.gpio-drv-edit,
+.gpio-data-edit,
+.gpio-mux-edit {
+  overflow: visible;
+}
+
+.gpio-function-edit select,
+.gpio-pull-edit select,
+.gpio-drv-edit select,
+.gpio-data-edit select {
+  width: 100%;
+  max-width: 100%;
+  padding: 4px 6px;
+  background: var(--color-text-subtle);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 12px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.gpio-function-edit select:focus,
+.gpio-pull-edit select:focus,
+.gpio-drv-edit select:focus,
+.gpio-data-edit select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.gpio-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.gpio-inline-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpio-inline-edit {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
+.gpio-inline-edit:hover:not(:disabled) {
+  background: var(--color-accent-muted);
+}
+
+.gpio-inline-save {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+.gpio-inline-save:hover:not(:disabled) {
+  background: var(--color-success-muted);
+}
+
+.gpio-inline-cancel {
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.gpio-inline-cancel:hover:not(:disabled) {
+  background: var(--color-error-muted);
+}
+
+.gpio-inline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-apply-all-btn {
+  padding: 6px 12px;
+  background: var(--color-success);
+  border: none;
+  border-radius: 6px;
+  color: var(--color-base);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gpio-apply-all-btn:hover:not(:disabled) {
+  background: var(--color-success-hover, var(--color-success));
+  filter: brightness(1.1);
+}
+
+.gpio-apply-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpio-row-selected {
+  background: var(--color-accent-subtle) !important;
+}
+
+.gpio-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--color-overlay0);
+}
+
+.gpio-empty-icon {
+  font-size: 64px;
+  opacity: 0.5;
+}
+
+[data-theme='light'] .gpio-empty-icon {
+  filter: brightness(0.8);
+}

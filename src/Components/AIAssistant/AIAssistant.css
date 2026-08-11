@@ -1,0 +1,752 @@
+.uta-fab {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 901;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 75%, #fff);
+  border-radius: 50%;
+  color: var(--color-accent-text, #fff);
+  background: var(--color-accent);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
+  font-size: 19px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.uta-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.28);
+}
+
+.uta-fab.open {
+  color: var(--color-text);
+  background: var(--color-surface1);
+  border-color: var(--color-surface2);
+}
+
+.uta-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 84px;
+  z-index: 900;
+  width: min(520px, calc(100vw - 44px));
+  height: min(700px, calc(100vh - 112px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--color-text);
+  background: var(--color-mantle, var(--color-base));
+  border: 1px solid var(--color-surface2);
+  border-radius: 10px;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.3);
+}
+
+.uta-header {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px 8px 14px;
+  border-bottom: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+}
+
+.uta-title,
+.uta-title > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.uta-title {
+  gap: 10px;
+}
+
+.uta-title > svg {
+  color: var(--color-accent);
+  font-size: 18px;
+}
+
+.uta-title > div {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.uta-title strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.uta-title span {
+  overflow: hidden;
+  color: var(--color-subtext0);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uta-header-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.uta-header-actions button,
+.uta-notice button,
+.uta-attachment button {
+  border: 0;
+  color: var(--color-subtext1);
+  background: transparent;
+  cursor: pointer;
+}
+
+.uta-header-actions button {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+}
+
+.uta-header-actions button:hover {
+  color: var(--color-text);
+  background: var(--color-surface1);
+}
+
+.uta-header-actions button.active {
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.uta-history {
+  position: absolute;
+  inset: 57px 0 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-mantle, var(--color-base));
+}
+
+.uta-history-header {
+  min-height: 49px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px 7px 14px;
+  border-bottom: 1px solid var(--color-surface1);
+}
+
+.uta-history-header > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.uta-history-header strong {
+  font-size: 12px;
+}
+
+.uta-history-header span {
+  overflow: hidden;
+  color: var(--color-subtext0);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uta-history-header > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  color: var(--color-subtext1);
+  background: var(--color-surface0);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.uta-history-header > button:hover:not(:disabled) {
+  color: var(--color-error, #f85149);
+  border-color: var(--color-error, #f85149);
+}
+
+.uta-history-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.uta-history-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 8px 0;
+  padding: 0 8px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 5px;
+  color: var(--color-subtext0);
+  background: var(--color-base);
+}
+
+.uta-history-search:focus-within {
+  border-color: var(--color-accent);
+}
+
+.uta-history-search input {
+  min-width: 0;
+  flex: 1;
+  padding: 7px 0;
+  border: 0;
+  outline: none;
+  color: var(--color-text);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+}
+
+.uta-history-empty {
+  padding: 40px 12px;
+  color: var(--color-subtext0);
+  font-size: 10px;
+  text-align: center;
+}
+
+.uta-history-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 49px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--color-base);
+}
+
+.uta-history-row:hover,
+.uta-history-row.active {
+  border-color: var(--color-surface2);
+  background: var(--color-surface0);
+}
+
+.uta-history-row.active {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.uta-history-main {
+  min-width: 0;
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  padding: 7px 4px 7px 10px;
+  overflow: hidden;
+  border: 0;
+  color: var(--color-text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.uta-history-main strong,
+.uta-history-main span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uta-history-main strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.uta-history-main span {
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+.uta-history-actions {
+  display: flex;
+  gap: 1px;
+  padding-right: 5px;
+  opacity: 0;
+}
+
+.uta-history-row:hover .uta-history-actions,
+.uta-history-row:focus-within .uta-history-actions {
+  opacity: 1;
+}
+
+.uta-history-actions button {
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--color-subtext0);
+  background: transparent;
+  cursor: pointer;
+}
+
+.uta-history-actions button:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface1);
+}
+
+.uta-history-rename {
+  min-width: 0;
+  flex: 1;
+  margin-left: 8px;
+  padding: 6px 7px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  outline: none;
+  color: var(--color-text);
+  background: var(--color-base);
+  font: inherit;
+  font-size: 11px;
+}
+
+.uta-history-note {
+  padding: 7px 12px;
+  color: var(--color-subtext0);
+  border-top: 1px solid var(--color-surface1);
+  font-size: 9px;
+}
+
+.uta-history button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.uta-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--color-surface1);
+}
+
+.uta-notice.warning {
+  color: var(--color-warning, #d29922);
+  background: color-mix(in srgb, var(--color-warning, #d29922) 9%, transparent);
+}
+
+.uta-notice.error {
+  color: var(--color-error, #f85149);
+  background: color-mix(in srgb, var(--color-error, #f85149) 8%, transparent);
+}
+
+.uta-notice.success {
+  color: var(--color-success, #3fb950);
+  background: color-mix(in srgb, var(--color-success, #3fb950) 8%, transparent);
+}
+
+.uta-notice.warning button {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.uta-context-bar {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  color: var(--color-subtext1);
+  background: var(--color-base);
+  border-bottom: 1px solid var(--color-surface1);
+  font-size: 10px;
+}
+
+.uta-context-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.uta-context-bar button {
+  min-height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  color: var(--color-text);
+  background: var(--color-surface0);
+  font: inherit;
+  cursor: pointer;
+}
+
+.uta-context-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uta-attachments {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-surface1);
+}
+
+.uta-attachment {
+  max-width: 210px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 5px 4px 7px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  color: var(--color-subtext1);
+  background: var(--color-surface0);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.uta-attachment > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uta-attachment small {
+  color: var(--color-warning, #d29922);
+}
+
+.uta-attachment button {
+  padding: 1px 3px;
+}
+
+.uta-messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.uta-empty {
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: auto;
+  color: var(--color-subtext0);
+  text-align: center;
+}
+
+.uta-empty > svg {
+  color: var(--color-accent);
+  font-size: 30px;
+}
+
+.uta-empty strong {
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.uta-empty span {
+  font-size: 11px;
+}
+
+.uta-starters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.uta-starters button {
+  padding: 7px 10px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 4px;
+  color: var(--color-subtext1);
+  background: var(--color-surface0);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.uta-starters button:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.uta-message {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.uta-message.user {
+  align-items: flex-end;
+}
+
+.uta-message-role {
+  padding: 0 3px;
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+.uta-message-body {
+  max-width: 100%;
+  color: var(--color-text);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.uta-message.user .uta-message-body {
+  max-width: 88%;
+  padding: 7px 10px;
+  border-radius: 8px 8px 2px 8px;
+  color: var(--color-accent-text, #fff);
+  background: var(--color-accent);
+}
+
+.uta-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.uta-code {
+  margin: 7px 0;
+  overflow: hidden;
+  border: 1px solid var(--color-surface2);
+  border-radius: 5px;
+  background: var(--color-base);
+}
+
+.uta-code > div {
+  padding: 4px 8px;
+  color: var(--color-subtext0);
+  background: var(--color-surface0);
+  border-bottom: 1px solid var(--color-surface1);
+  font:
+    10px Consolas,
+    monospace;
+}
+
+.uta-code pre,
+.uta-proposal pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font:
+    10px/1.5 Consolas,
+    monospace;
+}
+
+.uta-cursor {
+  color: var(--color-accent);
+  animation: uta-blink 1s steps(2) infinite;
+}
+
+@keyframes uta-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.uta-proposal {
+  margin: 8px 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-surface2));
+  border-radius: 6px;
+  background: var(--color-surface0);
+}
+
+.uta-proposal.invalid {
+  padding: 8px;
+  border-color: var(--color-error, #f85149);
+}
+
+.uta-proposal.invalid > strong,
+.uta-proposal.invalid > span {
+  display: block;
+}
+
+.uta-proposal.invalid > span {
+  color: var(--color-error, #f85149);
+  font-size: 10px;
+}
+
+.uta-proposal-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 9px;
+  border-bottom: 1px solid var(--color-surface1);
+}
+
+.uta-proposal-title > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.uta-proposal-title strong {
+  font-size: 11px;
+}
+
+.uta-proposal-title span {
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+.uta-proposal-title button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  color: var(--color-accent);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.uta-proposal-title button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.uta-proposal-title button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.uta-proposal ul {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 8px 10px 9px 26px;
+}
+
+.uta-proposal li {
+  padding-left: 2px;
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+.uta-proposal li code {
+  margin-right: 6px;
+  color: var(--color-text);
+  font-size: 10px;
+}
+
+.uta-proposal-error {
+  padding: 6px 9px;
+  color: var(--color-error, #f85149);
+  border-top: 1px solid var(--color-surface1);
+  font-size: 10px;
+}
+
+.uta-composer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  gap: 7px;
+  padding: 9px 10px 23px;
+  border-top: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+}
+
+.uta-composer textarea {
+  width: 100%;
+  min-height: 58px;
+  resize: none;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid var(--color-surface2);
+  border-radius: 5px;
+  outline: none;
+  color: var(--color-text);
+  background: var(--color-base);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.uta-composer textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.uta-send {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  color: var(--color-accent-text, #fff);
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+.uta-send.stop {
+  background: var(--color-error, #f85149);
+}
+
+.uta-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.uta-safety {
+  position: absolute;
+  left: 12px;
+  bottom: 5px;
+  color: var(--color-subtext0);
+  font-size: 9px;
+}
+
+@media (max-width: 640px) {
+  .uta-fab {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .uta-panel {
+    right: 8px;
+    bottom: 72px;
+    width: calc(100vw - 16px);
+    height: calc(100vh - 82px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uta-fab,
+  .uta-cursor {
+    transition: none;
+    animation: none;
+  }
+}
