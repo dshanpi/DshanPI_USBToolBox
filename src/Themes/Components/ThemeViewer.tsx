@@ -72,8 +72,8 @@ const ThemeViewer: React.FC<ThemeViewerProps> = ({ visible, onClose }) => {
                   />
                   <select className="preview-select">
                     <option>{t('themeViewer.selectOption')}</option>
-                    <option>Option 2</option>
-                    <option>Option 3</option>
+                    <option>{t('themeViewer.option2')}</option>
+                    <option>{t('themeViewer.option3')}</option>
                   </select>
                   <textarea
                     placeholder={t('themeViewer.textarea')}
@@ -213,7 +213,7 @@ const ThemeViewer: React.FC<ThemeViewerProps> = ({ visible, onClose }) => {
                     <tbody>
                       <tr>
                         <td>1</td>
-                        <td>Item One</td>
+                        <td>{t('themeViewer.item1')}</td>
                         <td>
                           <span className="preview-badge preview-badge-success">
                             {t('themeViewer.active')}
@@ -227,7 +227,7 @@ const ThemeViewer: React.FC<ThemeViewerProps> = ({ visible, onClose }) => {
                       </tr>
                       <tr>
                         <td>2</td>
-                        <td>Item Two</td>
+                        <td>{t('themeViewer.item2')}</td>
                         <td>
                           <span className="preview-badge preview-badge-warning">
                             {t('themeViewer.pending')}
@@ -241,7 +241,7 @@ const ThemeViewer: React.FC<ThemeViewerProps> = ({ visible, onClose }) => {
                       </tr>
                       <tr>
                         <td>3</td>
-                        <td>Item Three</td>
+                        <td>{t('themeViewer.item3')}</td>
                         <td>
                           <span className="preview-badge preview-badge-error">
                             {t('themeViewer.error')}

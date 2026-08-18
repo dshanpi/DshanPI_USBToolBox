@@ -30,6 +30,8 @@ interface LogEntry {
   isError: boolean;
 }
 
+type DelayUnit = 's' | 'ms' | 'us';
+
 interface WorkflowStep {
   id: number;
   type:
@@ -44,9 +46,10 @@ interface WorkflowStep {
     | 'reset_high'
     | 'aux_low'
     | 'aux_high';
-  data: string; // hex data for send/duplex, delay µs for delay
+  data: string; // hex data for send/duplex, numeric duration for delay
   readLen: string; // for duplex
   signalId?: string; // selected signal for aux_low / aux_high
+  delayUnit?: DelayUnit;
 }
 
 const SPEED_OPTIONS = [
@@ -62,6 +65,36 @@ const SPEED_OPTIONS = [
 
 const SPI_CS0_TRANSFER_CODE = 0x80;
 const SPI_CS0_ENABLE_MASK = 0x0001;
+const GPIO_PINS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+const WORKFLOW_GPIO_SIGNAL_PREFIX = 'gpio:';
+const DEFAULT_DELAY_UNIT: DelayUnit = 'ms';
+const LEGACY_DELAY_UNIT: DelayUnit = 'us';
+const MAX_DELAY_US = 600_000_000;
+const DELAY_UNIT_TO_US: Record<DelayUnit, number> = { s: 1_000_000, ms: 1_000, us: 1 };
+
+function workflowGpioSignalId(pin: number): string {
+  return `${WORKFLOW_GPIO_SIGNAL_PREFIX}${pin}`;
+}
+
+function parseWorkflowGpioPin(signalId: string): number | null {
+  if (!signalId.startsWith(WORKFLOW_GPIO_SIGNAL_PREFIX)) return null;
+  const pin = Number(signalId.slice(WORKFLOW_GPIO_SIGNAL_PREFIX.length));
+  return Number.isInteger(pin) && pin >= GPIO_PINS[0] && pin <= GPIO_PINS[GPIO_PINS.length - 1]
+    ? pin
+    : null;
+}
+
+function isDelayUnit(value: unknown): value is DelayUnit {
+  return value === 's' || value === 'ms' || value === 'us';
+}
+
+function getWorkflowDelayUnit(step: Pick<WorkflowStep, 'delayUnit'>): DelayUnit {
+  return isDelayUnit(step.delayUnit) ? step.delayUnit : LEGACY_DELAY_UNIT;
+}
+
+function delayToMicroseconds(value: number, unit: DelayUnit): number {
+  return Math.round(value * DELAY_UNIT_TO_US[unit]);
+}
 
 function formatTime(): string {
   const now = new Date();
@@ -121,7 +154,13 @@ function createTLC5615BreathingWorkflow(
 
   const addStep = (val: number) => {
     wf.push({ id: ++nextStepId, type: 'send', data: dacToHex(val), readLen: '' });
-    wf.push({ id: ++nextStepId, type: 'delay', data: String(delayUs), readLen: '' });
+    wf.push({
+      id: ++nextStepId,
+      type: 'delay',
+      data: String(delayUs),
+      readLen: '',
+      delayUnit: 'us',
+    });
   };
 
   // Fade in: min → max (sine ease-in)
@@ -353,12 +392,20 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
           txData,
           readLen: Number(readLen),
         },
-        auxiliaryPins: enabledAuxSignals.map(({ id, name, pin }) => ({ id, name, pin })),
-        workflow: steps.map(({ type, data, readLen: stepReadLen, signalId }) => ({
-          type,
-          data,
-          readLen: stepReadLen,
-          signalId,
+        auxiliaryPins: [
+          ...GPIO_PINS.map((pin) => ({
+            id: workflowGpioSignalId(pin),
+            name: `GPIO${pin}`,
+            pin,
+          })),
+          ...enabledAuxSignals.map(({ id, name, pin }) => ({ id, name, pin })),
+        ],
+        workflow: steps.map((step) => ({
+          type: step.type,
+          data: step.data,
+          readLen: step.readLen,
+          signalId: step.signalId,
+          delayUnit: step.type === 'delay' ? getWorkflowDelayUnit(step) : undefined,
         })),
         recentLogs: logs.slice(-30),
       }),
@@ -438,6 +485,7 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             throw new Error(`第 ${index + 1} 行 SPI 类型无效`);
           const data = optionalString(row.data, `steps[${index}].data`) ?? '';
           const signalId = optionalString(row.signalId, `steps[${index}].signalId`);
+          const rawDelayUnit = optionalString(row.delayUnit, `steps[${index}].delayUnit`);
           const rowReadLen = optionalNumber(row.readLen, `steps[${index}].readLen`);
           if (
             (type === 'send' || type === 'duplex') &&
@@ -448,12 +496,24 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
           if ((type === 'send' || type === 'duplex') && parseHex(data).length > 65_536) {
             throw new Error(`第 ${index + 1} 行发送数据超过 65536 字节`);
           }
-          if (type === 'delay' && (!/^\d+$/.test(data.trim()) || Number(data) > 600_000_000)) {
-            throw new Error(`第 ${index + 1} 行延时必须是 0–600000000 微秒的整数`);
+          if (rawDelayUnit !== undefined && !isDelayUnit(rawDelayUnit)) {
+            throw new Error(`第 ${index + 1} 行延时单位必须是 s、ms 或 us`);
+          }
+          const delayUnit = isDelayUnit(rawDelayUnit) ? rawDelayUnit : DEFAULT_DELAY_UNIT;
+          const delayValue = Number(data);
+          if (
+            type === 'delay' &&
+            (data.trim() === '' ||
+              !Number.isFinite(delayValue) ||
+              delayValue < 0 ||
+              delayToMicroseconds(delayValue, delayUnit) > MAX_DELAY_US)
+          ) {
+            throw new Error(`第 ${index + 1} 行延时必须是 0–600 秒范围内的非负数`);
           }
           if (
             (type === 'aux_low' || type === 'aux_high') &&
             signalId !== undefined &&
+            parseWorkflowGpioPin(signalId) === null &&
             !enabledAuxSignals.some((signal) => signal.id === signalId)
           ) {
             throw new Error(`第 ${index + 1} 行引用了不存在或未启用的辅助 IO`);
@@ -471,8 +531,9 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             readLen: rowReadLen === undefined ? '' : String(Math.trunc(rowReadLen)),
             signalId:
               type === 'aux_low' || type === 'aux_high'
-                ? (signalId ?? enabledAuxSignals[0]?.id)
+                ? (signalId ?? workflowGpioSignalId(GPIO_PINS[0]))
                 : undefined,
+            delayUnit: type === 'delay' ? delayUnit : undefined,
           };
         });
         setSteps(nextSteps);
@@ -695,22 +756,22 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
 
   // ─── Workflow ────────────────────────────────────────
 
-  const addStep = useCallback(
-    (type: WorkflowStep['type']) => {
-      setSteps((prev) => [
-        ...prev,
-        {
-          id: nextStepId++,
-          type,
-          data: '',
-          readLen: '',
-          signalId:
-            type === 'aux_low' || type === 'aux_high' ? enabledAuxSignals[0]?.id : undefined,
-        },
-      ]);
-    },
-    [enabledAuxSignals]
-  );
+  const addStep = useCallback((type: WorkflowStep['type']) => {
+    setSteps((prev) => [
+      ...prev,
+      {
+        id: nextStepId++,
+        type,
+        data: '',
+        readLen: '',
+        signalId:
+          type === 'aux_low' || type === 'aux_high'
+            ? workflowGpioSignalId(GPIO_PINS[0])
+            : undefined,
+        delayUnit: type === 'delay' ? DEFAULT_DELAY_UNIT : undefined,
+      },
+    ]);
+  }, []);
 
   const deleteStep = useCallback((id: number) => {
     setSteps((prev) => prev.filter((s) => s.id !== id));
@@ -742,13 +803,15 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
 
   const setAuxLevel = useCallback(
     async (signalId: string, high: boolean) => {
-      const signal = getSpiAuxSignal(signalId, auxSignals);
-      if (!signal || !signal.enabled) {
+      const directPin = parseWorkflowGpioPin(signalId);
+      const mappedSignal = directPin === null ? getSpiAuxSignal(signalId, auxSignals) : undefined;
+      if (directPin === null && (!mappedSignal || !mappedSignal.enabled)) {
         throw new Error(t('spiWiring.signalUnavailable'));
       }
-      if (auxPinConflicts.has(signal.pin)) {
-        throw new Error(t('spiWiring.pinConflict', { pin: signal.pin }));
+      if (mappedSignal && auxPinConflicts.has(mappedSignal.pin)) {
+        throw new Error(t('spiWiring.pinConflict', { pin: mappedSignal.pin }));
       }
+      const signal = mappedSignal ?? { name: `GPIO${directPin}`, pin: directPin as number };
       const mask = 1 << signal.pin;
       await invokeCommand('ch347_gpio_set', {
         index: deviceIndex,
@@ -851,11 +914,13 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
             await setAuxLevel(step.signalId, true);
             break;
           case 'delay': {
-            const us = parseInt(step.data, 10) || 0;
+            const unit = getWorkflowDelayUnit(step);
+            const value = Number(step.data) || 0;
+            const us = delayToMicroseconds(Math.max(0, value), unit);
             if (us > 0) {
               await new Promise((r) => setTimeout(r, Math.max(1, us / 1000)));
             }
-            addLog(t('serialTool.spi.master.logDelay', { us }));
+            addLog(t('serialTool.spi.master.logDelay', { value, unit }));
             break;
           }
         }
@@ -990,11 +1055,12 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
     // 持久化时丢掉 id（运行时唯一的），保留 type/data/readLen
     const stripped: SavedPreset = {
       name,
-      steps: steps.map(({ type, data, readLen, signalId }) => ({
+      steps: steps.map(({ type, data, readLen, signalId, delayUnit }) => ({
         type,
         data,
         readLen,
         signalId,
+        delayUnit,
       })),
     };
     const next = exists
@@ -1216,12 +1282,8 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                       level: 'HIGH',
                     })}
                   </option>
-                  <option value="aux_low" disabled={!enabledAuxSignals.length}>
-                    {t('spiWiring.typeAuxLow')}
-                  </option>
-                  <option value="aux_high" disabled={!enabledAuxSignals.length}>
-                    {t('spiWiring.typeAuxHigh')}
-                  </option>
+                  <option value="aux_low">{t('spiWiring.typeAuxLow')}</option>
+                  <option value="aux_high">{t('spiWiring.typeAuxHigh')}</option>
                 </optgroup>
                 <optgroup label={t('spiWiring.stepGroupTiming')}>
                   <option value="delay">{t('serialTool.spi.master.typeDelay')}</option>
@@ -1231,10 +1293,6 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                 type="button"
                 className="spi-step-add-button"
                 onClick={() => addStep(stepTypeToAdd)}
-                disabled={
-                  (stepTypeToAdd === 'aux_low' || stepTypeToAdd === 'aux_high') &&
-                  !enabledAuxSignals.length
-                }
               >
                 {t('spiWiring.addSelectedStep')}
               </button>
@@ -1264,7 +1322,13 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                       { id: ++nextStepId, type: 'send', data: d, readLen: '' },
                     ];
                     const W = (t: number): WorkflowStep[] => [
-                      { id: ++nextStepId, type: 'delay', data: String(t), readLen: '' },
+                      {
+                        id: ++nextStepId,
+                        type: 'delay',
+                        data: String(t),
+                        readLen: '',
+                        delayUnit: 'us',
+                      },
                     ];
                     const steps: WorkflowStep[] = [
                       { id: ++nextStepId, type: 'cs_low', data: '', readLen: '' },
@@ -1454,7 +1518,13 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                       { id: ++nextStepId, type: 'send', data: d, readLen: '' },
                     ];
                     const W = (t: number): WorkflowStep[] => [
-                      { id: ++nextStepId, type: 'delay', data: String(t), readLen: '' },
+                      {
+                        id: ++nextStepId,
+                        type: 'delay',
+                        data: String(t),
+                        readLen: '',
+                        delayUnit: 'us',
+                      },
                     ];
 
                     // 字号限制在 8-24 像素之间，超出就用默认 14
@@ -1680,8 +1750,10 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                                       signalId:
                                         e.target.value === 'aux_low' ||
                                         e.target.value === 'aux_high'
-                                          ? enabledAuxSignals[0]?.id
+                                          ? workflowGpioSignalId(GPIO_PINS[0])
                                           : undefined,
+                                      delayUnit:
+                                        e.target.value === 'delay' ? DEFAULT_DELAY_UNIT : undefined,
                                     }
                                   : s
                               )
@@ -1723,10 +1795,32 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                               value={step.data}
                               onChange={(e) => updateStep(step.id, 'data', e.target.value)}
                               placeholder={t('serialTool.spi.master.delayPlaceholder')}
+                              min={0}
+                              max={MAX_DELAY_US / DELAY_UNIT_TO_US[getWorkflowDelayUnit(step)]}
+                              step={getWorkflowDelayUnit(step) === 'us' ? 1 : 'any'}
                             />
-                            <span className="spi-step-unit">
-                              {t('serialTool.spi.master.delayUnit')}
-                            </span>
+                            <select
+                              className="spi-step-delay-unit"
+                              value={getWorkflowDelayUnit(step)}
+                              onChange={(event) => {
+                                const delayUnit = event.target.value as DelayUnit;
+                                setSteps((current) =>
+                                  current.map((item) =>
+                                    item.id === step.id
+                                      ? {
+                                          ...item,
+                                          delayUnit,
+                                        }
+                                      : item
+                                  )
+                                );
+                              }}
+                              aria-label={t('serialTool.spi.master.delayUnitLabel')}
+                            >
+                              <option value="s">s</option>
+                              <option value="ms">ms</option>
+                              <option value="us">us</option>
+                            </select>
                           </div>
                         )}
                         {(step.type === 'aux_low' || step.type === 'aux_high') && (
@@ -1738,14 +1832,23 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                             }
                           >
                             <option value="">{t('spiWiring.selectSignal')}</option>
-                            {enabledAuxSignals.map((signal) => (
-                              <option key={signal.id} value={signal.id}>
-                                {t('spiWiring.signalOption', {
-                                  name: signal.name,
-                                  pin: signal.pin,
-                                })}
+                            {GPIO_PINS.map((pin) => (
+                              <option key={pin} value={workflowGpioSignalId(pin)}>
+                                {t('spiWiring.gpioPin', { pin })}
                               </option>
                             ))}
+                            {enabledAuxSignals.length > 0 && (
+                              <optgroup label={t('spiWiring.auxSignals')}>
+                                {enabledAuxSignals.map((signal) => (
+                                  <option key={signal.id} value={signal.id}>
+                                    {t('spiWiring.signalOption', {
+                                      name: signal.name,
+                                      pin: signal.pin,
+                                    })}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            )}
                           </select>
                         )}
                         {isGpioToggle && step.type !== 'aux_low' && step.type !== 'aux_high' && (
@@ -1779,9 +1882,22 @@ export const SPIMasterTab: React.FC<SPIMasterTabProps> = ({
                 {!steps.length && (
                   <tr>
                     <td colSpan={5} className="spi-step-empty">
-                      {presetVariant === 'display'
-                        ? t('serialTool.spi.master.noStepsDisplay')
-                        : t('serialTool.spi.master.noStepsGeneral')}
+                      <div className="spi-step-empty-content">
+                        <span>
+                          {presetVariant === 'display'
+                            ? t('serialTool.spi.master.noStepsDisplay')
+                            : t('serialTool.spi.master.noStepsGeneral')}
+                        </span>
+                        <button
+                          type="button"
+                          className="spi-step-empty-add"
+                          onClick={() => addStep(stepTypeToAdd)}
+                          title={t('spiWiring.addSelectedStep')}
+                          aria-label={t('spiWiring.addSelectedStep')}
+                        >
+                          +
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}

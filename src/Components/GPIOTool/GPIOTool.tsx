@@ -36,6 +36,7 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
     [spiReservedPins]
   );
   const availableGpioMask = GPIO_CONTROL_MASK & ~spiReservedMask;
+  const [forceUse, setForceUse] = useState(false);
   const [snapshot, setSnapshot] = useState<GpioSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
   const [automationRunning, setAutomationRunning] = useState(false);
@@ -46,7 +47,7 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
     deviceState.devices.find((device) => device.index === deviceState.deviceIndex) ?? null;
 
   const readState = useCallback(
-    async (announce: boolean) => {
+    async (announce: boolean, manageBusy = true) => {
       if (!deviceState.online || deviceState.deviceIndex === null) {
         setSnapshot(null);
         if (announce) {
@@ -55,16 +56,21 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
         return;
       }
 
-      setBusy(true);
+      if (manageBusy) setBusy(true);
       try {
-        const result = await invokeCommand('ch347_gpio_get', {
-          index: deviceState.deviceIndex,
-        });
-        setSnapshot({
-          direction: result.direction & 0xff,
-          data: result.data & 0xff,
-          knownMask: 0xff,
-        });
+        try {
+          const result = await invokeCommand('ch347_gpio_get', {
+            index: deviceState.deviceIndex,
+          });
+          setSnapshot({
+            direction: result.direction & 0xff,
+            data: result.data & 0xff,
+            knownMask: 0xff,
+          });
+        } catch {
+          // Direction setting already succeeded. Keep the optimistic input
+          // state and let the automatic reader try again on its next cycle.
+        }
         if (announce) {
           setNotice({ kind: 'success', text: t('gpioTool.readSuccess') });
         }
@@ -75,7 +81,7 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
           text: t('gpioTool.readFailed', { error: normalizeIpcError(error).message }),
         });
       } finally {
-        setBusy(false);
+        if (manageBusy) setBusy(false);
       }
     },
     [deviceState.deviceIndex, deviceState.online, t]
@@ -92,6 +98,18 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
     }
   }, [automationRunning, connected, isActive, readState]);
 
+  // Keep input levels live while this tool is visible. A one-shot timer is
+  // scheduled after each completed read so slow USB calls cannot overlap.
+  useEffect(() => {
+    const hasInputPins = snapshot !== null && (snapshot.direction & GPIO_CONTROL_MASK) !== 0xff;
+    if (!connected || !isActive || automationRunning || busy || !hasInputPins) return;
+
+    const timer = window.setTimeout(() => {
+      void readState(false, false);
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [automationRunning, busy, connected, isActive, readState, snapshot]);
+
   const setOutputs = useCallback(
     async (mask: number, high: boolean, options: ApplyOutputOptions = {}) => {
       const { successText, announce = true, readBack = true, manageBusy = true } = options;
@@ -101,7 +119,7 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
       }
 
       const requestedMask = mask & GPIO_CONTROL_MASK;
-      const writableMask = requestedMask & ~spiReservedMask;
+      const writableMask = forceUse ? requestedMask : requestedMask & ~spiReservedMask;
       if (writableMask === 0) {
         const pins = [...spiReservedPins.entries()]
           .filter(([pin]) => (requestedMask & (1 << pin)) !== 0)
@@ -166,7 +184,71 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
         if (manageBusy) setBusy(false);
       }
     },
-    [deviceState.deviceIndex, deviceState.online, spiReservedMask, spiReservedPins, t]
+    [deviceState.deviceIndex, deviceState.online, forceUse, spiReservedMask, spiReservedPins, t]
+  );
+
+  const setInputs = useCallback(
+    async (mask: number, successText: string) => {
+      if (!deviceState.online || deviceState.deviceIndex === null) {
+        setNotice({ kind: 'error', text: t('gpioTool.deviceNotConnected') });
+        return false;
+      }
+
+      const requestedMask = mask & GPIO_CONTROL_MASK;
+      const writableMask = forceUse ? requestedMask : requestedMask & ~spiReservedMask;
+      if (writableMask === 0) {
+        const pins = [...spiReservedPins.entries()]
+          .filter(([pin]) => (requestedMask & (1 << pin)) !== 0)
+          .map(([pin, names]) => `GPIO${pin} (${names.join('/')})`)
+          .join(', ');
+        setNotice({ kind: 'error', text: t('spiWiring.reservedBySpi', { pins }) });
+        return false;
+      }
+
+      setBusy(true);
+      try {
+        // CH347GPIO_Set uses a cleared direction bit to configure the enabled
+        // pin as an input. dataOut is ignored for pins configured as inputs.
+        await invokeCommand('ch347_gpio_set', {
+          index: deviceState.deviceIndex,
+          enable: writableMask,
+          dirOut: 0,
+          dataOut: 0,
+        });
+
+        setSnapshot((previous) => ({
+          direction: (previous?.direction ?? 0) & (~writableMask & 0xff),
+          data: previous?.data ?? 0,
+          knownMask: (previous?.knownMask ?? 0) | writableMask,
+        }));
+
+        const result = await invokeCommand('ch347_gpio_get', {
+          index: deviceState.deviceIndex,
+        });
+        setSnapshot({
+          direction: result.direction & 0xff,
+          data: result.data & 0xff,
+          knownMask: 0xff,
+        });
+        setNotice({
+          kind: 'success',
+          text:
+            writableMask === requestedMask
+              ? successText
+              : `${successText} · ${t('spiWiring.reservedSkipped')}`,
+        });
+        return true;
+      } catch (error) {
+        setNotice({
+          kind: 'error',
+          text: t('gpioTool.writeFailed', { error: normalizeIpcError(error).message }),
+        });
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [deviceState.deviceIndex, deviceState.online, forceUse, spiReservedMask, spiReservedPins, t]
   );
 
   const setPin = (pin: number, high: boolean) => {
@@ -175,10 +257,18 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
     });
   };
 
+  const setPinInput = (pin: number) => {
+    void setInputs(1 << pin, t('gpioTool.pinInputSuccess', { pin }));
+  };
+
   const setAllPins = (high: boolean) => {
-    void setOutputs(availableGpioMask, high, {
+    void setOutputs(forceUse ? GPIO_CONTROL_MASK : availableGpioMask, high, {
       successText: t('gpioTool.allSetSuccess', { level: high ? 'HIGH' : 'LOW' }),
     });
+  };
+
+  const setAllPinsInput = () => {
+    void setInputs(forceUse ? GPIO_CONTROL_MASK : availableGpioMask, t('gpioTool.allInputSuccess'));
   };
 
   const controlsDisabled = busy || automationRunning;
@@ -214,9 +304,27 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
         <div className="gpio-toolbar-actions">
           <button
             type="button"
+            className={`gpio-toolbar-button gpio-force-button ${forceUse ? 'active' : ''}`}
+            onClick={() => setForceUse((enabled) => !enabled)}
+            disabled={controlsDisabled}
+            title={t('gpioTool.forceUseHint')}
+            aria-pressed={forceUse}
+          >
+            {t('gpioTool.forceUse')}
+          </button>
+          <button
+            type="button"
+            className="gpio-toolbar-button gpio-input-button"
+            onClick={setAllPinsInput}
+            disabled={!connected || controlsDisabled || (!forceUse && availableGpioMask === 0)}
+          >
+            {t('gpioTool.allInput')}
+          </button>
+          <button
+            type="button"
             className="gpio-toolbar-button gpio-low-button"
             onClick={() => setAllPins(false)}
-            disabled={!connected || controlsDisabled || availableGpioMask === 0}
+            disabled={!connected || controlsDisabled || (!forceUse && availableGpioMask === 0)}
           >
             <FontAwesomeIcon icon={faArrowDown} />
             {t('gpioTool.allLow')}
@@ -225,7 +333,7 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
             type="button"
             className="gpio-toolbar-button gpio-high-button"
             onClick={() => setAllPins(true)}
-            disabled={!connected || controlsDisabled || availableGpioMask === 0}
+            disabled={!connected || controlsDisabled || (!forceUse && availableGpioMask === 0)}
           >
             <FontAwesomeIcon icon={faArrowUp} />
             {t('gpioTool.allHigh')}
@@ -289,11 +397,27 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
               <div className="gpio-pin-actions" role="cell">
                 <button
                   type="button"
+                  className={`gpio-level-button input ${known && !output ? 'active' : ''}`}
+                  onClick={() => setPinInput(pin)}
+                  disabled={!connected || controlsDisabled || (reservedBySpi && !forceUse)}
+                  title={
+                    reservedBySpi && !forceUse
+                      ? t('spiWiring.reservedBySpi', { pins: `GPIO${pin}` })
+                      : t('gpioTool.setInputHint')
+                  }
+                  aria-pressed={known && !output}
+                >
+                  {t('gpioTool.setInput')}
+                </button>
+                <button
+                  type="button"
                   className={`gpio-level-button low ${known && output && !high ? 'active' : ''}`}
                   onClick={() => setPin(pin, false)}
-                  disabled={!connected || controlsDisabled || reservedBySpi}
+                  disabled={!connected || controlsDisabled || (reservedBySpi && !forceUse)}
                   title={
-                    reservedBySpi ? t('spiWiring.reservedBySpi', { pins: `GPIO${pin}` }) : undefined
+                    reservedBySpi && !forceUse
+                      ? t('spiWiring.reservedBySpi', { pins: `GPIO${pin}` })
+                      : undefined
                   }
                   aria-pressed={known && output && !high}
                 >
@@ -303,9 +427,11 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
                   type="button"
                   className={`gpio-level-button high ${known && output && high ? 'active' : ''}`}
                   onClick={() => setPin(pin, true)}
-                  disabled={!connected || controlsDisabled || reservedBySpi}
+                  disabled={!connected || controlsDisabled || (reservedBySpi && !forceUse)}
                   title={
-                    reservedBySpi ? t('spiWiring.reservedBySpi', { pins: `GPIO${pin}` }) : undefined
+                    reservedBySpi && !forceUse
+                      ? t('spiWiring.reservedBySpi', { pins: `GPIO${pin}` })
+                      : undefined
                   }
                   aria-pressed={known && output && high}
                 >
@@ -325,10 +451,6 @@ export const GPIOTool: React.FC<GPIOToolProps> = ({ isActive = true }) => {
       />
 
       {notice && <div className={`gpio-notice ${notice.kind}`}>{notice.text}</div>}
-
-      <div className="gpio-hints">
-        <p>{t('gpioTool.sharedPinHint')}</p>
-      </div>
     </div>
   );
 };

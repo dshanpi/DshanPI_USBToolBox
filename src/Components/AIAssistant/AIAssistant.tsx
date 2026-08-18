@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCheck,
@@ -75,6 +76,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [openPanel, setOpenPanel] = useState(false);
+  const [launcherTarget, setLauncherTarget] = useState<HTMLElement | null>(null);
   const [histories, setHistories] = useState(loadAssistantHistories);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyQuery, setHistoryQuery] = useState('');
@@ -137,6 +139,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       .then((settings) => setNoKey(!settings.ai.apiKey))
       .catch(() => setNoKey(true));
   }, [openPanel]);
+
+  useEffect(() => {
+    setLauncherTarget(document.getElementById('assistant-sidebar-slot'));
+  }, []);
 
   useEffect(() => {
     if (!openPanel) return;
@@ -782,14 +788,21 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         </section>
       )}
 
-      <button
-        className={`uta-fab ${openPanel ? 'open' : ''}`}
-        onClick={() => setOpenPanel((current) => !current)}
-        aria-label={openPanel ? t('aiAssistant.closeAssistant') : t('aiAssistant.openAssistant')}
-        title={t('aiAssistant.dialogLabel')}
-      >
-        <FontAwesomeIcon icon={openPanel ? faXmark : faRobot} />
-      </button>
+      {launcherTarget &&
+        createPortal(
+          <button
+            className={`sidebar-footer-btn uta-sidebar-trigger ${openPanel ? 'open' : ''}`}
+            onClick={() => setOpenPanel((current) => !current)}
+            aria-label={
+              openPanel ? t('aiAssistant.closeAssistant') : t('aiAssistant.openAssistant')
+            }
+            title={t('aiAssistant.dialogLabel')}
+          >
+            <FontAwesomeIcon icon={openPanel ? faXmark : faRobot} />
+            <span>{t('aiAssistant.title')}</span>
+          </button>,
+          launcherTarget
+        )}
     </>
   );
 };

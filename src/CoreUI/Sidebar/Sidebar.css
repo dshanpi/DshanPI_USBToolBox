@@ -194,6 +194,11 @@
   gap: 8px;
 }
 
+.assistant-sidebar-slot {
+  display: flex;
+  width: 100%;
+}
+
 .sidebar--collapsed .sidebar-footer {
   padding: 12px;
 }

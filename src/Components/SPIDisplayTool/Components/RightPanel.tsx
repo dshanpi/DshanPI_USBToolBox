@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBookmark,
@@ -109,13 +110,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({
   logs,
   onClearLogs,
 }) => {
+  const { t } = useTranslation();
   const previewRef = useRef<HTMLCanvasElement | null>(null);
   const logEndRef = useRef<HTMLDivElement | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const [previewMode, setPreviewMode] = useState<'draft' | 'sent'>('draft');
   const [wText, setWText] = useState(String(width));
   const [hText, setHText] = useState(String(height));
-  const [copyLabel, setCopyLabel] = useState('复制');
+  const [copyStatus, setCopyStatus] = useState<'copy' | 'copied' | 'failed'>('copy');
   const [showHistory, setShowHistory] = useState(false);
   const selectedPreview = previewMode === 'draft' ? draftPreview : sentPreview;
   const displayedRegion =
@@ -183,12 +185,12 @@ export const RightPanel: React.FC<RightPanelProps> = ({
       ? Math.min(100, (transferState.sentBytes / transferState.totalBytes) * 100)
       : 0;
   const transferLabel = useMemo(() => {
-    if (transferState.status === 'sending') return '正在发送';
-    if (transferState.status === 'success') return '发送完成';
-    if (transferState.status === 'cancelled') return '已停止';
-    if (transferState.status === 'error') return '发送失败';
-    return '等待发送';
-  }, [transferState.status]);
+    if (transferState.status === 'sending') return t('spiDisplay.right.sending');
+    if (transferState.status === 'success') return t('spiDisplay.right.sendComplete');
+    if (transferState.status === 'cancelled') return t('spiDisplay.right.stopped');
+    if (transferState.status === 'error') return t('spiDisplay.right.sendFailed');
+    return t('spiDisplay.right.waiting');
+  }, [t, transferState.status]);
 
   const commitWidth = () => {
     const value = Number.parseInt(wText, 10);
@@ -231,7 +233,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
     const value = logs.map((item) => `[${item.time}] ${item.message}`).join('\n');
     try {
       await navigator.clipboard.writeText(value);
-      setCopyLabel('已复制');
+      setCopyStatus('copied');
     } catch {
       const textarea = document.createElement('textarea');
       textarea.value = value;
@@ -241,28 +243,28 @@ export const RightPanel: React.FC<RightPanelProps> = ({
       textarea.select();
       const copied = document.execCommand('copy');
       textarea.remove();
-      setCopyLabel(copied ? '已复制' : '失败');
+      setCopyStatus(copied ? 'copied' : 'failed');
     }
-    window.setTimeout(() => setCopyLabel('复制'), 1500);
+    window.setTimeout(() => setCopyStatus('copy'), 1500);
   };
 
   return (
     <div className="sdt-panel sdt-right-panel">
       <div className="sdt-section-title">
         <FontAwesomeIcon icon={faDisplay} />
-        <span>画面预览</span>
+        <span>{t('spiDisplay.right.preview')}</span>
         <div className="sdt-preview-switch">
           <button
             className={previewMode === 'draft' ? 'active' : ''}
             onClick={() => setPreviewMode('draft')}
           >
-            待发送
+            {t('spiDisplay.right.draft')}
           </button>
           <button
             className={previewMode === 'sent' ? 'active' : ''}
             onClick={() => setPreviewMode('sent')}
           >
-            已发送
+            {t('spiDisplay.right.sent')}
           </button>
         </div>
       </div>
@@ -285,27 +287,34 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                 updateDragRegion(event);
                 dragStartRef.current = null;
               }}
-              title={displayType === 'rgb565' ? '拖动框选手动刷新区域' : undefined}
+              title={displayType === 'rgb565' ? t('spiDisplay.right.dragRegion') : undefined}
             />
           ) : (
             <div className="sdt-lcd-placeholder">
               <FontAwesomeIcon icon={faMicrochip} className="icon" />
-              <div>{previewMode === 'draft' ? '修改参数后在此实时预览' : '尚未向屏幕发送内容'}</div>
+              <div>
+                {previewMode === 'draft'
+                  ? t('spiDisplay.right.previewHint')
+                  : t('spiDisplay.right.noSentContent')}
+              </div>
             </div>
           )}
-          {compareEntry && <span className="sdt-compare-badge">历史｜当前</span>}
+          {compareEntry && (
+            <span className="sdt-compare-badge">{t('spiDisplay.right.historyCurrent')}</span>
+          )}
         </div>
         <div className="sdt-lcd-status">
           <span>
             <span className={`sdt-status-dot ${online ? 'connected' : ''}`} />
-            {online ? '已连接' : '未连接'}
+            {online ? t('spiDisplay.common.connected') : t('spiDisplay.common.disconnected')}
           </span>
           <span>
             {width} × {height}
           </span>
           {displayedRegion && (
             <span>
-              区域 {displayedRegion.x},{displayedRegion.y} {displayedRegion.w}×{displayedRegion.h}
+              {t('spiDisplay.right.region')} {displayedRegion.x},{displayedRegion.y}{' '}
+              {displayedRegion.w}×{displayedRegion.h}
             </span>
           )}
         </div>
@@ -314,8 +323,8 @@ export const RightPanel: React.FC<RightPanelProps> = ({
           displayType === 'rgb565' &&
           previewMode === 'draft' && (
             <div className="sdt-preview-region-note mono">
-              手动区域 X{manualRefreshRegion.x} Y{manualRefreshRegion.y} {manualRefreshRegion.w}×
-              {manualRefreshRegion.h}
+              {t('spiDisplay.right.manualRegion')} X{manualRefreshRegion.x} Y{manualRefreshRegion.y}{' '}
+              {manualRefreshRegion.w}×{manualRefreshRegion.h}
             </div>
           )}
 
@@ -331,7 +340,11 @@ export const RightPanel: React.FC<RightPanelProps> = ({
             <span>
               {formatBytes(transferState.sentBytes)} / {formatBytes(transferState.totalBytes)}
             </span>
-            <span>剩余 {formatDuration(transferState.estimatedRemainingMs)}</span>
+            <span>
+              {t('spiDisplay.right.remaining', {
+                time: formatDuration(transferState.estimatedRemainingMs),
+              })}
+            </span>
             <span>{formatBytes(transferState.throughputBytesPerSecond)}/s</span>
             <span>
               {formatDuration(transferState.frameTimeMs)} · {transferState.actualFps.toFixed(1)} fps
@@ -341,7 +354,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
           <div className="sdt-transfer-actions">
             {transferState.status === 'sending' ? (
               <button className="sdt-btn danger small" onClick={onCancelTransfer}>
-                <FontAwesomeIcon icon={faStop} /> 停止发送
+                <FontAwesomeIcon icon={faStop} /> {t('spiDisplay.right.stopSending')}
               </button>
             ) : (
               <button
@@ -349,14 +362,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                 onClick={onRetryLastSend}
                 disabled={transferState.status === 'idle'}
               >
-                <FontAwesomeIcon icon={faRotateRight} /> 重新发送
+                <FontAwesomeIcon icon={faRotateRight} /> {t('spiDisplay.right.resend')}
               </button>
             )}
           </div>
         </div>
 
         <div className="sdt-resolution-control">
-          <label>分辨率</label>
+          <label>{t('spiDisplay.right.resolution')}</label>
           <select
             className="sdt-select"
             value={resolutionPreset}
@@ -392,14 +405,16 @@ export const RightPanel: React.FC<RightPanelProps> = ({
 
       <div className="sdt-content-library">
         <button className="sdt-library-toggle" onClick={() => setShowHistory((value) => !value)}>
-          <span>发送历史与模板</span>
+          <span>{t('spiDisplay.right.historyTemplates')}</span>
           <span>
             {history.length} / {templates.length}
           </span>
         </button>
         {showHistory && (
           <div className="sdt-library-body">
-            {templates.length > 0 && <div className="sdt-library-label">内容模板</div>}
+            {templates.length > 0 && (
+              <div className="sdt-library-label">{t('spiDisplay.right.templates')}</div>
+            )}
             {templates.map((template) => (
               <div className="sdt-history-item" key={template.id}>
                 <img src={template.imageDataUrl} alt="" />
@@ -409,16 +424,24 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                     {template.width}×{template.height}
                   </small>
                 </div>
-                <button title="使用模板" onClick={() => onUseTemplate(template.id)}>
+                <button
+                  title={t('spiDisplay.right.useTemplate')}
+                  onClick={() => onUseTemplate(template.id)}
+                >
                   <FontAwesomeIcon icon={faPaperPlane} />
                 </button>
-                <button title="删除模板" onClick={() => onDeleteTemplate(template.id)}>
+                <button
+                  title={t('spiDisplay.right.deleteTemplate')}
+                  onClick={() => onDeleteTemplate(template.id)}
+                >
                   <FontAwesomeIcon icon={faXmark} />
                 </button>
               </div>
             ))}
-            <div className="sdt-library-label">最近发送</div>
-            {history.length === 0 && <div className="sdt-library-empty">暂无发送记录</div>}
+            <div className="sdt-library-label">{t('spiDisplay.right.recent')}</div>
+            {history.length === 0 && (
+              <div className="sdt-library-empty">{t('spiDisplay.right.noHistory')}</div>
+            )}
             {history.map((entry) => (
               <div className="sdt-history-item" key={entry.id}>
                 <canvas
@@ -435,26 +458,41 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                     {entry.timestamp} · {formatBytes(entry.bytes.length)}
                   </small>
                 </div>
-                <button title="重新发送" onClick={() => onResendHistory(entry.id)}>
+                <button
+                  title={t('spiDisplay.right.resend')}
+                  onClick={() => onResendHistory(entry.id)}
+                >
                   <FontAwesomeIcon icon={faPaperPlane} />
                 </button>
-                <button title="载入绘制编辑器" onClick={() => onEditHistory(entry.id)}>
+                <button
+                  title={t('spiDisplay.right.loadEditor')}
+                  onClick={() => onEditHistory(entry.id)}
+                >
                   <FontAwesomeIcon icon={faPencil} />
                 </button>
-                <button title="与当前预览比较" onClick={() => onCompareHistory(entry.id)}>
+                <button
+                  title={t('spiDisplay.right.comparePreview')}
+                  onClick={() => onCompareHistory(entry.id)}
+                >
                   <FontAwesomeIcon icon={faCodeCompare} />
                 </button>
-                <button title="保存模板" onClick={() => onSaveHistoryAsTemplate(entry.id)}>
+                <button
+                  title={t('spiDisplay.right.saveTemplate')}
+                  onClick={() => onSaveHistoryAsTemplate(entry.id)}
+                >
                   <FontAwesomeIcon icon={faBookmark} />
                 </button>
-                <button title="导出 RGB565/BIN" onClick={() => onExportHistory(entry.id)}>
+                <button
+                  title={t('spiDisplay.right.exportRgb')}
+                  onClick={() => onExportHistory(entry.id)}
+                >
                   <FontAwesomeIcon icon={faDownload} />
                 </button>
               </div>
             ))}
             {compareEntry && (
               <div className="sdt-parameter-compare">
-                <div className="sdt-library-label">参数对比：所选记录 / 相邻最新记录</div>
+                <div className="sdt-library-label">{t('spiDisplay.right.parameterCompare')}</div>
                 {Array.from(
                   new Set([
                     ...Object.keys(compareEntry.metadata ?? {}),
@@ -469,10 +507,12 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                 ))}
                 {!Object.keys(compareEntry.metadata ?? {}).length &&
                   !Object.keys(comparisonTarget?.metadata ?? {}).length && (
-                    <div className="sdt-library-empty">该记录没有可对比的内容参数</div>
+                    <div className="sdt-library-empty">
+                      {t('spiDisplay.right.noComparableParams')}
+                    </div>
                   )}
                 <button className="sdt-btn small" onClick={() => onCompareHistory(null)}>
-                  <FontAwesomeIcon icon={faXmark} /> 退出对比
+                  <FontAwesomeIcon icon={faXmark} /> {t('spiDisplay.right.exitCompare')}
                 </button>
               </div>
             )}
@@ -482,22 +522,22 @@ export const RightPanel: React.FC<RightPanelProps> = ({
 
       <div className="sdt-log-console">
         <div className="sdt-log-header">
-          <span>输出日志 ({logs.length})</span>
+          <span>{t('spiDisplay.right.outputLog', { count: logs.length })}</span>
           <div className="sdt-log-header-actions">
             <button
               className="sdt-btn small"
               onClick={() => void copyAllLogs()}
               disabled={!logs.length}
             >
-              <FontAwesomeIcon icon={faCopy} /> {copyLabel}
+              <FontAwesomeIcon icon={faCopy} /> {t(`spiDisplay.right.${copyStatus}`)}
             </button>
             <button className="sdt-btn small" onClick={onClearLogs}>
-              <FontAwesomeIcon icon={faTrash} /> 清空
+              <FontAwesomeIcon icon={faTrash} /> {t('spiDisplay.common.clear')}
             </button>
           </div>
         </div>
         <div className="sdt-log-list">
-          {!logs.length && <div className="sdt-library-empty">暂无日志</div>}
+          {!logs.length && <div className="sdt-library-empty">{t('spiDisplay.right.noLogs')}</div>}
           {logs.map((item, index) => (
             <div key={`${item.time}-${index}`} className="log-line">
               <span className="log-time">[{item.time}]</span>

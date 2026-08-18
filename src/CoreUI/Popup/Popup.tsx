@@ -40,7 +40,7 @@ interface PopupProps {
   type?: PopupType;
   /** Title text to display */
   title?: string;
-  /** Message content (supports HTML) */
+  /** Message content rendered as plain text */
   message?: string;
   /** Auto-close duration in milliseconds */
   duration?: number;
@@ -69,7 +69,7 @@ interface PopupProps {
  * Features:
  * - Auto-dismiss after configurable duration
  * - Click-outside-to-close for non-confirm types
- * - HTML support in message content
+ * - Plain-text message content (including line breaks)
  * - Internationalized button text defaults
  * - Animated visibility transitions
  *
@@ -175,7 +175,7 @@ export const Popup: React.FC<PopupProps> = ({
             </button>
           )}
         </div>
-        {message && <div className="popup-message" dangerouslySetInnerHTML={{ __html: message }} />}
+        {message && <div className="popup-message">{message}</div>}
         {isConfirmType && (
           <div className="popup-buttons">
             <button className="popup-btn popup-btn-cancel" onClick={handleClose}>

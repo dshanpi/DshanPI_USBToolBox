@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { invokeCommand, subscribeEvent } from '../../../Platform/IPC';
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import { crc16, formatRTUHex } from '../lib/ModbusProtocol';
@@ -28,6 +29,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   slaveEnabled,
   onSlaveEnabledChange,
 }) => {
+  const { t } = useTranslation();
   const [, setTick] = useState(0);
   const forceUpdate = useCallback(() => setTick((n) => n + 1), []);
   const sim = slaveSimRef.current;
@@ -116,7 +118,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   }, [serialPort]);
   useEffect(() => {
     scanPorts();
-  }, []);
+  }, [scanPorts]);
 
   const handleConnect = useCallback(async () => {
     if (!serialPort) {
@@ -163,6 +165,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   const rxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let disposed = false;
     let unlisten: UnlistenFn | undefined;
     if (connected) {
       subscribeEvent('serial-data-received', (payload: { port: string; data: number[] }) => {
@@ -205,10 +208,12 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
           }
         }, 50);
       }).then((fn) => {
-        unlisten = fn;
+        if (disposed) fn();
+        else unlisten = fn;
       });
     }
     return () => {
+      disposed = true;
       unlisten?.();
       if (rxTimerRef.current) clearTimeout(rxTimerRef.current);
     };
@@ -249,13 +254,13 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   // ─── Table helpers ───────────────────────────────────
 
   const renderCoilTable = (count: number) => (
-    <div className="modbus-data-panel" style={{ minHeight: 0, maxHeight: 220 }}>
+    <div className="modbus-data-panel modbus-slave-data-panel">
       <div className="modbus-data-table-wrap">
         <table className="modbus-data-table">
           <thead>
             <tr>
-              <th>Addr</th>
-              <th>Val</th>
+              <th>{t('modbus.common.addr')}</th>
+              <th>{t('modbus.common.valueShort')}</th>
             </tr>
           </thead>
           <tbody>
@@ -275,7 +280,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                       cursor: 'pointer',
                       userSelect: 'none',
                     }}
-                    title="Click to toggle"
+                    title={t('modbus.slave.clickToggle')}
                   >
                     {v}
                   </td>
@@ -289,13 +294,13 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   );
 
   const renderRegisterTable = (count: number) => (
-    <div className="modbus-data-panel" style={{ minHeight: 0, maxHeight: 220 }}>
+    <div className="modbus-data-panel modbus-slave-data-panel">
       <div className="modbus-data-table-wrap">
         <table className="modbus-data-table">
           <thead>
             <tr>
-              <th>Addr</th>
-              <th>Dec</th>
+              <th>{t('modbus.common.addr')}</th>
+              <th>{t('modbus.common.dec')}</th>
             </tr>
           </thead>
           <tbody>
@@ -326,7 +331,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
   );
 
   return (
-    <div className="modbus-master-layout">
+    <div className="modbus-master-layout modbus-slave-workspace">
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <label className="modbus-check-label">
@@ -335,10 +340,10 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
             checked={slaveEnabled}
             onChange={(e) => onSlaveEnabledChange(e.target.checked)}
           />{' '}
-          Slave Active
+          {t('modbus.slave.active')}
         </label>
         <div className="modbus-def-field" style={{ width: 120 }}>
-          <label>Slave ID</label>
+          <label>{t('modbus.common.slaveId')}</label>
           <input
             className="modbus-def-input"
             type="number"
@@ -350,18 +355,20 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
         </div>
         <span className={`status-led ${connected ? 'active' : ''}`} />
         <span style={{ fontSize: 11, color: 'var(--color-overlay1)' }}>
-          {connected ? `Listening on ${serialPort}` : 'Not connected'}
+          {connected
+            ? t('modbus.slave.listeningOn', { port: serialPort })
+            : t('modbus.common.notConnected')}
         </span>
       </div>
 
       {/* 4 data panels — single row */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+      <div className="modbus-slave-data-grid">
+        <div className="modbus-slave-data-column">
           <div
             className="modbus-section-title"
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <span>Coils (0x) — FC 01/05</span>
+            <span>{t('modbus.slave.coils')}</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 className="modbus-add-input"
@@ -379,7 +386,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                 }}
                 disabled={coilCount >= MAX_ADDR}
               >
-                Add
+                {t('modbus.common.add')}
               </button>
             </div>
           </div>
@@ -388,7 +395,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
             className="modbus-section-title"
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <span>Discrete Inputs (1x) — FC 02</span>
+            <span>{t('modbus.slave.discreteInputs')}</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 className="modbus-add-input"
@@ -406,18 +413,18 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                 }}
                 disabled={discreteCount >= MAX_ADDR}
               >
-                Add
+                {t('modbus.common.add')}
               </button>
             </div>
           </div>
           {renderCoilTable(discreteCount)}
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+        <div className="modbus-slave-data-column">
           <div
             className="modbus-section-title"
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <span>Holding Regs (4x) — FC 03/06/16</span>
+            <span>{t('modbus.slave.holdingRegisters')}</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 className="modbus-add-input"
@@ -435,7 +442,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                 }}
                 disabled={holdingCount >= MAX_ADDR}
               >
-                Add
+                {t('modbus.common.add')}
               </button>
             </div>
           </div>
@@ -444,7 +451,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
             className="modbus-section-title"
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            <span>Input Regs (3x) — FC 04</span>
+            <span>{t('modbus.slave.inputRegisters')}</span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <input
                 className="modbus-add-input"
@@ -462,7 +469,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                 }}
                 disabled={inputRegCount >= MAX_ADDR}
               >
-                Add
+                {t('modbus.common.add')}
               </button>
             </div>
           </div>
@@ -473,10 +480,10 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8 }}>
         <button className="i2c-btn" onClick={resetDefaults}>
-          Reset Defaults
+          {t('modbus.slave.resetDefaults')}
         </button>
         <button className="i2c-btn" onClick={injectTest}>
-          Inject Test Data
+          {t('modbus.slave.injectTestData')}
         </button>
       </div>
 
@@ -485,7 +492,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
         <div className="i2c-master-config-body">
           <div className="serial-config-row">
             <div className="config-group">
-              <label className="config-label">Port</label>
+              <label className="config-label">{t('modbus.common.port')}</label>
               <div className="config-port-row">
                 <span className={`status-led ${connected ? 'active' : ''}`} />
                 <select
@@ -494,7 +501,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                   onChange={(e) => setSerialPort(e.target.value)}
                   disabled={connected}
                 >
-                  <option value="">-- Select Port --</option>
+                  <option value="">{t('modbus.common.selectPort')}</option>
                   {ports.map((p) => (
                     <option key={p.name} value={p.name}>
                       {p.name}
@@ -506,14 +513,14 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                   className="config-btn-icon"
                   onClick={scanPorts}
                   disabled={connected}
-                  title="Refresh"
+                  title={t('modbus.common.refresh')}
                 >
                   ↻
                 </button>
               </div>
             </div>
             <div className="config-group">
-              <label className="config-label">Baud</label>
+              <label className="config-label">{t('modbus.common.baud')}</label>
               <select
                 className="config-select"
                 value={baudRate}
@@ -541,7 +548,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
               </select>
             </div>
             <div className="config-group">
-              <label className="config-label">Parity</label>
+              <label className="config-label">{t('modbus.common.parity')}</label>
               <select
                 className="config-select"
                 value={parity}
@@ -561,18 +568,18 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
                   onClick={handleConnect}
                   disabled={connecting || !serialPort}
                 >
-                  {connecting ? '...' : 'Connect'}
+                  {connecting ? '...' : t('modbus.common.connect')}
                 </button>
               ) : (
                 <button className="config-btn-close" onClick={handleDisconnect}>
-                  Disconnect
+                  {t('modbus.common.disconnect')}
                 </button>
               )}
             </div>
           </div>
           <div className="i2c-log-area" style={{ height: 150, marginTop: 8 }}>
             <div className="i2c-log-title">
-              <span className="status-led active" /> Slave Log
+              <span className="status-led active" /> {t('modbus.slave.log')}
             </div>
             <div
               className="i2c-log-list i2c-log-interactive"
@@ -580,7 +587,7 @@ export const SlaveTab: React.FC<SlaveTabProps> = ({
               style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}
             >
               <pre className="i2c-log-pre">
-                {logs.map((e) => `[${e.time}] ${e.message}`).join('\n') || 'Ready'}
+                {logs.map((e) => `[${e.time}] ${e.message}`).join('\n') || t('modbus.common.ready')}
               </pre>
             </div>
           </div>

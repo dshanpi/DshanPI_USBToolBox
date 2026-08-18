@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEraser,
@@ -12,12 +13,12 @@ import type { TabContext } from './common';
 
 type DrawTool = 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill';
 const TOOLS: Array<[DrawTool, string]> = [
-  ['brush', '画笔'],
-  ['eraser', '橡皮'],
-  ['line', '直线'],
-  ['rect', '矩形'],
-  ['circle', '圆形'],
-  ['fill', '填充'],
+  ['brush', 'spiDisplay.draw.brush'],
+  ['eraser', 'spiDisplay.draw.eraser'],
+  ['line', 'spiDisplay.draw.line'],
+  ['rect', 'spiDisplay.draw.rectangle'],
+  ['circle', 'spiDisplay.draw.circle'],
+  ['fill', 'spiDisplay.draw.fill'],
 ];
 
 function copyImageData(image: ImageData): ImageData {
@@ -34,6 +35,7 @@ export const DrawTab: React.FC<TabContext> = ({
   initialCanvas,
   onInitialCanvasConsumed,
 }) => {
+  const { t } = useTranslation();
   const [tool, setTool] = useState<DrawTool>('brush');
   const [color, setColor] = useState('#ffffff');
   const [brushSize, setBrushSize] = useState(2);
@@ -331,13 +333,13 @@ export const DrawTab: React.FC<TabContext> = ({
   return (
     <div className="sdt-tab-form">
       <div className="sdt-toolbar-row sdt-draw-tools">
-        {TOOLS.map(([value, label]) => (
+        {TOOLS.map(([value, labelKey]) => (
           <button
             key={value}
             className={`sdt-tool-btn ${tool === value ? 'active' : ''}`}
             onClick={() => setTool(value)}
           >
-            {label}
+            {t(labelKey)}
           </button>
         ))}
         <input
@@ -347,7 +349,7 @@ export const DrawTab: React.FC<TabContext> = ({
           onChange={(event) => setColor(event.target.value)}
         />
         <label>
-          大小
+          {t('spiDisplay.draw.size')}
           <input
             type="range"
             className="sdt-range"
@@ -365,7 +367,7 @@ export const DrawTab: React.FC<TabContext> = ({
               checked={filledShape}
               onChange={(event) => setFilledShape(event.target.checked)}
             />
-            填充
+            {t('spiDisplay.draw.filled')}
           </label>
         )}
       </div>
@@ -375,17 +377,17 @@ export const DrawTab: React.FC<TabContext> = ({
           onClick={() => restore(undoRef, redoRef)}
           disabled={!undoRef.current.length}
         >
-          <FontAwesomeIcon icon={faRotateLeft} /> 撤销
+          <FontAwesomeIcon icon={faRotateLeft} /> {t('spiDisplay.draw.undo')}
         </button>
         <button
           className="sdt-btn small"
           onClick={() => restore(redoRef, undoRef)}
           disabled={!redoRef.current.length}
         >
-          <FontAwesomeIcon icon={faRotateRight} /> 重做
+          <FontAwesomeIcon icon={faRotateRight} /> {t('spiDisplay.draw.redo')}
         </button>
         <button className="sdt-btn small" onClick={handleClearCanvas}>
-          <FontAwesomeIcon icon={faTrash} /> 清画布
+          <FontAwesomeIcon icon={faTrash} /> {t('spiDisplay.draw.clearCanvas')}
         </button>
         <span className="sdt-spacer" />
         <button
@@ -393,7 +395,7 @@ export const DrawTab: React.FC<TabContext> = ({
           onClick={() => void onClearDisplay()}
           disabled={busy}
         >
-          <FontAwesomeIcon icon={faEraser} /> 清屏
+          <FontAwesomeIcon icon={faEraser} /> {t('spiDisplay.common.clearDisplay')}
         </button>
         <button
           className="sdt-btn primary"
@@ -401,12 +403,12 @@ export const DrawTab: React.FC<TabContext> = ({
             canvasRef.current &&
             void onSend({
               canvas: canvasRef.current,
-              description: `绘制画面 ${width}×${height}`,
+              description: t('spiDisplay.draw.description', { width, height }),
               bgColor: '#000000',
               metadata: {
                 类型: '绘制',
                 画布: `${width}×${height}`,
-                最后工具: TOOLS.find(([value]) => value === tool)?.[1] ?? tool,
+                最后工具: t(TOOLS.find(([value]) => value === tool)?.[1] ?? tool),
                 颜色: color,
                 笔刷: brushSize,
               },
@@ -414,15 +416,15 @@ export const DrawTab: React.FC<TabContext> = ({
           }
           disabled={busy}
         >
-          <FontAwesomeIcon icon={faPaperPlane} /> 发送
+          <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.common.send')}
         </button>
       </div>
 
       <details className="sdt-advanced-panel">
-        <summary>高级绘制设置</summary>
+        <summary>{t('spiDisplay.draw.advanced')}</summary>
         <div className="sdt-advanced-content sdt-toolbar-row">
           <button className="sdt-btn small" onClick={() => fileInputRef.current?.click()}>
-            <FontAwesomeIcon icon={faFolderOpen} /> 导入底图
+            <FontAwesomeIcon icon={faFolderOpen} /> {t('spiDisplay.draw.importBackground')}
           </button>
           <input
             ref={fileInputRef}
@@ -435,13 +437,13 @@ export const DrawTab: React.FC<TabContext> = ({
             }}
           />
           <label>
-            放大
+            {t('spiDisplay.draw.zoom')}
             <select
               className="sdt-select compact"
               value={zoom}
               onChange={(event) => setZoom(Number(event.target.value))}
             >
-              <option value={1}>适应</option>
+              <option value={1}>{t('spiDisplay.draw.fit')}</option>
               <option value={2}>2×</option>
               <option value={4}>4×</option>
               <option value={8}>8×</option>
@@ -453,7 +455,7 @@ export const DrawTab: React.FC<TabContext> = ({
               checked={showGrid}
               onChange={(event) => setShowGrid(event.target.checked)}
             />
-            像素网格
+            {t('spiDisplay.draw.pixelGrid')}
           </label>
         </div>
       </details>
@@ -486,7 +488,11 @@ export const DrawTab: React.FC<TabContext> = ({
       </div>
       <div className="sdt-canvas-status">
         <span>
-          画布 {width}×{height} · {TOOLS.find(([value]) => value === tool)?.[1]}
+          {t('spiDisplay.draw.canvas', {
+            width,
+            height,
+            tool: t(TOOLS.find(([value]) => value === tool)?.[1] ?? tool),
+          })}
         </span>
         <span>{coords ? `(${coords.x}, ${coords.y})` : '(--, --)'}</span>
       </div>

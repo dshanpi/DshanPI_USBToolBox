@@ -26,14 +26,31 @@ export function buildRTUFrame(slaveId: number, funcCode: number, dataBytes: numb
 /** Parse a Modbus RTU response. Returns parsed payload or error description. */
 export function parseRTUResponse(buffer: Uint8Array): ModbusResponse | ModbusError {
   if (buffer.length < 4) return { error: 'Response too short' };
-  const recvCrc = (buffer[buffer.length - 2] | (buffer[buffer.length - 1] << 8));
+  const recvCrc = buffer[buffer.length - 2] | (buffer[buffer.length - 1] << 8);
   const calcCrc = crc16(buffer.slice(0, -2));
-  if (recvCrc !== calcCrc) return { error: `CRC mismatch: recv 0x${recvCrc.toString(16)}, calc 0x${calcCrc.toString(16)}` };
+  if (recvCrc !== calcCrc)
+    return {
+      error: `CRC mismatch: recv 0x${recvCrc.toString(16)}, calc 0x${calcCrc.toString(16)}`,
+    };
   const slaveId = buffer[0];
   const funcCode = buffer[1];
   if ((funcCode & 0x80) !== 0) {
+    if (buffer.length !== 5)
+      return { error: 'Malformed Modbus exception response', slaveId, funcCode };
     const exceptionCode = buffer[2];
-    return { error: `Exception: func=${funcCode & 0x7f} code=${exceptionCode}`, slaveId, funcCode, exception: exceptionCode };
+    return {
+      error: `Exception: func=${funcCode & 0x7f} code=${exceptionCode}`,
+      slaveId,
+      funcCode,
+      exception: exceptionCode,
+    };
+  }
+  if ([1, 2, 3, 4].includes(funcCode)) {
+    const byteCount = buffer[2];
+    if (buffer.length !== byteCount + 5)
+      return { error: 'Response byte count does not match RTU frame length', slaveId, funcCode };
+  } else if ([5, 6, 15, 16].includes(funcCode) && buffer.length !== 8) {
+    return { error: 'Malformed Modbus write response', slaveId, funcCode };
   }
   return {
     slaveId,
@@ -44,13 +61,21 @@ export function parseRTUResponse(buffer: Uint8Array): ModbusResponse | ModbusErr
 }
 
 /** Build a Modbus TCP request frame: MBAP header + PDU */
-export function buildTCPFrame(transId: number, slaveId: number, funcCode: number, dataBytes: number[]): Uint8Array {
+export function buildTCPFrame(
+  transId: number,
+  slaveId: number,
+  funcCode: number,
+  dataBytes: number[]
+): Uint8Array {
   const pdu = [slaveId, funcCode, ...dataBytes];
   const len = pdu.length;
   const mbap = [
-    (transId >> 8) & 0xff, transId & 0xff, // Transaction ID
-    0, 0, // Protocol ID (0 = Modbus)
-    (len >> 8) & 0xff, len & 0xff, // Length (PDU byte count)
+    (transId >> 8) & 0xff,
+    transId & 0xff, // Transaction ID
+    0,
+    0, // Protocol ID (0 = Modbus)
+    (len >> 8) & 0xff,
+    len & 0xff, // Length (PDU byte count)
   ];
   return new Uint8Array([...mbap, ...pdu]);
 }
@@ -59,14 +84,38 @@ export function buildTCPFrame(transId: number, slaveId: number, funcCode: number
 export function parseTCPResponse(buffer: Uint8Array): ModbusResponse | ModbusError {
   if (buffer.length < 8) return { error: 'Response too short for MBAP' };
   const transId = (buffer[0] << 8) | buffer[1];
+  const protocolId = (buffer[2] << 8) | buffer[3];
+  if (protocolId !== 0) return { error: `Invalid Modbus protocol ID ${protocolId}`, transId };
   const len = (buffer[4] << 8) | buffer[5];
-  if (buffer.length < 6 + len) return { error: 'Incomplete TCP frame' };
+  if (len < 2 || len > 254) return { error: `Invalid MBAP length ${len}`, transId };
+  if (buffer.length !== 6 + len)
+    return { error: 'TCP frame length does not match MBAP header', transId };
   const pdu = buffer.slice(6, 6 + len);
   const slaveId = pdu[0];
   const funcCode = pdu[1];
   if ((funcCode & 0x80) !== 0) {
+    if (pdu.length !== 3)
+      return { error: 'Malformed Modbus TCP exception response', slaveId, funcCode, transId };
     const exceptionCode = pdu[2];
-    return { error: `Exception: func=${funcCode & 0x7f} code=${exceptionCode}`, slaveId, funcCode, exception: exceptionCode };
+    return {
+      error: `Exception: func=${funcCode & 0x7f} code=${exceptionCode}`,
+      slaveId,
+      funcCode,
+      exception: exceptionCode,
+      transId,
+    };
+  }
+  if ([1, 2, 3, 4].includes(funcCode)) {
+    const byteCount = pdu[2];
+    if (pdu.length !== byteCount + 3)
+      return {
+        error: 'Response byte count does not match TCP frame length',
+        slaveId,
+        funcCode,
+        transId,
+      };
+  } else if ([5, 6, 15, 16].includes(funcCode) && pdu.length !== 6) {
+    return { error: 'Malformed Modbus TCP write response', slaveId, funcCode, transId };
   }
   return { slaveId, funcCode, data: pdu.slice(2), raw: pdu, transId };
 }
@@ -86,6 +135,7 @@ export interface ModbusError {
   slaveId?: number;
   funcCode?: number;
   exception?: number;
+  transId?: number;
 }
 
 export function isModbusError(r: ModbusResponse | ModbusError): r is ModbusError {
@@ -124,18 +174,18 @@ export function buildPDUData(
   funcCode: number,
   startAddr: number,
   quantity: number,
-  writeBytes: number[],
+  writeBytes: number[]
 ): number[] {
   if (isReadFunc(funcCode)) {
     return [(startAddr >> 8) & 0xff, startAddr & 0xff, (quantity >> 8) & 0xff, quantity & 0xff];
   }
   if (funcCode === 5) {
-    const userVal = writeBytes.length >= 2 ? ((writeBytes[0] << 8) | writeBytes[1]) : 0;
+    const userVal = writeBytes.length >= 2 ? (writeBytes[0] << 8) | writeBytes[1] : 0;
     const coilVal = userVal === 0 ? 0x0000 : 0xff00;
     return [(startAddr >> 8) & 0xff, startAddr & 0xff, (coilVal >> 8) & 0xff, coilVal & 0xff];
   }
   if (funcCode === 6) {
-    const regVal = writeBytes.length >= 2 ? ((writeBytes[0] << 8) | writeBytes[1]) : quantity;
+    const regVal = writeBytes.length >= 2 ? (writeBytes[0] << 8) | writeBytes[1] : quantity;
     return [(startAddr >> 8) & 0xff, startAddr & 0xff, (regVal >> 8) & 0xff, regVal & 0xff];
   }
   if (funcCode === 15) {
@@ -143,9 +193,16 @@ export function buildPDUData(
     const data = new Array(byteCount).fill(0);
     for (let i = 0; i < Math.min(quantity, writeBytes.length * 8); i++) {
       const bit = (writeBytes[Math.floor(i / 8)] >> (i % 8)) & 1;
-      if (bit) data[Math.floor(i / 8)] |= (1 << (i % 8));
+      if (bit) data[Math.floor(i / 8)] |= 1 << (i % 8);
     }
-    return [(startAddr >> 8) & 0xff, startAddr & 0xff, (quantity >> 8) & 0xff, quantity & 0xff, byteCount, ...data];
+    return [
+      (startAddr >> 8) & 0xff,
+      startAddr & 0xff,
+      (quantity >> 8) & 0xff,
+      quantity & 0xff,
+      byteCount,
+      ...data,
+    ];
   }
   if (funcCode === 16) {
     const byteCount = quantity * 2;
@@ -155,7 +212,14 @@ export function buildPDUData(
       const lo = i * 2 + 1 < writeBytes.length ? writeBytes[i * 2 + 1] : 0;
       data.push(hi, lo);
     }
-    return [(startAddr >> 8) & 0xff, startAddr & 0xff, (quantity >> 8) & 0xff, quantity & 0xff, byteCount, ...data];
+    return [
+      (startAddr >> 8) & 0xff,
+      startAddr & 0xff,
+      (quantity >> 8) & 0xff,
+      quantity & 0xff,
+      byteCount,
+      ...data,
+    ];
   }
   return [];
 }
@@ -173,7 +237,7 @@ export function lrc(data: Uint8Array | number[]): number {
   const arr = Array.isArray(data) ? data : Array.from(data);
   let sum = 0;
   for (const b of arr) sum = (sum + b) & 0xff;
-  return ((~sum + 1) & 0xff);
+  return (~sum + 1) & 0xff;
 }
 
 /** Build a Modbus ASCII request frame: ":01 03 0000 000A F7\r\n" style string */
@@ -219,11 +283,16 @@ export function responseToBits(data: Uint8Array, count: number): number[] {
 /** PLC address mapping for function codes. Returns the 1-based PLC address prefix */
 export function getPLCAddressPrefix(funcCode: number): string {
   switch (funcCode) {
-    case 1: return '0';   // Coils: 00001-09999
-    case 2: return '1';   // Discrete Inputs: 10001-19999
-    case 3: return '4';   // Holding Registers: 40001-49999
-    case 4: return '3';   // Input Registers: 30001-39999
-    default: return '';
+    case 1:
+      return '0'; // Coils: 00001-09999
+    case 2:
+      return '1'; // Discrete Inputs: 10001-19999
+    case 3:
+      return '4'; // Holding Registers: 40001-49999
+    case 4:
+      return '3'; // Input Registers: 30001-39999
+    default:
+      return '';
   }
 }
 

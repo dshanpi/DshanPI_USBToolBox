@@ -16,12 +16,13 @@
  *   );
  *
  * 三个特性：
- *   - ESC 取消、Enter 提交（prompt 模式）
- *   - 点击遮罩取消
+ *   - ESC / Enter keyboard handling in prompt mode
+ *   - Clicking the backdrop dismisses the dialog
  *   - 危险操作用 okDanger:true 把确认按钮变红（删除/覆盖/清空场景）
  */
 
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './useModalDialog.css';
 
 /** Modal 内部状态。mode 决定显示输入框还是仅确认按钮。 */
@@ -48,7 +49,7 @@ export interface ModalDialogOptions {
 
 /** Hook 返回值。 */
 export interface UseModalDialogResult {
-  /** 弹出输入框：返回 Promise，resolve 输入字符串或 null（取消） */
+  /** Opens an input dialog and resolves to the entered string or null. */
   showPrompt: (title: string, defaultValue?: string, message?: string) => Promise<string | null>;
   /** 弹出确认框：返回 Promise<boolean>。confirm/cancel 两态 */
   showConfirm: (title: string, message?: string, opts?: ModalDialogOptions) => Promise<boolean>;
@@ -65,41 +66,58 @@ export interface UseModalDialogResult {
  * 因为应用里同一时刻只会有一个 modal。
  */
 export function useModalDialog(): UseModalDialogResult {
+  const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState>({ open: false, mode: 'prompt', title: '' });
   const [input, setInput] = useState('');
 
-  const showPrompt = useCallback((title: string, defaultValue = '', message?: string): Promise<string | null> => {
-    return new Promise((resolve) => {
-      setInput(defaultValue);
-      setModal({ open: true, mode: 'prompt', title, message, resolve });
-    });
-  }, []);
-
-  const showConfirm = useCallback((title: string, message?: string, opts?: ModalDialogOptions): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setModal({
-        open: true, mode: 'confirm', title, message,
-        okText: opts?.okText, okDanger: opts?.okDanger,
-        // confirm 模式下 resolve('') 视为确认，resolve(null) 视为取消
-        resolve: (val) => resolve(val !== null),
+  const showPrompt = useCallback(
+    (title: string, defaultValue = '', message?: string): Promise<string | null> => {
+      return new Promise((resolve) => {
+        setInput(defaultValue);
+        setModal({ open: true, mode: 'prompt', title, message, resolve });
       });
-    });
-  }, []);
+    },
+    []
+  );
+
+  const showConfirm = useCallback(
+    (title: string, message?: string, opts?: ModalDialogOptions): Promise<boolean> => {
+      return new Promise((resolve) => {
+        setModal({
+          open: true,
+          mode: 'confirm',
+          title,
+          message,
+          okText: opts?.okText,
+          okDanger: opts?.okDanger,
+          // confirm 模式下 resolve('') 视为确认，resolve(null) 视为取消
+          resolve: (val) => resolve(val !== null),
+        });
+      });
+    },
+    []
+  );
 
   const showAlert = useCallback((title: string, message?: string): Promise<void> => {
     return new Promise((resolve) => {
       setModal({
-        open: true, mode: 'alert', title, message,
+        open: true,
+        mode: 'alert',
+        title,
+        message,
         resolve: () => resolve(),
       });
     });
   }, []);
 
   /** 关闭弹窗并把结果通过 resolve 返回给等待方。 */
-  const close = useCallback((result: string | null) => {
-    modal.resolve?.(result);
-    setModal((m) => ({ ...m, open: false, resolve: undefined }));
-  }, [modal]);
+  const close = useCallback(
+    (result: string | null) => {
+      modal.resolve?.(result);
+      setModal((m) => ({ ...m, open: false, resolve: undefined }));
+    },
+    [modal]
+  );
 
   // 弹窗 JSX —— 调用方挂到树上即可。所有交互（ESC/Enter/点遮罩）都在内部处理
   const modalNode = !modal.open ? null : (
@@ -123,11 +141,15 @@ export function useModalDialog(): UseModalDialogResult {
         <div className="spi-modal-actions">
           {/* alert 模式只有 OK 按钮；prompt/confirm 模式有取消和确认 */}
           {modal.mode !== 'alert' && (
-            <button className="spi-modal-btn" onClick={() => close(null)}>取消</button>
+            <button className="spi-modal-btn" onClick={() => close(null)}>
+              {t('common.cancel')}
+            </button>
           )}
-          <button className={`spi-modal-btn ${modal.okDanger ? 'danger' : 'primary'}`}
-            onClick={() => close(modal.mode === 'prompt' ? input : '')}>
-            {modal.okText ?? '确定'}
+          <button
+            className={`spi-modal-btn ${modal.okDanger ? 'danger' : 'primary'}`}
+            onClick={() => close(modal.mode === 'prompt' ? input : '')}
+          >
+            {modal.okText ?? t('common.confirm')}
           </button>
         </div>
       </div>

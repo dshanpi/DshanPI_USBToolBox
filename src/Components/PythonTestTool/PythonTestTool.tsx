@@ -1,13 +1,19 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPlay, faStop, faCopy, faTrashCan, faFlask, faFileCode, faFolderOpen,
-  faFloppyDisk, faUpRightFromSquare,
+  faPlay,
+  faStop,
+  faCopy,
+  faTrashCan,
+  faFlask,
+  faFileCode,
+  faFolderOpen,
+  faFloppyDisk,
+  faUpRightFromSquare,
 } from '@fortawesome/free-solid-svg-icons';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
-import { openPath } from '@tauri-apps/plugin-opener';
 import { readTextFile } from '@tauri-apps/plugin-fs';
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import { MonacoEditor } from '../../CoreUI';
 import { AiChat } from './Components/AiChat';
@@ -263,12 +269,24 @@ print("=== 测试结束 ===")
 `;
 
 /** 内置示例清单：下拉里选 → 加载到编辑器。 */
-const BUILTIN_EXAMPLES: Array<{ key: string; label: string; code: string }> = [
-  { key: 'oled-hello', label: 'SSD1306 显示文本', code: EXAMPLE_SCRIPT },
-  { key: 'eeprom-24c02', label: '24C02 EEPROM 读写测试', code: EEPROM_24C02_SCRIPT },
-  { key: 'serial-at', label: '串口 AT 模组测试', code: SERIAL_AT_SCRIPT },
-  { key: 'modbus-rtu', label: 'Modbus RTU 从机测试', code: MODBUS_RTU_SCRIPT },
-  { key: 'custom-lcd', label: '自定义屏幕驱动（扩展模板）', code: CUSTOM_LCD_SCRIPT },
+const BUILTIN_EXAMPLES: Array<{ key: string; labelKey: string; code: string }> = [
+  { key: 'oled-hello', labelKey: 'tools.pythonTestTool.examples.oled', code: EXAMPLE_SCRIPT },
+  {
+    key: 'eeprom-24c02',
+    labelKey: 'tools.pythonTestTool.examples.eeprom',
+    code: EEPROM_24C02_SCRIPT,
+  },
+  { key: 'serial-at', labelKey: 'tools.pythonTestTool.examples.serialAt', code: SERIAL_AT_SCRIPT },
+  {
+    key: 'modbus-rtu',
+    labelKey: 'tools.pythonTestTool.examples.modbusRtu',
+    code: MODBUS_RTU_SCRIPT,
+  },
+  {
+    key: 'custom-lcd',
+    labelKey: 'tools.pythonTestTool.examples.customDisplay',
+    code: CUSTOM_LCD_SCRIPT,
+  },
 ];
 
 /**
@@ -281,6 +299,7 @@ const BUILTIN_EXAMPLES: Array<{ key: string; label: string; code: string }> = [
  * 可嵌入 Python 运行（用户零安装），输出经事件流式回传。
  */
 export const PythonTestTool: React.FC = () => {
+  const { t } = useTranslation();
   // ─── 服务状态 ───
   const [running, setRunning] = useState(false);
   const [activePort, setActivePort] = useState<number | null>(null);
@@ -301,9 +320,13 @@ export const PythonTestTool: React.FC = () => {
     });
   }, []);
 
-  useEffect(() => { outEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [output]);
+  useEffect(() => {
+    outEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [output]);
 
-  const baseUrl = activePort ? `http://127.0.0.1:${activePort}` : `http://127.0.0.1:${portInput || '8765'}`;
+  const baseUrl = activePort
+    ? `http://127.0.0.1:${activePort}`
+    : `http://127.0.0.1:${portInput || '8765'}`;
 
   // ─── 启动时拉状态 + 运行时信息 + 订阅脚本输出 ───
   const refreshStatus = useCallback(async () => {
@@ -312,7 +335,9 @@ export const PythonTestTool: React.FC = () => {
       setRunning(s.running);
       setActivePort(s.port);
       if (s.running && s.port) setPortInput(String(s.port));
-    } catch { /* 后端未就绪 */ }
+    } catch {
+      /* 后端未就绪 */
+    }
   }, []);
 
   useEffect(() => {
@@ -327,42 +352,64 @@ export const PythonTestTool: React.FC = () => {
         appendOut(p.stream === 'stderr' ? 'stderr' : 'stdout', p.line);
       });
       const u2 = await subscribeEvent('pytest-script-exit', (p) => {
-        appendOut(p.success ? 'success' : 'error',
-          `脚本结束，退出码 ${p.code}${p.success ? '' : '（失败）'}`);
+        appendOut(
+          p.success ? 'success' : 'error',
+          t('tools.pythonTestTool.ui.scriptExit', {
+            code: p.code,
+            status: p.success ? '' : t('tools.pythonTestTool.ui.failedSuffix'),
+          })
+        );
         setScriptRunning(false);
       });
-      if (alive) { unsubs.push(u1, u2); } else { u1(); u2(); }
+      if (alive) {
+        unsubs.push(u1, u2);
+      } else {
+        u1();
+        u2();
+      }
     })();
-    return () => { alive = false; unsubs.forEach((u) => u()); };
-  }, [appendOut]);
+    return () => {
+      alive = false;
+      unsubs.forEach((u) => u());
+    };
+  }, [appendOut, t]);
 
   // ─── 服务启停 ───
   const handleStart = useCallback(async () => {
     if (busy || running) return;
     const port = parseInt(portInput, 10);
-    if (!port || port < 1 || port > 65535) { appendOut('error', '端口无效（1-65535）'); return; }
+    if (!port || port < 1 || port > 65535) {
+      appendOut('error', t('tools.pythonTestTool.ui.invalidPort'));
+      return;
+    }
     setBusy(true);
-    appendOut('info', `开启设备接口 (端口 ${port})...`);
+    appendOut('info', t('tools.pythonTestTool.ui.startingInterface', { port }));
     try {
       const s = await invokeCommand('pytest_server_start', { port });
-      setRunning(s.running); setActivePort(s.port);
-      appendOut('success', `设备接口已开启：${baseUrl}`);
+      setRunning(s.running);
+      setActivePort(s.port);
+      appendOut('success', t('tools.pythonTestTool.ui.interfaceStarted', { url: baseUrl }));
     } catch (e) {
-      appendOut('error', `开启失败：${(e as Error).message}`);
-    } finally { setBusy(false); }
-  }, [busy, running, portInput, baseUrl, appendOut]);
+      appendOut('error', t('tools.pythonTestTool.ui.startFailed', { error: (e as Error).message }));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, running, portInput, baseUrl, appendOut, t]);
 
   const handleStop = useCallback(async () => {
     if (busy || !running) return;
     setBusy(true);
     try {
       await invokeCommand('pytest_server_stop');
-      setRunning(false); setActivePort(null);
-      appendOut('info', '设备接口已关闭');
+      setRunning(false);
+      setActivePort(null);
+      appendOut('info', t('tools.pythonTestTool.ui.interfaceStopped'));
     } catch (e) {
-      appendOut('error', `关闭失败：${(e as Error).message}`);
-    } finally { setBusy(false); }
-  }, [busy, running, appendOut]);
+      appendOut('error', t('tools.pythonTestTool.ui.stopFailed', { error: (e as Error).message }));
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, running, appendOut, t]);
 
   const copyBaseUrl = useCallback(() => {
     navigator.clipboard?.writeText(baseUrl);
@@ -379,14 +426,21 @@ export const PythonTestTool: React.FC = () => {
     try {
       const dir = await invokeCommand('pytest_user_dir');
       setUserDir(dir);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  useEffect(() => { refreshUserFiles(); }, [refreshUserFiles]);
+  useEffect(() => {
+    refreshUserFiles();
+  }, [refreshUserFiles]);
 
   const loadExample = useCallback((key: string) => {
     const ex = BUILTIN_EXAMPLES.find((e) => e.key === key);
-    if (ex) { setCode(ex.code); setCurrentName(''); }
+    if (ex) {
+      setCode(ex.code);
+      setCurrentName('');
+    }
   }, []);
 
   const saveAsUserFile = useCallback(async () => {
@@ -395,16 +449,19 @@ export const PythonTestTool: React.FC = () => {
       try {
         await invokeCommand('pytest_write_user_file', { name: currentName, content: code });
         await refreshUserFiles();
-        appendOut('success', `已保存：${currentName}（可被其它脚本 import）`);
+        appendOut('success', t('tools.pythonTestTool.ui.saved', { name: currentName }));
       } catch (e) {
-        appendOut('error', `保存失败：${(e as Error).message}`);
+        appendOut(
+          'error',
+          t('tools.pythonTestTool.ui.saveFailed', { error: (e as Error).message })
+        );
       }
       return;
     }
     // 首次命名：弹出自定义对话框（非浏览器 prompt，不显示 localhost:3030）
     setSaveDialogName('my_script.py');
     setSaveDialogOpen(true);
-  }, [code, currentName, refreshUserFiles, appendOut]);
+  }, [code, currentName, refreshUserFiles, appendOut, t]);
 
   /** 保存弹窗：确认保存 */
   const handleSaveDialogConfirm = useCallback(async () => {
@@ -415,38 +472,27 @@ export const PythonTestTool: React.FC = () => {
       await invokeCommand('pytest_write_user_file', { name, content: code });
       setCurrentName(name);
       await refreshUserFiles();
-      appendOut('success', `已保存：${name}（可被其它脚本 import）`);
+      appendOut('success', t('tools.pythonTestTool.ui.saved', { name }));
     } catch (e) {
-      appendOut('error', `保存失败：${(e as Error).message}`);
+      appendOut('error', t('tools.pythonTestTool.ui.saveFailed', { error: (e as Error).message }));
     }
-  }, [saveDialogName, code, refreshUserFiles, appendOut]);
+  }, [saveDialogName, code, refreshUserFiles, appendOut, t]);
 
   /** 保存弹窗：在系统文件管理器中打开用户工作区 */
   const handleOpenWorkspace = useCallback(async () => {
     if (userDir) {
-      try { await openPath(userDir); } catch { /* ignore */ }
+      try {
+        await invokeCommand('pytest_open_user_dir');
+      } catch {
+        /* ignore */
+      }
     }
   }, [userDir]);
 
   /** 打开「API 参考手册」：弹出独立窗口，加载 public/python-api-docs.html。 */
   const openApiDocs = useCallback(async () => {
-    const label = 'python-api-docs';
     try {
-      const existing = await WebviewWindow.getByLabel(label);
-      if (existing) {
-        await existing.show();
-        await existing.setFocus();
-        return;
-      }
-      new WebviewWindow(label, {
-        url: `${window.location.origin}/python-api-docs.html`,
-        title: 'Python 产测 API 参考手册',
-        width: 1100,
-        height: 760,
-        resizable: true,
-        minimizable: true,
-        maximizable: true,
-      });
+      await invokeCommand('open_python_api_docs');
     } catch (e) {
       console.error('打开 API 参考手册失败:', e);
     }
@@ -456,70 +502,119 @@ export const PythonTestTool: React.FC = () => {
   const runScript = useCallback(async () => {
     if (scriptRunning) return;
     setOutput([]);
-    appendOut('info', '运行脚本...');
-    if (!running) appendOut('info', '提示：设备接口未开启，脚本中的设备调用会失败。先点「开启接口」。');
+    appendOut('info', t('tools.pythonTestTool.ui.runningScript'));
+    if (!running) appendOut('info', t('tools.pythonTestTool.ui.interfaceRequiredHint'));
     setScriptRunning(true);
     try {
       await invokeCommand('pytest_run_script', { code });
     } catch (e) {
-      appendOut('error', `无法启动脚本：${(e as Error).message}`);
+      appendOut('error', t('tools.pythonTestTool.ui.runFailed', { error: (e as Error).message }));
       setScriptRunning(false);
     }
-  }, [scriptRunning, code, running, appendOut]);
+  }, [scriptRunning, code, running, appendOut, t]);
 
   const stopScript = useCallback(async () => {
-    try { await invokeCommand('pytest_stop_script'); } catch { /* ignore */ }
+    try {
+      await invokeCommand('pytest_stop_script');
+    } catch {
+      /* ignore */
+    }
     setScriptRunning(false);
-    appendOut('info', '已请求停止脚本');
-  }, [appendOut]);
+    appendOut('info', t('tools.pythonTestTool.ui.stopRequested'));
+  }, [appendOut, t]);
 
   const openFile = useCallback(async () => {
     try {
-      const sel = await openDialog({ multiple: false, filters: [{ name: 'Python', extensions: ['py'] }] });
+      const sel = await openDialog({
+        multiple: false,
+        filters: [{ name: 'Python', extensions: ['py'] }],
+      });
       if (typeof sel === 'string') {
         setCode(await readTextFile(sel));
-        appendOut('info', `已加载：${sel}`);
+        appendOut('info', t('tools.pythonTestTool.ui.loaded', { path: sel }));
       }
     } catch (e) {
-      appendOut('error', `打开文件失败：${(e as Error).message}`);
+      appendOut('error', t('tools.pythonTestTool.ui.openFailed', { error: (e as Error).message }));
     }
-  }, [appendOut]);
+  }, [appendOut, t]);
 
   return (
     <div className="ptt-root">
       {/* ── 顶栏：设备接口（紧凑横排）── */}
       <div className="ptt-topbar">
         <span className="ptt-topbar-title">
-          <FontAwesomeIcon icon={faFlask} /> 设备接口
+          <FontAwesomeIcon icon={faFlask} /> {t('tools.pythonTestTool.ui.deviceInterface')}
         </span>
         <span className={`ptt-led ${running ? 'online' : ''}`} />
-        <span className="ptt-status-text">{running ? '已开启' : '未开启'}</span>
-        {running && activePort && <span className="ptt-status-port">端口 {activePort}</span>}
+        <span className="ptt-status-text">
+          {running ? t('tools.pythonTestTool.ui.enabled') : t('tools.pythonTestTool.ui.disabled')}
+        </span>
+        {running && activePort && (
+          <span className="ptt-status-port">
+            {t('tools.pythonTestTool.ui.portValue', { port: activePort })}
+          </span>
+        )}
         <span className="ptt-topbar-sep" />
-        <label style={{ fontSize: 11, color: 'var(--color-subtext1)', whiteSpace: 'nowrap' }}>端口</label>
-        <input className="ptt-input" type="number" min={1} max={65535} value={portInput}
-          disabled={running || busy} onChange={(e) => setPortInput(e.target.value)}
-          style={{ width: 72, flex: 'none' }} />
-        <button className="ptt-btn success" onClick={handleStart} disabled={running || busy}
-          style={{ flex: 'none', padding: '4px 12px' }}>
-          <FontAwesomeIcon icon={faPlay} /> 开启
+        <label style={{ fontSize: 11, color: 'var(--color-subtext1)', whiteSpace: 'nowrap' }}>
+          {t('tools.pythonTestTool.ui.port')}
+        </label>
+        <input
+          className="ptt-input"
+          type="number"
+          min={1}
+          max={65535}
+          value={portInput}
+          disabled={running || busy}
+          onChange={(e) => setPortInput(e.target.value)}
+          style={{ width: 72, flex: 'none' }}
+        />
+        <button
+          className="ptt-btn success"
+          onClick={handleStart}
+          disabled={running || busy}
+          style={{ flex: 'none', padding: '4px 12px' }}
+        >
+          <FontAwesomeIcon icon={faPlay} /> {t('tools.pythonTestTool.ui.start')}
         </button>
-        <button className="ptt-btn danger" onClick={handleStop} disabled={!running || busy}
-          style={{ flex: 'none', padding: '4px 12px' }}>
-          <FontAwesomeIcon icon={faStop} /> 关闭
+        <button
+          className="ptt-btn danger"
+          onClick={handleStop}
+          disabled={!running || busy}
+          style={{ flex: 'none', padding: '4px 12px' }}
+        >
+          <FontAwesomeIcon icon={faStop} /> {t('tools.pythonTestTool.ui.close')}
         </button>
         <span className="ptt-topbar-sep" />
-        <code style={{
-          fontFamily: "'Consolas', monospace", fontSize: 11, color: 'var(--color-accent, #58a6ff)',
-          background: 'var(--color-base)', padding: '3px 8px', borderRadius: 4,
-          border: '1px solid var(--color-surface1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>{baseUrl}</code>
-        <button className="ptt-icon-btn" title="复制" onClick={copyBaseUrl}>
+        <code
+          style={{
+            fontFamily: "'Consolas', monospace",
+            fontSize: 11,
+            color: 'var(--color-accent, #58a6ff)',
+            background: 'var(--color-base)',
+            padding: '3px 8px',
+            borderRadius: 4,
+            border: '1px solid var(--color-surface1)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {baseUrl}
+        </code>
+        <button
+          className="ptt-icon-btn"
+          title={t('tools.pythonTestTool.ui.copy')}
+          onClick={copyBaseUrl}
+        >
           <FontAwesomeIcon icon={faCopy} />
         </button>
-        <button className="ptt-icon-btn" title="API 参考手册（在新窗口打开）" onClick={openApiDocs}
-          style={{ marginLeft: 'auto' }}>
-          <FontAwesomeIcon icon={faUpRightFromSquare} /> API 手册
+        <button
+          className="ptt-icon-btn"
+          title={t('tools.pythonTestTool.ui.openApiDocs')}
+          onClick={openApiDocs}
+          style={{ marginLeft: 'auto' }}
+        >
+          <FontAwesomeIcon icon={faUpRightFromSquare} /> {t('tools.pythonTestTool.ui.apiDocs')}
         </button>
       </div>
 
@@ -528,28 +623,47 @@ export const PythonTestTool: React.FC = () => {
         <div className="ptt-col ptt-col-left">
           <div className="ptt-card ptt-editor-card">
             <div className="ptt-card-title ptt-editor-title">
-              <span><FontAwesomeIcon icon={faFileCode} /> 脚本{currentName ? ` · ${currentName}` : ''}</span>
+              <span>
+                <FontAwesomeIcon icon={faFileCode} /> {t('tools.pythonTestTool.ui.script')}
+                {currentName ? ` · ${currentName}` : ''}
+              </span>
               <div className="ptt-editor-actions">
-                <select className="ptt-select" title="加载内置示例"
-                  value="" onChange={(e) => { if (e.target.value) loadExample(e.target.value); }}>
-                  <option value="">示例…</option>
+                <select
+                  className="ptt-select"
+                  title={t('tools.pythonTestTool.ui.loadExample')}
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) loadExample(e.target.value);
+                  }}
+                >
+                  <option value="">{t('tools.pythonTestTool.ui.examples')}</option>
                   {BUILTIN_EXAMPLES.map((ex) => (
-                    <option key={ex.key} value={ex.key}>{ex.label}</option>
+                    <option key={ex.key} value={ex.key}>
+                      {t(ex.labelKey)}
+                    </option>
                   ))}
                 </select>
-                <button className="ptt-icon-btn" title="保存为可 import 模块（存到用户工作区）" onClick={saveAsUserFile}>
-                  <FontAwesomeIcon icon={faFloppyDisk} /> 保存
+                <button
+                  className="ptt-icon-btn"
+                  title={t('tools.pythonTestTool.ui.saveModuleHint')}
+                  onClick={saveAsUserFile}
+                >
+                  <FontAwesomeIcon icon={faFloppyDisk} /> {t('tools.pythonTestTool.ui.save')}
                 </button>
-                <button className="ptt-icon-btn" title="从用户目录打开" onClick={openFile}>
-                  <FontAwesomeIcon icon={faFolderOpen} /> 打开
+                <button
+                  className="ptt-icon-btn"
+                  title={t('tools.pythonTestTool.ui.openUserFile')}
+                  onClick={openFile}
+                >
+                  <FontAwesomeIcon icon={faFolderOpen} /> {t('tools.pythonTestTool.ui.open')}
                 </button>
                 {!scriptRunning ? (
                   <button className="ptt-btn success ptt-run-btn" onClick={runScript}>
-                    <FontAwesomeIcon icon={faPlay} /> 运行
+                    <FontAwesomeIcon icon={faPlay} /> {t('tools.pythonTestTool.ui.run')}
                   </button>
                 ) : (
                   <button className="ptt-btn danger ptt-run-btn" onClick={stopScript}>
-                    <FontAwesomeIcon icon={faStop} /> 停止
+                    <FontAwesomeIcon icon={faStop} /> {t('tools.pythonTestTool.ui.stop')}
                   </button>
                 )}
               </div>
@@ -564,15 +678,23 @@ export const PythonTestTool: React.FC = () => {
 
           <div className="ptt-card ptt-output-card">
             <div className="ptt-card-title ptt-log-title">
-              <span>输出</span>
-              <button className="ptt-icon-btn" title="清空" onClick={() => setOutput([])}>
+              <span>{t('tools.pythonTestTool.ui.output')}</span>
+              <button
+                className="ptt-icon-btn"
+                title={t('tools.pythonTestTool.ui.clear')}
+                onClick={() => setOutput([])}
+              >
                 <FontAwesomeIcon icon={faTrashCan} />
               </button>
             </div>
             <div className="ptt-output">
-              {output.length === 0 && <div className="ptt-log-empty">尚无输出。点「运行」执行脚本。</div>}
+              {output.length === 0 && (
+                <div className="ptt-log-empty">{t('tools.pythonTestTool.ui.noOutput')}</div>
+              )}
               {output.map((l, i) => (
-                <div className={`ptt-out-line ${l.kind}`} key={i}>{l.text || '\u00a0'}</div>
+                <div className={`ptt-out-line ${l.kind}`} key={i}>
+                  {l.text || '\u00a0'}
+                </div>
               ))}
               <div ref={outEndRef} />
             </div>
@@ -581,7 +703,10 @@ export const PythonTestTool: React.FC = () => {
 
         <div className="ptt-col ptt-col-right">
           <AiChat
-            onApplyCode={(c) => { setCode(c); appendOut('info', '已应用 AI 生成的代码到编辑器'); }}
+            onApplyCode={(c) => {
+              setCode(c);
+              appendOut('info', '已应用 AI 生成的代码到编辑器');
+            }}
             onLog={(msg, isError) => appendOut(isError ? 'error' : 'info', msg)}
           />
         </div>
@@ -591,14 +716,19 @@ export const PythonTestTool: React.FC = () => {
       {saveDialogOpen && (
         <div className="spi-modal-overlay" onClick={() => setSaveDialogOpen(false)}>
           <div className="spi-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="spi-modal-title">保存脚本</div>
+            <div className="spi-modal-title">{t('tools.pythonTestTool.ui.saveScript')}</div>
             <div className="spi-modal-message">
-              保存到用户工作区后，可被其他脚本 <code>import</code>。
+              {t('tools.pythonTestTool.ui.saveImportPrefix')} <code>import</code>
+              {t('tools.pythonTestTool.ui.saveImportSuffix')}
             </div>
             <div className="ptt-save-path">
               <code title={userDir}>{userDir || '…'}</code>
-              <button className="ptt-icon-btn" onClick={handleOpenWorkspace}
-                title="在文件管理器中打开工作区" disabled={!userDir}>
+              <button
+                className="ptt-icon-btn"
+                onClick={handleOpenWorkspace}
+                title={t('tools.pythonTestTool.ui.openWorkspace')}
+                disabled={!userDir}
+              >
                 <FontAwesomeIcon icon={faUpRightFromSquare} />
               </button>
             </div>
@@ -614,8 +744,15 @@ export const PythonTestTool: React.FC = () => {
               }}
             />
             <div className="spi-modal-actions">
-              <button className="spi-modal-btn" onClick={() => setSaveDialogOpen(false)}>取消</button>
-              <button className="spi-modal-btn primary" onClick={() => void handleSaveDialogConfirm()}>保存</button>
+              <button className="spi-modal-btn" onClick={() => setSaveDialogOpen(false)}>
+                {t('tools.pythonTestTool.ui.cancel')}
+              </button>
+              <button
+                className="spi-modal-btn primary"
+                onClick={() => void handleSaveDialogConfirm()}
+              >
+                {t('tools.pythonTestTool.ui.save')}
+              </button>
             </div>
           </div>
         </div>

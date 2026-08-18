@@ -116,7 +116,8 @@
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
-  white-space: pre-line;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .popup-buttons {

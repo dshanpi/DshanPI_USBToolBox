@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMicrochip,
@@ -85,6 +86,7 @@ export interface LeftPanelProps {
  * 左侧面板：硬件配置卡片 + 初始化命令表 + 操作按钮组。
  */
 export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
+  const { t } = useTranslation();
   // 命令表行 ID 自增计数器（通过 max+1 保证唯一）
   const nextRowId = (): number => (p.rows.length ? Math.max(...p.rows.map((r) => r.id)) + 1 : 1);
 
@@ -112,14 +114,14 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
    */
   const handleImport = async () => {
     const txt = await p.showPrompt(
-      '导入命令表',
+      t('spiDisplay.left.importTitle'),
       '',
-      '粘贴 JSON 数组，例如：\n[{"type":"cmd","data":"AE"},{"type":"delay","data":"20000"}]'
+      t('spiDisplay.left.importPrompt')
     );
     if (!txt) return;
     try {
       const parsed = JSON.parse(txt);
-      if (!Array.isArray(parsed)) throw new Error('JSON 必须是数组');
+      if (!Array.isArray(parsed)) throw new Error(t('spiDisplay.left.jsonArrayRequired'));
       const rows: DisplayCommandRow[] = parsed.map((it: unknown, i: number) => {
         const row = it as { type?: string; data?: string };
         return {
@@ -132,7 +134,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
       });
       p.onRowsChange(rows);
     } catch (e) {
-      await p.showAlert('导入失败', (e as Error).message);
+      await p.showAlert(t('spiDisplay.left.importFailed'), (e as Error).message);
     }
   };
 
@@ -148,12 +150,12 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
     try {
       const filePath = await save({
         defaultPath: 'init-commands.txt',
-        filters: [{ name: '文本文件', extensions: ['txt'] }],
+        filters: [{ name: t('spiDisplay.left.textFile'), extensions: ['txt'] }],
       });
       if (!filePath) return; // 用户取消了
       await writeTextFile(filePath, content);
     } catch (e) {
-      await p.showAlert('导出失败', (e as Error).message);
+      await p.showAlert(t('spiDisplay.left.exportFailed'), (e as Error).message);
     }
   };
 
@@ -161,7 +163,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
     <div className="sdt-panel">
       <div className="sdt-section-title">
         <FontAwesomeIcon icon={faMicrochip} />
-        <span>SPI 配置 &amp; 初始化序列</span>
+        <span>{t('spiDisplay.left.title')}</span>
       </div>
 
       {/* 卡片 1：硬件参数 -- SPI 参数 + Init SPI 按钮
@@ -174,20 +176,20 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
         {/* SPI 参数（紧凑 grid 布局）—— Mode/Speed/CS/Bits/BitOrder 5 项 + Init SPI */}
         <div className="sdt-spi-grid">
           <div className="sdt-spi-field">
-            <label>Mode</label>
+            <label>{t('spiDisplay.terms.mode')}</label>
             <select
               className="sdt-select"
               value={p.spiMode}
               onChange={(e) => p.onSpiModeChange(parseInt(e.target.value))}
             >
-              <option value={0}>Mode 0</option>
-              <option value={1}>Mode 1</option>
-              <option value={2}>Mode 2</option>
-              <option value={3}>Mode 3</option>
+              <option value={0}>{t('spiDisplay.terms.modeNumber', { number: 0 })}</option>
+              <option value={1}>{t('spiDisplay.terms.modeNumber', { number: 1 })}</option>
+              <option value={2}>{t('spiDisplay.terms.modeNumber', { number: 2 })}</option>
+              <option value={3}>{t('spiDisplay.terms.modeNumber', { number: 3 })}</option>
             </select>
           </div>
           <div className="sdt-spi-field">
-            <label>Speed</label>
+            <label>{t('spiDisplay.terms.speed')}</label>
             <select
               className="sdt-select"
               value={p.spiSpeed}
@@ -206,31 +208,31 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
             </select>
           </div>
           <div className="sdt-spi-field">
-            <label>CS</label>
+            <label>{t('spiDisplay.terms.cs')}</label>
             <select className="sdt-select" defaultValue="0" aria-label="CS0">
-              <option value="0">CS0</option>
+              <option value="0">{t('spiDisplay.terms.cs0')}</option>
             </select>
           </div>
           <div className="sdt-spi-field">
-            <label>Bits</label>
+            <label>{t('spiDisplay.terms.bits')}</label>
             <select
               className="sdt-select"
               value={p.spiBits}
               onChange={(e) => p.onSpiBitsChange(e.target.value)}
             >
-              <option value="8">8-bit</option>
-              <option value="16">16-bit</option>
+              <option value="8">{t('spiDisplay.terms.bitCount', { count: 8 })}</option>
+              <option value="16">{t('spiDisplay.terms.bitCount', { count: 16 })}</option>
             </select>
           </div>
           <div className="sdt-spi-field">
-            <label>BitOrder</label>
+            <label>{t('spiDisplay.terms.bitOrder')}</label>
             <select
               className="sdt-select"
               value={p.spiBitOrder}
               onChange={(e) => p.onSpiBitOrderChange(e.target.value)}
             >
-              <option value="1">MSB</option>
-              <option value="0">LSB</option>
+              <option value="1">{t('spiDisplay.terms.msb')}</option>
+              <option value="0">{t('spiDisplay.terms.lsb')}</option>
             </select>
           </div>
           <div className="sdt-spi-field">
@@ -239,9 +241,9 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
               className="sdt-btn primary"
               onClick={p.onInitSpi}
               disabled={!p.online || p.busy}
-              title="把上述 SPI 参数下发到 CH347（改完配置后必按）"
+              title={t('spiDisplay.left.applySpiHint')}
             >
-              设置
+              {t('spiDisplay.left.apply')}
             </button>
           </div>
         </div>
@@ -255,13 +257,13 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
           位置放在初始化命令表卡片上方，逻辑与 SPI Tool 的预设系统一致。
           "导入"按钮从命令表卡片标题移到这里 —— 与预设功能并列，UI 更整洁 */}
       <div className="sdt-preset-bar">
-        <span className="sdt-preset-bar-label">屏幕预设</span>
+        <span className="sdt-preset-bar-label">{t('spiDisplay.left.presets')}</span>
         <select
           className="sdt-preset-bar-select"
           value={p.selectedScreenPreset}
           onChange={(e) => p.onSelectedScreenPresetChange(e.target.value)}
         >
-          <optgroup label="内置预设">
+          <optgroup label={t('spiDisplay.left.builtinPresets')}>
             {p.builtinScreenPresets.map((bp) => (
               <option key={bp.key} value={bp.key}>
                 {bp.name}
@@ -269,7 +271,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
             ))}
           </optgroup>
           {p.userScreenPresets.length > 0 && (
-            <optgroup label="自定义预设">
+            <optgroup label={t('spiDisplay.left.customPresets')}>
               {p.userScreenPresets.map((up) => (
                 <option key={`user:${up.name}`} value={`user:${up.name}`}>
                   {up.name}
@@ -283,38 +285,38 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
           onClick={() => p.onApplyScreenPreset(p.selectedScreenPreset)}
           disabled={!p.selectedScreenPreset}
         >
-          Load
+          {t('spiDisplay.left.load')}
         </button>
         <button
           className="sdt-preset-bar-btn"
           onClick={p.onSaveAsScreenPreset}
           disabled={!p.rows.length}
-          title="把当前命令表保存为屏幕预设"
+          title={t('spiDisplay.left.savePresetHint')}
         >
-          另存为
+          {t('spiDisplay.left.saveAs')}
         </button>
         <button
           className="sdt-preset-bar-btn"
           onClick={handleImport}
-          title="从 JSON 字符串导入命令表"
+          title={t('spiDisplay.left.importHint')}
         >
-          <FontAwesomeIcon icon={faFileImport} /> 导入
+          <FontAwesomeIcon icon={faFileImport} /> {t('spiDisplay.left.import')}
         </button>
         <button
           className="sdt-preset-bar-btn"
           onClick={handleExport}
           disabled={!p.rows.length}
-          title="导出命令表到 txt 文件"
+          title={t('spiDisplay.left.exportHint')}
         >
-          <FontAwesomeIcon icon={faFileExport} /> 导出
+          <FontAwesomeIcon icon={faFileExport} /> {t('spiDisplay.left.export')}
         </button>
         {p.selectedScreenPreset.startsWith('user:') && (
           <button
             className="sdt-preset-bar-btn danger"
             onClick={p.onDeleteScreenPreset}
-            title="删除当前选中的自定义预设"
+            title={t('spiDisplay.left.deletePresetHint')}
           >
-            删除
+            {t('spiDisplay.common.delete')}
           </button>
         )}
       </div>
@@ -336,8 +338,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
             <thead>
               <tr>
                 <th className="row-num">#</th>
-                <th className="col-type">类型</th>
-                <th className="col-data">参数（Hex / µs / 电平）</th>
+                <th className="col-type">{t('spiDisplay.left.type')}</th>
+                <th className="col-data">{t('spiDisplay.left.parameter')}</th>
                 <th className="col-actions">
                   {/* 清空所有命令行 —— 二次确认避免误操作 */}
                   <button
@@ -347,17 +349,17 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
                       if (!p.rows.length) return;
                       if (
                         !(await p.showConfirm(
-                          '清空命令表',
-                          `确定清空全部 ${p.rows.length} 行？此操作无法撤销。`,
-                          { okText: '清空', okDanger: true }
+                          t('spiDisplay.left.clearTitle'),
+                          t('spiDisplay.left.clearConfirm', { count: p.rows.length }),
+                          { okText: t('spiDisplay.common.clear'), okDanger: true }
                         ))
                       )
                         return;
                       p.onRowsChange([]);
                     }}
-                    title="清空所有命令行"
+                    title={t('spiDisplay.left.clearHint')}
                   >
-                    清空
+                    {t('spiDisplay.common.clear')}
                   </button>
                 </th>
               </tr>
@@ -372,14 +374,14 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
                       value={row.type}
                       onChange={(e) => updateRow(row.id, 'type', e.target.value)}
                     >
-                      <option value="cmd">命令</option>
-                      <option value="data">数据</option>
-                      <option value="delay">延时</option>
-                      <option value="cs">CS</option>
-                      <option value="dc">DC</option>
-                      <option value="rst">RST</option>
-                      <option value="bl">背光</option>
-                      <option value="fill">填色</option>
+                      <option value="cmd">{t('spiDisplay.left.command')}</option>
+                      <option value="data">{t('spiDisplay.left.data')}</option>
+                      <option value="delay">{t('spiDisplay.left.delay')}</option>
+                      <option value="cs">{t('spiDisplay.terms.cs')}</option>
+                      <option value="dc">{t('spiDisplay.terms.dc')}</option>
+                      <option value="rst">{t('spiDisplay.terms.rst')}</option>
+                      <option value="bl">{t('spiDisplay.left.backlight')}</option>
+                      <option value="fill">{t('spiDisplay.left.fill')}</option>
                     </select>
                   </td>
                   <td>
@@ -394,8 +396,8 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
                         value={String(row.data).toUpperCase() === 'HIGH' ? 'HIGH' : 'LOW'}
                         onChange={(e) => updateRow(row.id, 'data', e.target.value)}
                       >
-                        <option value="LOW">LOW</option>
-                        <option value="HIGH">HIGH</option>
+                        <option value="LOW">{t('spiDisplay.terms.low')}</option>
+                        <option value="HIGH">{t('spiDisplay.terms.high')}</option>
                       </select>
                     ) : (
                       <input
@@ -414,7 +416,11 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
                     )}
                   </td>
                   <td className="col-actions">
-                    <button className="del-btn" onClick={() => deleteRow(row.id)} title="删除">
+                    <button
+                      className="del-btn"
+                      onClick={() => deleteRow(row.id)}
+                      title={t('spiDisplay.common.delete')}
+                    >
                       <FontAwesomeIcon icon={faXmark} />
                     </button>
                   </td>
@@ -423,7 +429,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
               {p.rows.length === 0 && (
                 <tr>
                   <td colSpan={4} className="sdt-cmd-empty">
-                    暂无命令，点击下方「+ 添加」或顶部「导入」
+                    {t('spiDisplay.left.noCommands')}
                   </td>
                 </tr>
               )}
@@ -431,8 +437,12 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
           </table>
         </div>
         {/* 添加按钮放在表格底部 —— 与每行的"删除"操作呼应，符合"先看列表再扩展"的习惯 */}
-        <button className="sdt-add-row-btn" onClick={addRow} title="添加一行命令">
-          <FontAwesomeIcon icon={faPlus} /> 添加
+        <button
+          className="sdt-add-row-btn"
+          onClick={addRow}
+          title={t('spiDisplay.left.addRowHint')}
+        >
+          <FontAwesomeIcon icon={faPlus} /> {t('spiDisplay.common.add')}
         </button>
       </div>
 
@@ -444,10 +454,10 @@ export const LeftPanel: React.FC<LeftPanelProps> = (p) => {
           onClick={p.onSendInit}
           disabled={!p.online || p.busy || p.rows.length === 0}
         >
-          <FontAwesomeIcon icon={faBolt} /> 发送初始化
+          <FontAwesomeIcon icon={faBolt} /> {t('spiDisplay.left.sendInit')}
         </button>
         <button className="sdt-btn danger" onClick={p.onReset} disabled={!p.online || p.busy}>
-          <FontAwesomeIcon icon={faPowerOff} /> 复位
+          <FontAwesomeIcon icon={faPowerOff} /> {t('spiDisplay.left.reset')}
         </button>
       </div>
     </div>

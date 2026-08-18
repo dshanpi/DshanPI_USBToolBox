@@ -104,7 +104,7 @@ const AppContent: React.FC = () => {
         id: 'gpio-tool',
         name: t('tools.gpioTool.name', 'GPIO Tool'),
         icon: faToggleOn,
-        description: t('tools.gpioTool.description', 'Control CH347 GPIO0-GPIO7 levels'),
+        description: t('tools.gpioTool.description', 'Read and control CH347 GPIO0-GPIO7 levels'),
       },
       {
         id: 'spi-display-tool',
@@ -369,9 +369,7 @@ const AppContent: React.FC = () => {
         onLoginClick={handleLoginClick}
         authUserName={authUser?.name ?? null}
         sidebarLocked={isWorking}
-        controlArea={
-          <DeviceConnectButton />
-        }
+        controlArea={<DeviceConnectButton />}
       >
         {renderAllTools()}
       </Layout>

@@ -10,6 +10,7 @@ import type { IpcCommandSpec, IpcEventSpec } from './Types';
 export interface IpcCommandMap {
   /** Open DevTools window for debugging */
   open_devtools: IpcCommandSpec;
+  open_python_api_docs: IpcCommandSpec;
   /** Get system proxy settings as string */
   get_system_proxy: IpcCommandSpec<undefined, string>;
   /** Get proxy configuration as string */
@@ -944,6 +945,7 @@ export interface IpcCommandMap {
   pytest_stop_script: IpcCommandSpec;
   /** 用户工作区目录（可写、持久化、被注入 sys.path），不存在则创建 */
   pytest_user_dir: IpcCommandSpec<undefined, string>;
+  pytest_open_user_dir: IpcCommandSpec;
   /** 列出用户目录下的 .py 文件 */
   pytest_list_user_files: IpcCommandSpec<undefined, Array<{ name: string; size: number }>>;
   /** 读取用户目录下的某个 .py 文件 */

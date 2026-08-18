@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEraser,
@@ -13,10 +14,10 @@ import type { TabContext } from './common';
 type TextAlign = 'left' | 'center' | 'right';
 const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48];
 const SYSTEM_FONTS = [
-  ['oled', '内置点阵字体'],
-  ['sans-serif', '系统无衬线'],
-  ['serif', '系统衬线'],
-  ['monospace', '系统等宽'],
+  ['oled', 'spiDisplay.text.fontBuiltin'],
+  ['sans-serif', 'spiDisplay.text.fontSans'],
+  ['serif', 'spiDisplay.text.fontSerif'],
+  ['monospace', 'spiDisplay.text.fontMono'],
 ] as const;
 
 function drawSpacedText(
@@ -43,6 +44,7 @@ export const TextTab: React.FC<TabContext> = ({
   onClearDisplay,
   busy,
 }) => {
+  const { t } = useTranslation();
   const [fontSize, setFontSize] = useState(16);
   const [fgColor, setFgColor] = useState('#ffffff');
   const [bgColor, setBgColor] = useState('#000000');
@@ -243,21 +245,21 @@ export const TextTab: React.FC<TabContext> = ({
   return (
     <div className="sdt-tab-form">
       <details className="sdt-advanced-panel">
-        <summary>高级排版</summary>
+        <summary>{t('spiDisplay.text.advanced')}</summary>
         <div className="sdt-advanced-content">
           <div className="sdt-toolbar-row">
-            <label>字体</label>
+            <label>{t('spiDisplay.text.font')}</label>
             <select
               className="sdt-select"
               value={fontFamily}
               onChange={(event) => setFontFamily(event.target.value)}
             >
-              {SYSTEM_FONTS.map(([value, label]) => (
+              {SYSTEM_FONTS.map(([value, labelKey]) => (
                 <option key={value} value={value}>
-                  {label}
+                  {t(labelKey)}
                 </option>
               ))}
-              {localFontName && <option value="local">本地字体</option>}
+              {localFontName && <option value="local">{t('spiDisplay.text.localFont')}</option>}
             </select>
             <button className="sdt-btn small" onClick={() => fontInputRef.current?.click()}>
               <FontAwesomeIcon icon={faFolderOpen} /> TTF
@@ -275,7 +277,7 @@ export const TextTab: React.FC<TabContext> = ({
                 checked={bold}
                 onChange={(event) => setBold(event.target.checked)}
               />
-              粗体
+              {t('spiDisplay.text.bold')}
             </label>
             <label className="sdt-check">
               <input
@@ -283,21 +285,21 @@ export const TextTab: React.FC<TabContext> = ({
                 checked={stroke}
                 onChange={(event) => setStroke(event.target.checked)}
               />
-              描边
+              {t('spiDisplay.text.stroke')}
             </label>
           </div>
 
           <div className="sdt-toolbar-row sdt-parameter-grid">
             <label>
-              对齐
+              {t('spiDisplay.text.align')}
               <select
                 className="sdt-select"
                 value={align}
                 onChange={(event) => setAlign(event.target.value as TextAlign)}
               >
-                <option value="left">左对齐</option>
-                <option value="center">居中</option>
-                <option value="right">右对齐</option>
+                <option value="left">{t('spiDisplay.text.alignLeft')}</option>
+                <option value="center">{t('spiDisplay.text.alignCenter')}</option>
+                <option value="right">{t('spiDisplay.text.alignRight')}</option>
               </select>
             </label>
             <label>
@@ -319,7 +321,7 @@ export const TextTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              区域宽
+              {t('spiDisplay.text.regionWidth')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -330,7 +332,7 @@ export const TextTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              区域高
+              {t('spiDisplay.text.regionHeight')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -341,7 +343,7 @@ export const TextTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              行距
+              {t('spiDisplay.text.lineSpacing')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -350,7 +352,7 @@ export const TextTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              字距
+              {t('spiDisplay.text.letterSpacing')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -364,7 +366,7 @@ export const TextTab: React.FC<TabContext> = ({
                 checked={autoWrap}
                 onChange={(event) => setAutoWrap(event.target.checked)}
               />
-              自动换行
+              {t('spiDisplay.text.autoWrap')}
             </label>
           </div>
 
@@ -375,15 +377,15 @@ export const TextTab: React.FC<TabContext> = ({
               disabled={busy}
             >
               <FontAwesomeIcon icon={scrolling ? faStop : faPlay} />{' '}
-              {scrolling ? '停止滚动' : '滚动文字'}
+              {scrolling ? t('spiDisplay.text.stopScroll') : t('spiDisplay.text.scrollText')}
             </button>
-            <span className="sdt-advanced-hint">滚动发送会按当前排版参数连续刷新屏幕</span>
+            <span className="sdt-advanced-hint">{t('spiDisplay.text.scrollHint')}</span>
           </div>
         </div>
       </details>
 
       <div className="sdt-toolbar-row">
-        <label>字号</label>
+        <label>{t('spiDisplay.text.fontSize')}</label>
         <select
           className="sdt-select compact"
           value={fontSize}
@@ -395,14 +397,14 @@ export const TextTab: React.FC<TabContext> = ({
             </option>
           ))}
         </select>
-        <label>文字</label>
+        <label>{t('spiDisplay.text.foreground')}</label>
         <input
           type="color"
           className="sdt-color-input"
           value={fgColor}
           onChange={(event) => setFgColor(event.target.value)}
         />
-        <label>背景</label>
+        <label>{t('spiDisplay.text.background')}</label>
         <input
           type="color"
           className="sdt-color-input"
@@ -415,17 +417,17 @@ export const TextTab: React.FC<TabContext> = ({
           onClick={() => void onClearDisplay()}
           disabled={busy}
         >
-          <FontAwesomeIcon icon={faEraser} /> 清屏
+          <FontAwesomeIcon icon={faEraser} /> {t('spiDisplay.common.clearDisplay')}
         </button>
         <button className="sdt-btn primary" onClick={() => void handleSend()} disabled={busy}>
-          <FontAwesomeIcon icon={faPaperPlane} /> 发送
+          <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.common.send')}
         </button>
       </div>
       <textarea
         className="sdt-textarea"
         value={text}
         onChange={(event) => setText(event.target.value)}
-        placeholder="输入要显示的文字"
+        placeholder={t('spiDisplay.text.placeholder')}
       />
     </div>
   );

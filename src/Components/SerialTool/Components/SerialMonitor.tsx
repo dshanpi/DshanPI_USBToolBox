@@ -201,21 +201,21 @@ export const SerialMonitor: React.FC<SerialMonitorProps> = ({
           {statusText}
         </span>
         <div className="serial-monitor-actions">
-          <label className="serial-option-inline" title="Echo typed characters locally">
+          <label className="serial-option-inline" title={t('serialTool.monitor.echoHint')}>
             <input
               type="checkbox"
               checked={localEcho}
               onChange={(e) => setLocalEcho(e.target.checked)}
             />
-            Echo
+            {t('serialTool.monitor.echo')}
           </label>
-          <label className="serial-option-inline" title="Append newline on Enter">
+          <label className="serial-option-inline" title={t('serialTool.monitor.appendNewlineHint')}>
             <input
               type="checkbox"
               checked={appendNewline}
               onChange={(e) => setAppendNewline(e.target.checked)}
             />
-            +\\n
+            {t('serialTool.monitor.appendNewline')}
           </label>
           <button
             className={`serial-action-btn ${paused ? 'active warning' : ''}`}

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { invokeCommand, subscribeEvent } from '../../../Platform/IPC';
 import type { UnlistenFn } from '@tauri-apps/api/event';
 import {
@@ -16,6 +17,7 @@ import {
   getPLCAddressPrefix,
   FUNC_CODES,
   type ModbusResponse,
+  type ModbusError,
 } from '../lib/ModbusProtocol';
 import type { SlaveSimulator } from '../lib/SlaveSimulator';
 import {
@@ -36,6 +38,31 @@ interface LogEntry {
   isError: boolean;
 }
 
+interface PendingRequest {
+  protocol: 'rtu' | 'tcp';
+  transactionId?: number;
+  slaveId: number;
+  funcCode: number;
+  quantity: number;
+}
+
+function responseTimeoutMs(
+  protocol: 'rtu' | 'tcp',
+  baudRate: number,
+  funcCode: number,
+  quantity: number
+): number {
+  if (protocol === 'tcp') return 3000;
+  const responseBytes =
+    funcCode === 1 || funcCode === 2
+      ? Math.ceil(quantity / 8) + 5
+      : funcCode === 3 || funcCode === 4
+        ? quantity * 2 + 5
+        : 8;
+  const wireTimeMs = (responseBytes * 11 * 1000) / Math.max(300, baudRate);
+  return Math.min(30000, Math.max(1000, Math.ceil(wireTimeMs * 2 + 300)));
+}
+
 function formatTime(): string {
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
@@ -46,6 +73,7 @@ function formatTime(): string {
 }
 
 export const MasterTab: React.FC<MasterTabProps> = (_props) => {
+  const { t } = useTranslation();
   // Transport config
   const [protocol, setProtocol] = useState<'rtu' | 'tcp'>('rtu');
   const [serialPort, setSerialPort] = useState('');
@@ -86,6 +114,19 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   const [ports, setPorts] = useState<Array<{ name: string; description: string }>>([]);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const connIdRef = useRef<string>('');
+  const requestInFlightRef = useRef(false);
+  const pendingRequestRef = useRef<PendingRequest | null>(null);
+  const responseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transactionIdRef = useRef(0);
+
+  const clearPendingRequest = useCallback(() => {
+    if (responseTimerRef.current) {
+      clearTimeout(responseTimerRef.current);
+      responseTimerRef.current = null;
+    }
+    pendingRequestRef.current = null;
+    requestInFlightRef.current = false;
+  }, []);
 
   // Log
   const [logs, setLogs] = useState<LogEntry[]>(() => [
@@ -220,6 +261,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
       // Clear rx buffers so stale bytes from a previous session don't get parsed
       rxBufRef.current = [];
       tcpRxBufRef.current = [];
+      clearPendingRequest();
       setConnected(true);
       addLog(
         `${protocol.toUpperCase()} connected — ${protocol === 'rtu' ? serialPort : `${tcpHost}:${tcpPort}`}`
@@ -243,7 +285,18 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
       }
     }
     setConnecting(false);
-  }, [protocol, serialPort, baudRate, _dataBits, _stopBits, parity, tcpHost, tcpPort, addLog]);
+  }, [
+    protocol,
+    serialPort,
+    baudRate,
+    _dataBits,
+    _stopBits,
+    parity,
+    tcpHost,
+    tcpPort,
+    addLog,
+    clearPendingRequest,
+  ]);
 
   const handleDisconnect = useCallback(async () => {
     try {
@@ -256,13 +309,14 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
       /* ignore */
     }
     setConnected(false);
+    clearPendingRequest();
     if (scanTimerRef.current) {
       clearInterval(scanTimerRef.current);
       scanTimerRef.current = null;
     }
     setScanning(false);
     addLog('Disconnected');
-  }, [protocol, addLog]);
+  }, [protocol, addLog, clearPendingRequest]);
 
   // ─── Receive buffer (accumulate fragmented Modbus RTU frames) ──
 
@@ -272,40 +326,70 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   // multiple frames glued together. Accumulate here and split by MBAP length.
   const tcpRxBufRef = useRef<number[]>([]);
 
+  const handleParsedResponse = useCallback(
+    (transport: 'rtu' | 'tcp', result: ModbusResponse | ModbusError, data: Uint8Array) => {
+      const pending = pendingRequestRef.current;
+      const rawHex = formatRTUHex(data);
+      addLog(`RX: ${rawHex}`);
+      setRtuRespHex(rawHex);
+
+      if (!pending || pending.protocol !== transport) {
+        addLog('RX ignored: no matching request is pending', true);
+        return;
+      }
+
+      if (isModbusError(result)) {
+        const sameSlave = result.slaveId === undefined || result.slaveId === pending.slaveId;
+        const sameFunction =
+          result.funcCode === undefined || (result.funcCode & 0x7f) === pending.funcCode;
+        const sameTransaction =
+          transport !== 'tcp' ||
+          result.transId === undefined ||
+          result.transId === pending.transactionId;
+        if (!sameSlave || !sameFunction || !sameTransaction) {
+          addLog('RX ignored: response does not match the pending request', true);
+          return;
+        }
+        clearPendingRequest();
+        addLog(`RX Error: ${result.error}`, true);
+        if (disableOnError) setRwDisabled(true);
+        return;
+      }
+
+      const resp = result as ModbusResponse;
+      if (
+        resp.slaveId !== pending.slaveId ||
+        resp.funcCode !== pending.funcCode ||
+        (transport === 'tcp' && resp.transId !== pending.transactionId)
+      ) {
+        addLog('RX ignored: slave, function, or transaction ID does not match', true);
+        return;
+      }
+
+      clearPendingRequest();
+      if (pending.funcCode === 1 || pending.funcCode === 2) {
+        setRespBits(responseToBits(resp.data, pending.quantity));
+        setRespRegisters([]);
+      } else if (pending.funcCode === 3 || pending.funcCode === 4) {
+        setRespRegisters(responseToRegisters(resp.data));
+        setRespBits([]);
+      }
+    },
+    [addLog, clearPendingRequest, disableOnError]
+  );
+
   const processRxBuffer = useCallback(() => {
     const buf = rxBufRef.current;
     rxBufRef.current = [];
-    if (buf.length < 4) return; // Too short for a valid RTU frame
+    if (buf.length < 4) return;
     const data = new Uint8Array(buf);
-    const result = parseRTUResponse(data);
-    const rawHex = formatRTUHex(data);
-    addLog(`RX: ${rawHex}`);
-    setRtuRespHex(rawHex);
-
-    if (isModbusError(result)) {
-      addLog(`RX Error: ${result.error}`, true);
-      if (disableOnError) setRwDisabled(true);
-      return;
-    }
-    const resp = result as ModbusResponse;
-    const fc = parseInt(funcCode, 10);
-
-    if (resp.funcCode === fc) {
-      if (fc === 1 || fc === 2) {
-        const bits = responseToBits(resp.data, parseInt(quantity, 10));
-        setRespBits(bits);
-        setRespRegisters([]);
-      } else if (fc === 3 || fc === 4) {
-        const regs = responseToRegisters(resp.data);
-        setRespRegisters(regs);
-        setRespBits([]);
-      }
-    }
-  }, [funcCode, quantity, addLog, disableOnError]);
+    handleParsedResponse('rtu', parseRTUResponse(data), data);
+  }, [handleParsedResponse]);
 
   // ─── Event listeners ────────────────────────────────
 
   useEffect(() => {
+    let disposed = false;
     let unlisten: UnlistenFn | undefined;
     let unlistenTcp: UnlistenFn | undefined;
     let unlistenTcpDisc: UnlistenFn | undefined;
@@ -314,6 +398,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
         if (!payload.data || payload.data.length === 0) {
           if (payload.port === connIdRef.current && protocol === 'rtu') {
             setConnected(false);
+            clearPendingRequest();
             if (scanTimerRef.current) {
               clearInterval(scanTimerRef.current);
               scanTimerRef.current = null;
@@ -329,7 +414,8 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
         if (rxTimerRef.current) clearTimeout(rxTimerRef.current);
         rxTimerRef.current = setTimeout(() => processRxBuffer(), 50);
       }).then((fn) => {
-        unlisten = fn;
+        if (disposed) fn();
+        else unlisten = fn;
       });
       subscribeEvent('tcp-data-received', (payload: { id: string; data: number[] }) => {
         if (!payload.data || payload.data.length === 0) return;
@@ -340,38 +426,28 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
         while (tcpRxBufRef.current.length >= 8) {
           const buf = tcpRxBufRef.current;
           const len = (buf[4] << 8) | buf[5]; // MBAP length = bytes following the 6-byte header
+          if (len < 2 || len > 254) {
+            tcpRxBufRef.current = [];
+            clearPendingRequest();
+            addLog(`RX Error: invalid Modbus TCP length ${len}`, true);
+            break;
+          }
           if (buf.length < 6 + len) break; // incomplete frame, wait for more bytes
           const frameBytes = buf.slice(0, 6 + len);
           tcpRxBufRef.current = buf.slice(6 + len);
           const data = new Uint8Array(frameBytes);
-          const result = parseTCPResponse(data);
-          const rawHex = formatRTUHex(data);
-          addLog(`RX: ${rawHex}`);
-          setRtuRespHex(rawHex);
-          if (isModbusError(result)) {
-            addLog(`RX Error: ${result.error}`, true);
-            if (disableOnError) setRwDisabled(true);
-            continue;
-          }
-          const resp = result as ModbusResponse;
-          const fc = parseInt(funcCode, 10);
-          if (resp.funcCode === fc) {
-            if (fc === 1 || fc === 2) {
-              setRespBits(responseToBits(resp.data, parseInt(quantity, 10)));
-              setRespRegisters([]);
-            } else if (fc === 3 || fc === 4) {
-              setRespRegisters(responseToRegisters(resp.data));
-              setRespBits([]);
-            }
-          }
+          handleParsedResponse('tcp', parseTCPResponse(data), data);
         }
       }).then((fn) => {
-        unlistenTcp = fn;
+        if (disposed) fn();
+        else unlistenTcp = fn;
       });
       // TCP connection lost — reflect in UI. (RTU detects this via empty serial-data-received above.)
       subscribeEvent('tcp-disconnected', (payload: string) => {
         if (payload !== connIdRef.current || protocol !== 'tcp') return;
+        invokeCommand('tcp_close', { id: payload }).catch(() => {});
         setConnected(false);
+        clearPendingRequest();
         if (scanTimerRef.current) {
           clearInterval(scanTimerRef.current);
           scanTimerRef.current = null;
@@ -379,17 +455,19 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
         setScanning(false);
         addLog('TCP connection closed by remote', true);
       }).then((fn) => {
-        unlistenTcpDisc = fn;
+        if (disposed) fn();
+        else unlistenTcpDisc = fn;
       });
     }
     return () => {
+      disposed = true;
       unlisten?.();
       unlistenTcp?.();
       unlistenTcpDisc?.();
       if (rxTimerRef.current) clearTimeout(rxTimerRef.current);
       tcpRxBufRef.current = [];
     };
-  }, [protocol, connected, processRxBuffer, funcCode, quantity, addLog, disableOnError]);
+  }, [protocol, connected, processRxBuffer, handleParsedResponse, addLog, clearPendingRequest]);
 
   // ─── Send/Receive ────────────────────────────────────
 
@@ -623,13 +701,32 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   }, [rowCount, quantity]);
 
   const execReadWrite = useCallback(async () => {
-    if (!connected || rwDisabled) return;
+    if (!connected || rwDisabled || requestInFlightRef.current) return;
+    let pending: PendingRequest | null = null;
     try {
       const sid = parseInt(slaveId, 10);
       const fc = parseInt(funcCode, 10);
       const addr = parseAddr(startAddr);
       const qty = parseInt(quantity, 10);
       const read = isReadFunc(fc);
+      const maxQuantity =
+        fc === 1 || fc === 2
+          ? 2000
+          : fc === 3 || fc === 4
+            ? 125
+            : fc === 15
+              ? 1968
+              : fc === 16
+                ? 123
+                : 1;
+      if (!Number.isInteger(sid) || sid < 1 || sid > 247) throw new Error('Slave ID must be 1-247');
+      if (!FUNC_CODES[fc]) throw new Error('Unsupported Modbus function code');
+      if (!Number.isInteger(addr) || addr < 0 || addr > 0xffff)
+        throw new Error('Start address must be 0-65535');
+      if (!Number.isInteger(qty) || qty < 1 || qty > maxQuantity)
+        throw new Error(`Quantity must be 1-${maxQuantity} for function ${fc}`);
+      if (addr + (fc === 5 || fc === 6 ? 1 : qty) > 0x10000)
+        throw new Error('Requested address range exceeds 65535');
 
       // Build write bytes for write function codes
       let writeBytes: number[] = [];
@@ -647,7 +744,26 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
       }
 
       const pduData = buildPDUData(fc, addr, qty, writeBytes);
-      const frame = buildRTUFrame(sid, fc, pduData);
+      let transactionId: number | undefined;
+      let frame: Uint8Array;
+      if (protocol === 'rtu') {
+        frame = buildRTUFrame(sid, fc, pduData);
+      } else {
+        transactionIdRef.current = (transactionIdRef.current + 1) & 0xffff;
+        transactionId = transactionIdRef.current;
+        frame = buildTCPFrame(transactionId, sid, fc, pduData);
+      }
+
+      pending = { protocol, transactionId, slaveId: sid, funcCode: fc, quantity: qty };
+      pendingRequestRef.current = pending;
+      requestInFlightRef.current = true;
+      const timeoutMs = responseTimeoutMs(protocol, parseInt(baudRate, 10) || 115200, fc, qty);
+      responseTimerRef.current = setTimeout(() => {
+        if (pendingRequestRef.current !== pending) return;
+        clearPendingRequest();
+        addLog(`Response timeout after ${timeoutMs} ms`, true);
+        if (disableOnError) setRwDisabled(true);
+      }, timeoutMs);
 
       // Update message preview
       setRtuRespHex('');
@@ -658,13 +774,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
       if (protocol === 'rtu') {
         await invokeCommand('serial_write', { port: connIdRef.current, data: Array.from(frame) });
       } else {
-        const tcpFrame = (await import('../lib/ModbusProtocol')).buildTCPFrame(
-          Math.floor(Math.random() * 65535),
-          sid,
-          fc,
-          pduData
-        );
-        await invokeCommand('tcp_send', { id: connIdRef.current, data: Array.from(tcpFrame) });
+        await invokeCommand('tcp_send', { id: connIdRef.current, data: Array.from(frame) });
       }
 
       // Mirror the write into the local slave simulator so the Slave tab stays in sync.
@@ -678,6 +788,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
         }
       }
     } catch (e: unknown) {
+      if (!pending || pendingRequestRef.current === pending) clearPendingRequest();
       const msg = (e as Error).message || String(e);
       addLog(`TX Error: ${msg}`, true);
       if (disableOnError) setRwDisabled(true);
@@ -692,9 +803,11 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
     writeDataHex,
     singleWriteVal,
     protocol,
+    baudRate,
     parseAddr,
     addLog,
     disableOnError,
+    clearPendingRequest,
     _props,
   ]);
 
@@ -710,7 +823,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   // ─── Scan / Polling ──────────────────────────────────
 
   const startScan = useCallback(() => {
-    if (!connected || rwDisabled) return;
+    if (!connected || rwDisabled || scanTimerRef.current) return;
     setScanning(true);
     execReadWriteRef.current();
     scanTimerRef.current = setInterval(
@@ -732,8 +845,9 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   useEffect(() => {
     return () => {
       if (scanTimerRef.current) clearInterval(scanTimerRef.current);
+      clearPendingRequest();
     };
-  }, []);
+  }, [clearPendingRequest]);
 
   // ─── Data table edit ─────────────────────────────────
 
@@ -785,16 +899,16 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
   const logText = logs.map((e) => `[${e.time}] ${e.message}`).join('\n');
 
   return (
-    <div className="modbus-master-layout">
+    <div className="modbus-master-layout modbus-master-workspace">
       {/* Middle area: Definition (left) + Data Table (right) */}
       <div className="modbus-master-middle">
         {/* ─── Left: Read/Write Definition ─────────────── */}
         <div className="modbus-def-panel">
-          <div className="modbus-section-title">Read/Write Definition</div>
+          <div className="modbus-section-title">{t('modbus.master.definition')}</div>
 
           <div className="modbus-def-grid">
             <div className="modbus-def-field">
-              <label>Slave ID</label>
+              <label>{t('modbus.common.slaveId')}</label>
               <input
                 className="modbus-def-input"
                 type="number"
@@ -806,7 +920,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
               />
             </div>
             <div className="modbus-def-field">
-              <label>Function Code</label>
+              <label>{t('modbus.master.functionCode')}</label>
               <select
                 className="modbus-def-input"
                 value={funcCode}
@@ -815,24 +929,28 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
               >
                 {Object.entries(FUNC_CODES).map(([k, v]) => (
                   <option key={k} value={k}>
-                    {v}
+                    {t(`modbus.functions.${k}`, { defaultValue: v })}
                   </option>
                 ))}
               </select>
             </div>
             <div className="modbus-def-field">
-              <label>Address Mode</label>
+              <label>{t('modbus.master.addressMode')}</label>
               <select
                 className="modbus-def-input"
                 value={addrMode}
                 onChange={(e) => setAddrMode(e.target.value as 'dec' | 'hex')}
               >
-                <option value="dec">Decimal</option>
-                <option value="hex">Hexadecimal</option>
+                <option value="dec">{t('modbus.master.decimal')}</option>
+                <option value="hex">{t('modbus.master.hexadecimal')}</option>
               </select>
             </div>
             <div className="modbus-def-field">
-              <label>Start Address ({addrMode === 'hex' ? 'Hex' : 'Dec'})</label>
+              <label>
+                {t('modbus.master.startAddress', {
+                  mode: addrMode === 'hex' ? 'Hex' : 'Dec',
+                })}
+              </label>
               <input
                 className="modbus-def-input"
                 type="text"
@@ -842,7 +960,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
               />
             </div>
             <div className="modbus-def-field">
-              <label>Quantity</label>
+              <label>{t('modbus.master.quantity')}</label>
               <input
                 className="modbus-def-input"
                 type="number"
@@ -856,7 +974,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
 
           <div className="modbus-scan-row">
             <div className="modbus-def-field" style={{ flex: 1 }}>
-              <label>Scan Rate (ms)</label>
+              <label>{t('modbus.master.scanRate')}</label>
               <div style={{ display: 'flex', gap: 6 }}>
                 <input
                   className="modbus-def-input"
@@ -878,27 +996,27 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
             <div className="modbus-def-grid">
               {fc === 5 ? (
                 <div className="modbus-def-field">
-                  <label>Coil Value</label>
+                  <label>{t('modbus.master.coilValue')}</label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       className={`i2c-btn ${singleWriteVal === '1' ? 'primary' : ''}`}
                       onClick={() => setSingleWriteVal('1')}
                       style={{ flex: 1 }}
                     >
-                      ON (FF 00)
+                      {t('modbus.master.onValue')}
                     </button>
                     <button
                       className={`i2c-btn ${singleWriteVal === '0' ? 'primary' : ''}`}
                       onClick={() => setSingleWriteVal('0')}
                       style={{ flex: 1 }}
                     >
-                      OFF (00 00)
+                      {t('modbus.master.offValue')}
                     </button>
                   </div>
                 </div>
               ) : fc === 6 ? (
                 <div className="modbus-def-field">
-                  <label>Register Value (0-65535)</label>
+                  <label>{t('modbus.master.registerValue')}</label>
                   <input
                     className="modbus-def-input"
                     type="number"
@@ -910,7 +1028,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                 </div>
               ) : (
                 <div className="modbus-def-field">
-                  <label>Write Data (hex bytes, space-separated)</label>
+                  <label>{t('modbus.master.writeData')}</label>
                   <textarea
                     className="modbus-def-input"
                     style={{
@@ -937,7 +1055,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                   if (e.target.checked) stopScan();
                 }}
               />
-              Read/Write Disabled
+              {t('modbus.master.readWriteDisabled')}
             </label>
             <label className="modbus-check-label">
               <input
@@ -945,7 +1063,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                 checked={disableOnError}
                 onChange={(e) => setDisableOnError(e.target.checked)}
               />
-              Disable on Error
+              {t('modbus.master.disableOnError')}
             </label>
           </div>
 
@@ -956,7 +1074,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                 onClick={execReadWrite}
                 disabled={!connected || rwDisabled || scanning}
               >
-                Read
+                {t('modbus.common.read')}
               </button>
             ) : (
               <button
@@ -964,7 +1082,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                 onClick={execReadWrite}
                 disabled={!connected || rwDisabled || scanning}
               >
-                Write
+                {t('modbus.common.write')}
               </button>
             )}
             {!scanning ? (
@@ -973,34 +1091,39 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                 onClick={startScan}
                 disabled={!connected || rwDisabled}
               >
-                Poll
+                {t('modbus.master.poll')}
               </button>
             ) : (
               <button className="i2c-btn danger" onClick={stopScan}>
-                Stop
+                {t('modbus.common.stop')}
               </button>
             )}
           </div>
         </div>
 
         {/* ─── Right: Data Table ────────────────────────── */}
-        <div className="modbus-data-panel">
-          <div
-            className="modbus-section-title"
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-          >
-            <span>Data View</span>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="modbus-data-panel modbus-master-data-panel">
+          <div className="modbus-data-header">
+            <div className="modbus-data-heading">
+              <span className="modbus-section-title">{t('modbus.master.dataView')}</span>
+              <span className="modbus-data-summary">
+                {t('modbus.master.visibleRows', {
+                  visible: displayRows,
+                  total: Math.max(1, parseInt(quantity, 10) || 1),
+                })}
+              </span>
+            </div>
+            <div className="modbus-data-controls">
               <select
                 className="modbus-view-select"
                 value={rowCount}
                 onChange={(e) => setRowCount(e.target.value as typeof rowCount)}
               >
-                <option value="10">10 rows</option>
-                <option value="20">20 rows</option>
-                <option value="50">50 rows</option>
-                <option value="100">100 rows</option>
-                <option value="fit">Fit to Quantity</option>
+                <option value="10">{t('modbus.master.rows', { count: 10 })}</option>
+                <option value="20">{t('modbus.master.rows', { count: 20 })}</option>
+                <option value="50">{t('modbus.master.rows', { count: 50 })}</option>
+                <option value="100">{t('modbus.master.rows', { count: 100 })}</option>
+                <option value="fit">{t('modbus.master.fitQuantity')}</option>
               </select>
               <label className="modbus-check-label">
                 <input
@@ -1008,7 +1131,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                   checked={hideNameCol}
                   onChange={(e) => setHideNameCol(e.target.checked)}
                 />
-                Hide Names
+                {t('modbus.master.hideNames')}
               </label>
               <label className="modbus-check-label">
                 <input
@@ -1016,7 +1139,7 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                   checked={plcAddressMode}
                   onChange={(e) => setPlcAddressMode(e.target.checked)}
                 />
-                PLC Addr (1-based)
+                {t('modbus.master.plcAddress')}
               </label>
             </div>
           </div>
@@ -1026,11 +1149,16 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
               <table className="modbus-data-table">
                 <thead>
                   <tr>
-                    <th className="modbus-tbl-addr">Address</th>
-                    {!hideNameCol && <th className="modbus-tbl-name">Name</th>}
-                    <th className="modbus-tbl-val">
-                      {hasRegisterData ? 'Value (Hex/Dec)' : 'Value (0/1)'}
-                    </th>
+                    <th className="modbus-tbl-addr">{t('modbus.common.address')}</th>
+                    {!hideNameCol && <th className="modbus-tbl-name">{t('modbus.common.name')}</th>}
+                    {hasRegisterData ? (
+                      <>
+                        <th className="modbus-tbl-hex">HEX</th>
+                        <th className="modbus-tbl-val">{t('modbus.common.dec')}</th>
+                      </>
+                    ) : (
+                      <th className="modbus-tbl-val">{t('modbus.master.valueBit')}</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -1052,312 +1180,349 @@ export const MasterTab: React.FC<MasterTabProps> = (_props) => {
                         </td>
                         {!hideNameCol && (
                           <td className="modbus-tbl-name">
-                            {hasRegisterData ? `Holding Reg ${absAddr}` : `Coil ${absAddr}`}
+                            {hasRegisterData
+                              ? t('modbus.master.holdingRegisterName', { address: absAddr })
+                              : t('modbus.master.coilName', { address: absAddr })}
                           </td>
                         )}
-                        <td className="modbus-tbl-val">
-                          {hasRegisterData ? (
-                            i < respRegisters.length ? (
-                              <input
-                                className="modbus-tbl-input"
-                                type="number"
-                                value={regVal ?? 0}
-                                onChange={(e) => editRegister(i, parseInt(e.target.value, 10) || 0)}
-                                min={0}
-                                max={65535}
-                              />
+                        {hasRegisterData ? (
+                          <>
+                            <td className="modbus-tbl-hex">
+                              {i < respRegisters.length ? (
+                                <span className="modbus-hex-value">
+                                  0x{(regVal ?? 0).toString(16).toUpperCase().padStart(4, '0')}
+                                </span>
+                              ) : (
+                                <span className="modbus-tbl-empty">—</span>
+                              )}
+                            </td>
+                            <td className="modbus-tbl-val">
+                              {i < respRegisters.length ? (
+                                <input
+                                  className="modbus-tbl-input"
+                                  type="number"
+                                  value={regVal ?? 0}
+                                  onChange={(e) =>
+                                    editRegister(i, parseInt(e.target.value, 10) || 0)
+                                  }
+                                  min={0}
+                                  max={65535}
+                                />
+                              ) : (
+                                <span className="modbus-tbl-empty">—</span>
+                              )}
+                            </td>
+                          </>
+                        ) : (
+                          <td className="modbus-tbl-val">
+                            {i < respBits.length ? (
+                              <div className="modbus-bit-control">
+                                <span
+                                  className={`modbus-bit-indicator ${bitVal ? 'is-high' : 'is-low'}`}
+                                  aria-hidden="true"
+                                />
+                                <select
+                                  className="modbus-tbl-input modbus-bit-select"
+                                  value={bitVal ?? 0}
+                                  onChange={(e) => editBit(i, parseInt(e.target.value, 10))}
+                                >
+                                  <option value={0}>{t('modbus.master.lowValue')}</option>
+                                  <option value={1}>{t('modbus.master.highValue')}</option>
+                                </select>
+                              </div>
                             ) : (
                               <span className="modbus-tbl-empty">—</span>
-                            )
-                          ) : i < respBits.length ? (
-                            <select
-                              className="modbus-tbl-input"
-                              value={bitVal ?? 0}
-                              onChange={(e) => editBit(i, parseInt(e.target.value, 10))}
-                            >
-                              <option value={0}>0</option>
-                              <option value={1}>1</option>
-                            </select>
-                          ) : (
-                            <span className="modbus-tbl-empty">—</span>
-                          )}
-                        </td>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             ) : (
-              <div className="modbus-data-empty">
-                Select a read function code (01-04) and click Read to view data
-              </div>
+              <div className="modbus-data-empty">{t('modbus.master.selectReadHint')}</div>
             )}
           </div>
 
           {connected && scanning && (
             <div className="modbus-scan-status">
               <span className="status-led active" />
-              Scanning every {scanRate}ms — {isRead ? 'Reading' : 'Writing'}{' '}
-              {fc === 1 || fc === 2 ? 'Coils' : 'Registers'}
+              {t('modbus.master.scanning', {
+                rate: scanRate,
+                action: isRead ? t('modbus.master.reading') : t('modbus.master.writing'),
+                target:
+                  fc === 1 || fc === 2 ? t('modbus.master.coils') : t('modbus.master.registers'),
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* ─── Message Preview (live-updating, selectable) ─── */}
-      <div className={`modbus-msg-panel ${msgCollapsed ? 'collapsed' : ''}`}>
-        <div
-          className="modbus-msg-header"
-          onClick={() => setMsgCollapsed(!msgCollapsed)}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <span>{msgCollapsed ? '▶' : '▼'} Request / Response Messages</span>
-          {!msgCollapsed && (
-            <button
-              className="serial-action-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                const lines = [
-                  `RTU:  ${previewFrames.rtu}`,
-                  `ASCII: ${previewFrames.ascii}`,
-                  `TCP:  ${previewFrames.tcp}`,
-                  `Resp: ${rtuRespHex || '—'}`,
-                ];
-                navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
-              }}
-            >
-              Copy All
-            </button>
-          )}
-        </div>
-        {!msgCollapsed && (
-          <div className="modbus-msg-grid">
-            <div className="modbus-msg-field">
-              <span className="modbus-msg-label">RTU Request:</span>
-              <pre
-                className="modbus-msg-pre"
-                onMouseDown={() => {}} // Allow native text selection
-              >
-                {previewFrames.rtu || '—'}
-              </pre>
-            </div>
-            <div className="modbus-msg-field">
-              <span className="modbus-msg-label">ASCII Request:</span>
-              <pre className="modbus-msg-pre">{previewFrames.ascii || '—'}</pre>
-            </div>
-            <div className="modbus-msg-field">
-              <span className="modbus-msg-label">TCP Request:</span>
-              <pre className="modbus-msg-pre">{previewFrames.tcp || '—'}</pre>
-            </div>
-            <div className="modbus-msg-field">
-              <span className="modbus-msg-label">
-                {protocol === 'tcp' ? 'TCP Response:' : 'RTU Response:'}
-              </span>
-              <pre
-                className="modbus-msg-pre"
-                style={{ color: rtuRespHex ? 'var(--color-text)' : 'var(--color-overlay0)' }}
-              >
-                {rtuRespHex || '— Waiting for response —'}
-              </pre>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Bottom: Log + Connection ─────────────────────── */}
-      <div className={`i2c-master-config ${configCollapsed ? 'collapsed' : ''}`}>
-        {configCollapsed ? (
-          <button
-            className="i2c-config-collapse-btn"
-            onClick={() => setConfigCollapsed(false)}
-            title="Expand"
+      <div className="modbus-bottom-dock">
+        {/* ─── Message Preview (live-updating, selectable) ─── */}
+        <div className={`modbus-msg-panel ${msgCollapsed ? 'collapsed' : ''}`}>
+          <div
+            className="modbus-msg-header"
+            onClick={() => setMsgCollapsed(!msgCollapsed)}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
-            &#9650;
-          </button>
-        ) : (
-          <>
+            <span>
+              {msgCollapsed ? '▶' : '▼'} {t('modbus.master.messages')}
+            </span>
+            {!msgCollapsed && (
+              <button
+                className="serial-action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const lines = [
+                    `RTU:  ${previewFrames.rtu}`,
+                    `ASCII: ${previewFrames.ascii}`,
+                    `TCP:  ${previewFrames.tcp}`,
+                    `Resp: ${rtuRespHex || '—'}`,
+                  ];
+                  navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
+                }}
+              >
+                {t('modbus.master.copyAll')}
+              </button>
+            )}
+          </div>
+          {!msgCollapsed && (
+            <div className="modbus-msg-grid">
+              <div className="modbus-msg-field">
+                <span className="modbus-msg-label">{t('modbus.master.rtuRequest')}</span>
+                <pre
+                  className="modbus-msg-pre"
+                  onMouseDown={() => {}} // Allow native text selection
+                >
+                  {previewFrames.rtu || '—'}
+                </pre>
+              </div>
+              <div className="modbus-msg-field">
+                <span className="modbus-msg-label">{t('modbus.master.asciiRequest')}</span>
+                <pre className="modbus-msg-pre">{previewFrames.ascii || '—'}</pre>
+              </div>
+              <div className="modbus-msg-field">
+                <span className="modbus-msg-label">{t('modbus.master.tcpRequest')}</span>
+                <pre className="modbus-msg-pre">{previewFrames.tcp || '—'}</pre>
+              </div>
+              <div className="modbus-msg-field">
+                <span className="modbus-msg-label">
+                  {protocol === 'tcp'
+                    ? t('modbus.master.tcpResponse')
+                    : t('modbus.master.rtuResponse')}
+                </span>
+                <pre
+                  className="modbus-msg-pre"
+                  style={{ color: rtuRespHex ? 'var(--color-text)' : 'var(--color-overlay0)' }}
+                >
+                  {rtuRespHex || t('modbus.master.waitingResponse')}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ─── Bottom: Log + Connection ─────────────────────── */}
+        <div className={`i2c-master-config ${configCollapsed ? 'collapsed' : ''}`}>
+          {configCollapsed ? (
             <button
               className="i2c-config-collapse-btn"
-              style={{ position: 'absolute', top: 4, right: 8, zIndex: 1 }}
-              onClick={() => setConfigCollapsed(true)}
-              title="Collapse"
+              onClick={() => setConfigCollapsed(false)}
+              title={t('modbus.common.expand')}
             >
-              &#9660;
+              &#9650;
             </button>
-            <div className="i2c-master-config-body">
-              {/* Connection bar */}
-              <div className="serial-config-row">
-                <div className="config-group">
-                  <label className="config-label">Protocol</label>
-                  <select
-                    className="config-select"
-                    value={protocol}
-                    onChange={(e) => setProtocol(e.target.value as 'rtu' | 'tcp')}
-                    disabled={connected}
-                  >
-                    <option value="rtu">Modbus RTU (Serial)</option>
-                    <option value="tcp">Modbus TCP</option>
-                  </select>
-                </div>
-                <div className="config-group">
-                  <label className="config-label">Port</label>
-                  <div className="config-port-row">
-                    <span
-                      className={`status-led ${connected ? 'active' : ''}`}
-                      style={{ marginRight: 4 }}
-                    />
-                    {protocol === 'rtu' ? (
-                      <>
+          ) : (
+            <>
+              <button
+                className="i2c-config-collapse-btn"
+                style={{ position: 'absolute', top: 4, right: 8, zIndex: 1 }}
+                onClick={() => setConfigCollapsed(true)}
+                title={t('modbus.common.collapse')}
+              >
+                &#9660;
+              </button>
+              <div className="i2c-master-config-body">
+                {/* Connection bar */}
+                <div className="serial-config-row">
+                  <div className="config-group">
+                    <label className="config-label">{t('modbus.common.protocol')}</label>
+                    <select
+                      className="config-select"
+                      value={protocol}
+                      onChange={(e) => setProtocol(e.target.value as 'rtu' | 'tcp')}
+                      disabled={connected}
+                    >
+                      <option value="rtu">{t('modbus.master.rtuSerial')}</option>
+                      <option value="tcp">Modbus TCP</option>
+                    </select>
+                  </div>
+                  <div className="config-group">
+                    <label className="config-label">{t('modbus.common.port')}</label>
+                    <div className="config-port-row">
+                      <span
+                        className={`status-led ${connected ? 'active' : ''}`}
+                        style={{ marginRight: 4 }}
+                      />
+                      {protocol === 'rtu' ? (
+                        <>
+                          <select
+                            className="config-select"
+                            value={serialPort}
+                            onChange={(e) => setSerialPort(e.target.value)}
+                            disabled={connected}
+                          >
+                            <option value="">{t('modbus.common.selectPort')}</option>
+                            {ports.map((p) => (
+                              <option key={p.name} value={p.name}>
+                                {p.name}
+                                {p.description && p.description !== p.name
+                                  ? ` (${p.description})`
+                                  : ''}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="config-btn-icon"
+                            onClick={scanPorts}
+                            disabled={connected}
+                            title={t('modbus.common.refresh')}
+                          >
+                            ↻
+                          </button>
+                          <button
+                            className={`config-btn-icon ${autoRefresh ? 'active' : ''}`}
+                            onClick={() => setAutoRefresh((v) => !v)}
+                            disabled={connected}
+                            title={t('modbus.common.auto')}
+                          >
+                            A
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <input
+                            className="config-select"
+                            type="text"
+                            value={tcpHost}
+                            onChange={(e) => setTcpHost(e.target.value)}
+                            disabled={connected}
+                            placeholder="Host"
+                            style={{ width: 110 }}
+                          />
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: 'var(--color-overlay1)',
+                              margin: '0 4px',
+                            }}
+                          >
+                            :
+                          </span>
+                          <input
+                            className="config-select"
+                            type="number"
+                            value={tcpPort}
+                            onChange={(e) => setTcpPort(e.target.value)}
+                            disabled={connected}
+                            placeholder="502"
+                            style={{ width: 65 }}
+                            min={1}
+                            max={65535}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {protocol === 'rtu' && (
+                    <>
+                      <div className="config-group">
+                        <label className="config-label">{t('modbus.common.baud')}</label>
                         <select
                           className="config-select"
-                          value={serialPort}
-                          onChange={(e) => setSerialPort(e.target.value)}
+                          value={baudRate}
+                          onChange={(e) => setBaudRate(e.target.value)}
                           disabled={connected}
                         >
-                          <option value="">-- Select Port --</option>
-                          {ports.map((p) => (
-                            <option key={p.name} value={p.name}>
-                              {p.name}
-                              {p.description && p.description !== p.name
-                                ? ` (${p.description})`
-                                : ''}
+                          {[
+                            '300',
+                            '1200',
+                            '2400',
+                            '4800',
+                            '9600',
+                            '19200',
+                            '38400',
+                            '57600',
+                            '115200',
+                            '230400',
+                            '460800',
+                            '921600',
+                          ].map((b) => (
+                            <option key={b} value={b}>
+                              {b}
                             </option>
                           ))}
                         </select>
-                        <button
-                          className="config-btn-icon"
-                          onClick={scanPorts}
-                          disabled={connected}
-                          title="Refresh"
-                        >
-                          ↻
-                        </button>
-                        <button
-                          className={`config-btn-icon ${autoRefresh ? 'active' : ''}`}
-                          onClick={() => setAutoRefresh((v) => !v)}
-                          disabled={connected}
-                          title="Auto"
-                        >
-                          A
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <input
+                      </div>
+                      <div className="config-group">
+                        <label className="config-label">{t('modbus.common.parity')}</label>
+                        <select
                           className="config-select"
-                          type="text"
-                          value={tcpHost}
-                          onChange={(e) => setTcpHost(e.target.value)}
+                          value={parity}
+                          onChange={(e) => setParity(e.target.value)}
                           disabled={connected}
-                          placeholder="Host"
-                          style={{ width: 110 }}
-                        />
-                        <span
-                          style={{ fontSize: 11, color: 'var(--color-overlay1)', margin: '0 4px' }}
                         >
-                          :
-                        </span>
-                        <input
-                          className="config-select"
-                          type="number"
-                          value={tcpPort}
-                          onChange={(e) => setTcpPort(e.target.value)}
-                          disabled={connected}
-                          placeholder="502"
-                          style={{ width: 65 }}
-                          min={1}
-                          max={65535}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-                {protocol === 'rtu' && (
-                  <>
-                    <div className="config-group">
-                      <label className="config-label">Baud</label>
-                      <select
-                        className="config-select"
-                        value={baudRate}
-                        onChange={(e) => setBaudRate(e.target.value)}
-                        disabled={connected}
-                      >
-                        {[
-                          '300',
-                          '1200',
-                          '2400',
-                          '4800',
-                          '9600',
-                          '19200',
-                          '38400',
-                          '57600',
-                          '115200',
-                          '230400',
-                          '460800',
-                          '921600',
-                        ].map((b) => (
-                          <option key={b} value={b}>
-                            {b}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="config-group">
-                      <label className="config-label">Parity</label>
-                      <select
-                        className="config-select"
-                        value={parity}
-                        onChange={(e) => setParity(e.target.value)}
-                        disabled={connected}
-                      >
-                        <option value="none">8N1</option>
-                        <option value="even">8E1</option>
-                        <option value="odd">8O1</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-                <div className="config-group config-connect">
-                  <label className="config-label">&nbsp;</label>
-                  {!connected ? (
-                    <button
-                      className="config-btn-open"
-                      onClick={handleConnect}
-                      disabled={connecting || (protocol === 'rtu' && !serialPort)}
-                    >
-                      {connecting ? '...' : 'Connect'}
-                    </button>
-                  ) : (
-                    <button className="config-btn-close" onClick={handleDisconnect}>
-                      Disconnect
-                    </button>
+                          <option value="none">8N1</option>
+                          <option value="even">8E1</option>
+                          <option value="odd">8O1</option>
+                        </select>
+                      </div>
+                    </>
                   )}
-                </div>
-              </div>
-
-              {/* Log */}
-              <div className="i2c-log-area">
-                <div className="i2c-log-title">
-                  <span className="status-led active" />
-                  Bus Log
-                  <div className="i2c-log-actions">
-                    <button className="serial-action-btn" onClick={handleClearLog}>
-                      Clear
-                    </button>
-                    {clearedText && (
-                      <button className="serial-action-btn" onClick={handleRestore}>
-                        Restore
+                  <div className="config-group config-connect">
+                    <label className="config-label">&nbsp;</label>
+                    {!connected ? (
+                      <button
+                        className="config-btn-open"
+                        onClick={handleConnect}
+                        disabled={connecting || (protocol === 'rtu' && !serialPort)}
+                      >
+                        {connecting ? '...' : t('modbus.common.connect')}
+                      </button>
+                    ) : (
+                      <button className="config-btn-close" onClick={handleDisconnect}>
+                        {t('modbus.common.disconnect')}
                       </button>
                     )}
                   </div>
                 </div>
-                <div className="i2c-log-list i2c-log-interactive" ref={logListRef}>
-                  <pre className="i2c-log-pre">{logText || 'Ready'}</pre>
+
+                {/* Log */}
+                <div className="i2c-log-area">
+                  <div className="i2c-log-title">
+                    <span className="status-led active" />
+                    {t('modbus.master.busLog')}
+                    <div className="i2c-log-actions">
+                      <button className="serial-action-btn" onClick={handleClearLog}>
+                        {t('modbus.common.clear')}
+                      </button>
+                      {clearedText && (
+                        <button className="serial-action-btn" onClick={handleRestore}>
+                          {t('modbus.common.restore')}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="i2c-log-list i2c-log-interactive" ref={logListRef}>
+                    <pre className="i2c-log-pre">{logText || t('modbus.common.ready')}</pre>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

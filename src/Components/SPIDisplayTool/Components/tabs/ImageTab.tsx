@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCloudArrowUp,
@@ -13,12 +14,12 @@ import type { TabContext } from './common';
 
 type ScaleMode = 'stretch' | 'contain' | 'cover' | 'custom' | 'tile';
 type MonoMode = 'color' | 'threshold' | 'dither';
-const SCALE_LABELS: Record<ScaleMode, string> = {
-  stretch: '拉伸填满',
-  contain: '等比完整显示',
-  cover: '等比填充裁剪',
-  custom: '自定义缩放定位',
-  tile: '平铺',
+const SCALE_LABEL_KEYS: Record<ScaleMode, string> = {
+  stretch: 'spiDisplay.image.scaleStretch',
+  contain: 'spiDisplay.image.scaleContain',
+  cover: 'spiDisplay.image.scaleCover',
+  custom: 'spiDisplay.image.scaleCustom',
+  tile: 'spiDisplay.image.scaleTile',
 };
 
 function applyPixelProcessing(
@@ -82,6 +83,7 @@ export const ImageTab: React.FC<TabContext> = ({
   busy,
   displayType,
 }) => {
+  const { t } = useTranslation();
   const [scaleMode, setScaleMode] = useState<ScaleMode>('contain');
   const [imageURL, setImageURL] = useState<string | null>(null);
   const [imageName, setImageName] = useState('');
@@ -267,12 +269,15 @@ export const ImageTab: React.FC<TabContext> = ({
     if (!canvas) return;
     await onSend({
       canvas,
-      description: `图片：${imageName} · ${SCALE_LABELS[scaleMode]}`,
+      description: t('spiDisplay.image.description', {
+        name: imageName,
+        layout: t(SCALE_LABEL_KEYS[scaleMode]),
+      }),
       bgColor: background,
       metadata: {
         类型: '图片',
         文件: imageName,
-        布局: SCALE_LABELS[scaleMode],
+        布局: t(SCALE_LABEL_KEYS[scaleMode]),
         缩放: `${zoom}%`,
         X: offsetX,
         Y: offsetY,
@@ -300,39 +305,39 @@ export const ImageTab: React.FC<TabContext> = ({
     <div className="sdt-tab-form">
       <div className="sdt-toolbar-row">
         <label>
-          布局
+          {t('spiDisplay.common.layout')}
           <select
             className="sdt-select"
             value={scaleMode}
             onChange={(event) => setScaleMode(event.target.value as ScaleMode)}
           >
-            {(Object.keys(SCALE_LABELS) as ScaleMode[]).map((mode) => (
+            {(Object.keys(SCALE_LABEL_KEYS) as ScaleMode[]).map((mode) => (
               <option key={mode} value={mode}>
-                {SCALE_LABELS[mode]}
+                {t(SCALE_LABEL_KEYS[mode])}
               </option>
             ))}
           </select>
         </label>
         <button className="sdt-btn small" onClick={() => fileInputRef.current?.click()}>
-          <FontAwesomeIcon icon={faFolderOpen} /> 选择图片
+          <FontAwesomeIcon icon={faFolderOpen} /> {t('spiDisplay.image.select')}
         </button>
         <span className="sdt-spacer" />
         <button className="sdt-btn" onClick={handleClear} disabled={!imageURL}>
-          <FontAwesomeIcon icon={faXmark} /> 清空
+          <FontAwesomeIcon icon={faXmark} /> {t('spiDisplay.common.clear')}
         </button>
         <button
           className="sdt-btn sdt-clear-screen-btn"
           onClick={() => void onClearDisplay()}
           disabled={busy}
         >
-          <FontAwesomeIcon icon={faEraser} /> 清屏
+          <FontAwesomeIcon icon={faEraser} /> {t('spiDisplay.common.clearDisplay')}
         </button>
         <button
           className="sdt-btn primary"
           onClick={() => void handleSend()}
           disabled={busy || !loadedImage}
         >
-          <FontAwesomeIcon icon={faPaperPlane} /> 发送
+          <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.common.send')}
         </button>
         <input
           ref={fileInputRef}
@@ -347,11 +352,11 @@ export const ImageTab: React.FC<TabContext> = ({
       </div>
 
       <details className="sdt-advanced-panel">
-        <summary>高级图片设置</summary>
+        <summary>{t('spiDisplay.image.advanced')}</summary>
         <div className="sdt-advanced-content">
           <div className="sdt-toolbar-row sdt-parameter-grid">
             <label>
-              缩放 %
+              {t('spiDisplay.image.zoom')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -380,7 +385,7 @@ export const ImageTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              亮度
+              {t('spiDisplay.image.brightness')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -391,7 +396,7 @@ export const ImageTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              对比度
+              {t('spiDisplay.image.contrast')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -402,7 +407,7 @@ export const ImageTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              饱和度
+              {t('spiDisplay.image.saturation')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -413,31 +418,31 @@ export const ImageTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              通道
+              {t('spiDisplay.image.channel')}
               <select
                 className="sdt-select"
                 value={channelOrder}
                 onChange={(event) => setChannelOrder(event.target.value as 'rgb' | 'bgr')}
               >
-                <option value="rgb">RGB</option>
-                <option value="bgr">BGR</option>
+                <option value="rgb">{t('spiDisplay.terms.rgb')}</option>
+                <option value="bgr">{t('spiDisplay.terms.bgr')}</option>
               </select>
             </label>
             <label>
-              单色处理
+              {t('spiDisplay.image.monochrome')}
               <select
                 className="sdt-select"
                 value={monoMode}
                 onChange={(event) => setMonoMode(event.target.value as MonoMode)}
               >
-                <option value="color">关闭</option>
-                <option value="threshold">阈值</option>
-                <option value="dither">Floyd–Steinberg</option>
+                <option value="color">{t('spiDisplay.common.off')}</option>
+                <option value="threshold">{t('spiDisplay.image.threshold')}</option>
+                <option value="dither">{t('spiDisplay.terms.floydSteinberg')}</option>
               </select>
             </label>
             {monoMode !== 'color' && (
               <label>
-                阈值
+                {t('spiDisplay.image.threshold')}
                 <input
                   className="sdt-input mono"
                   type="number"
@@ -449,7 +454,7 @@ export const ImageTab: React.FC<TabContext> = ({
               </label>
             )}
             <label>
-              透明背景
+              {t('spiDisplay.image.transparentBackground')}
               <input
                 className="sdt-color-input"
                 type="color"
@@ -458,9 +463,7 @@ export const ImageTab: React.FC<TabContext> = ({
               />
             </label>
           </div>
-          <div className="sdt-advanced-hint">
-            可调整定位、颜色通道和单色转换；拖动下方预览也会自动进入自定义定位模式。
-          </div>
+          <div className="sdt-advanced-hint">{t('spiDisplay.image.advancedHint')}</div>
         </div>
       </details>
 
@@ -507,13 +510,13 @@ export const ImageTab: React.FC<TabContext> = ({
               }}
             />
             <div className="hint">{imageName}</div>
-            <div className="sub-hint">拖动画面定位；参数变化只更新预览</div>
+            <div className="sub-hint">{t('spiDisplay.image.dragHint')}</div>
           </>
         ) : (
           <button className="sdt-drop-placeholder" onClick={() => fileInputRef.current?.click()}>
             <FontAwesomeIcon icon={faCloudArrowUp} className="icon" />
-            <span>拖拽图片至此，或点击选择</span>
-            <small>PNG / JPG / BMP / WEBP / GIF 第一帧</small>
+            <span>{t('spiDisplay.image.dropHint')}</span>
+            <small>{t('spiDisplay.image.formats')}</small>
           </button>
         )}
       </div>

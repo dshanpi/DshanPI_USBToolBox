@@ -435,6 +435,39 @@
   font-style: italic;
 }
 
+.spi-step-empty-content {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spi-step-empty-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  color: var(--color-accent-text, #fff);
+  background: var(--color-accent);
+  font-family: inherit;
+  font-size: 20px;
+  font-style: normal;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    filter 0.12s,
+    transform 0.12s;
+}
+
+.spi-step-empty-add:hover {
+  filter: brightness(1.08);
+  transform: scale(1.05);
+}
+
 /* ─── Workflow as table — 仿 SPIDisplayTool 初始化命令表布局 ─────────────────
    勾选 + 顺序号 + 类型下拉 + 数据输入 + 删除按钮，每行平齐成列。
    保留 .spi-step-row.selected / .active 的高亮颜色。 */
@@ -572,10 +605,14 @@
   gap: 4px;
 }
 
-.spi-step-table .spi-step-unit {
-  font-size: 10px;
-  color: var(--color-overlay0);
-  flex-shrink: 0;
+.spi-step-table .spi-step-data-with-unit .spi-step-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.spi-step-table .spi-step-delay-unit {
+  width: 68px;
+  flex: 0 0 68px;
 }
 
 .spi-step-table .spi-step-noop {

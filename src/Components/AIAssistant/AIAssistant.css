@@ -1,44 +1,32 @@
-.uta-fab {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 901;
-  width: 50px;
-  height: 50px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 75%, #fff);
-  border-radius: 50%;
-  color: var(--color-accent-text, #fff);
-  background: var(--color-accent);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
-  font-size: 19px;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+.uta-sidebar-trigger {
+  border: 1px solid transparent;
 }
 
-.uta-fab:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.28);
+.uta-sidebar-trigger > svg {
+  flex: 0 0 auto;
 }
 
-.uta-fab.open {
-  color: var(--color-text);
-  background: var(--color-surface1);
-  border-color: var(--color-surface2);
+.uta-sidebar-trigger.open {
+  border-color: color-mix(in srgb, var(--color-accent) 46%, transparent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface0));
+}
+
+.sidebar--collapsed .uta-sidebar-trigger {
+  padding: 10px;
+}
+
+.sidebar--collapsed .uta-sidebar-trigger span {
+  display: none;
 }
 
 .uta-panel {
   position: fixed;
   right: 22px;
-  bottom: 84px;
+  bottom: 22px;
   z-index: 900;
   width: min(520px, calc(100vw - 44px));
-  height: min(700px, calc(100vh - 112px));
+  height: min(700px, calc(100vh - 44px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -730,21 +718,15 @@
 }
 
 @media (max-width: 640px) {
-  .uta-fab {
-    right: 14px;
-    bottom: 14px;
-  }
-
   .uta-panel {
     right: 8px;
-    bottom: 72px;
+    bottom: 8px;
     width: calc(100vw - 16px);
-    height: calc(100vh - 82px);
+    height: calc(100vh - 16px);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .uta-fab,
   .uta-cursor {
     transition: none;
     animation: none;

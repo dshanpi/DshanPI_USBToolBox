@@ -1,19 +1,69 @@
-/* ─── Page root: natural flow, scrollable ────────────── */
+/* ─── Full-height workbench shell ────────────────────── */
+
+.modbus-tool-page-root {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
 
 .modbus-tool-page-root .page-container {
   max-width: none !important;
   width: 100%;
-  /* padding-top / page-header 间距沿用 PageContainer 默认值，
-     使「Modbus 工具」标题位置与串口/I2C/SPI 工具的左上角标题保持一致。 */
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 14px 18px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.modbus-tool-page-root .proto-top-bar {
-  padding-left: 0;
-  padding-right: 0;
-  margin-bottom: 8px;
-  background: none;
-  border: none;
-  border-radius: 0;
+.modbus-tool-page-root .page-header {
+  display: none;
+}
+
+.modbus-tool-page-root .page-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modbus-workbench {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modbus-tool-page-root .proto-content {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modbus-workbench-bar {
+  min-height: 48px;
+  margin: 0 0 12px;
+  padding: 7px 12px;
+  border-radius: 12px;
+}
+
+.modbus-workbench-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface0));
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.modbus-workbench-title {
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
 }
 
 /* ─── Modbus Master layout ───────────────────────────── */
@@ -21,19 +71,32 @@
 .modbus-master-layout {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .modbus-master-middle {
   display: flex;
-  gap: 8px;
+  flex: 1;
+  min-height: 280px;
+  gap: 12px;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.modbus-slave-workspace {
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 /* ─── Log area inside config (fixed height, scrollable) ── */
 
 .modbus-tool-page-root .i2c-log-area {
-  max-height: 200px;
-  min-height: 200px;
+  max-height: 142px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
 }
@@ -47,17 +110,17 @@
 /* ─── Read/Write Definition Panel ──────────────────── */
 
 .modbus-section-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-accent);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 
 .modbus-def-panel {
-  width: 250px;
-  min-width: 220px;
+  width: 270px;
+  min-width: 250px;
   flex-shrink: 0;
   background: var(--color-crust);
   border-radius: 10px;
@@ -66,6 +129,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .modbus-def-grid {
@@ -126,7 +191,7 @@
   cursor: pointer;
 }
 
-.modbus-check-label input[type="checkbox"] {
+.modbus-check-label input[type='checkbox'] {
   accent-color: var(--color-accent);
   width: 13px;
   height: 13px;
@@ -148,30 +213,77 @@
   background: var(--color-crust);
   border-radius: 10px;
   border: 1px solid var(--color-surface0);
-  padding: 10px;
-  min-height: 300px;
-  max-height: 55vh;
+  padding: 0;
+  min-height: 420px;
+  max-height: 64vh;
+  overflow: hidden;
+}
+
+.modbus-master-data-panel {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
+
+.modbus-data-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px 12px;
+  border-bottom: 1px solid var(--color-surface0);
+  background: color-mix(in srgb, var(--color-mantle) 64%, transparent);
+  flex-shrink: 0;
+}
+
+.modbus-data-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.modbus-data-heading .modbus-section-title {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.modbus-data-summary {
+  color: var(--color-overlay0);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.modbus-data-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .modbus-view-select {
-  padding: 3px 6px;
+  min-height: 30px;
+  padding: 4px 9px;
   background: var(--color-base);
   border: 1px solid var(--color-surface0);
   border-radius: 4px;
   color: var(--color-text);
-  font-size: 10px;
+  font-size: 12px;
   font-family: inherit;
   outline: none;
 }
 
 .modbus-data-table-wrap {
   flex: 1;
-  overflow-y: auto;
+  overflow: auto;
   min-height: 0;
+  scrollbar-gutter: stable;
 }
 
 .modbus-data-table-wrap::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
+  height: 8px;
 }
 .modbus-data-table-wrap::-webkit-scrollbar-thumb {
   background: var(--color-surface1);
@@ -182,7 +294,7 @@
   width: 100%;
   border-collapse: collapse;
   font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--color-text);
 }
 
@@ -191,24 +303,29 @@
   top: 0;
   z-index: 1;
   background: var(--color-mantle);
-  padding: 4px 6px;
+  padding: 10px 12px;
   text-align: left;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-overlay1);
   text-transform: uppercase;
   border-bottom: 1px solid var(--color-surface0);
 }
 
 .modbus-data-table td {
-  padding: 2px 6px;
+  height: 40px;
+  padding: 5px 12px;
   border-bottom: 1px solid rgba(51, 65, 85, 0.2);
   vertical-align: middle;
-  line-height: 1.3;
+  line-height: 1.45;
+}
+
+.modbus-data-table tbody tr:nth-child(even) {
+  background: rgba(148, 163, 184, 0.025);
 }
 
 .modbus-data-table tr:hover {
-  background: rgba(56, 189, 248, 0.04);
+  background: rgba(56, 189, 248, 0.08);
 }
 
 .modbus-tbl-row-active {
@@ -216,49 +333,76 @@
 }
 
 .modbus-tbl-addr {
-  color: var(--color-overlay1);
-  font-size: 10px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 600;
   text-align: center;
 }
 
 .modbus-tbl-val {
   text-align: center;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Fix table-layout for consistent column widths */
-.modbus-data-panel .modbus-data-table {
+.modbus-master-data-panel .modbus-data-table {
   table-layout: fixed;
+  min-width: 560px;
 }
 
-.modbus-data-panel .modbus-data-table th:first-child,
-.modbus-data-panel .modbus-data-table td:first-child {
-  width: 48px;
+.modbus-master-data-panel .modbus-data-table th:first-child,
+.modbus-master-data-panel .modbus-data-table td:first-child {
+  width: 108px;
   text-align: center;
 }
 
-.modbus-data-panel .modbus-data-table th:last-child,
-.modbus-data-panel .modbus-data-table td:last-child {
-  width: 70px;
+.modbus-master-data-panel .modbus-data-table th:last-child,
+.modbus-master-data-panel .modbus-data-table td:last-child {
+  width: 136px;
   text-align: center;
 }
 
 .modbus-tbl-name {
   color: var(--color-overlay0);
-  font-size: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .modbus-tbl-val {
-  width: 140px;
+  width: 136px;
+}
+
+.modbus-tbl-hex {
+  width: 116px;
+  text-align: center !important;
+}
+
+.modbus-hex-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-surface0));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-base));
+  color: var(--color-accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .modbus-tbl-input {
-  padding: 2px 4px;
+  min-height: 30px;
+  padding: 5px 8px;
   background: var(--color-base);
   border: 1px solid var(--color-surface0);
   border-radius: 4px;
   color: var(--color-text);
-  font-size: 11px;
+  font-size: 13px;
   font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
   outline: none;
   width: 100%;
@@ -268,6 +412,33 @@
 
 .modbus-tbl-input:focus {
   border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.modbus-bit-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.modbus-bit-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-overlay0);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-overlay0) 14%, transparent);
+}
+
+.modbus-bit-indicator.is-high {
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 16%, transparent);
+}
+
+.modbus-bit-select {
+  max-width: 104px;
+  font-weight: 700;
 }
 
 .modbus-add-input {
@@ -299,39 +470,55 @@
   justify-content: center;
   height: 100%;
   min-height: 120px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-overlay0);
   font-style: italic;
 }
 
 .modbus-scan-status {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-accent);
-  padding-top: 8px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--color-surface0);
   display: flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
 }
 
-/* ─── Message Preview ──────────────────────────────── */
+/* ─── Bottom dock: messages + connection/log ───────── */
+
+.modbus-bottom-dock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
+  max-height: 430px;
+  overflow: hidden;
+}
 
 .modbus-msg-panel {
-  flex-shrink: 0;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
   background: var(--color-crust);
   border-radius: 8px;
   border: 1px solid var(--color-surface0);
-  margin-top: 4px;
+  overflow: hidden;
+  max-height: 198px;
 }
 
 .modbus-msg-panel.collapsed {
   padding: 0;
+  align-self: start;
 }
 
 .modbus-msg-header {
-  padding: 6px 14px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--color-accent);
   cursor: pointer;
   user-select: none;
@@ -345,22 +532,51 @@
 .modbus-msg-grid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 4px 14px 10px;
+  gap: 5px;
+  padding: 5px 14px 11px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modbus-bottom-dock > .i2c-master-config {
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  border: 1px solid var(--color-surface0);
+  border-radius: 8px;
+  background: var(--color-crust);
+  overflow: hidden;
+}
+
+.modbus-bottom-dock > .i2c-master-config.collapsed {
+  height: auto;
+  align-self: start;
+  padding: 4px;
+  border-top: 1px solid var(--color-surface0);
+}
+
+.modbus-bottom-dock .i2c-master-config-body {
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .modbus-msg-field {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 10px;
+  gap: 12px;
+  font-size: 13px;
 }
 
 .modbus-msg-label {
   color: var(--color-overlay1);
   white-space: nowrap;
-  min-width: 130px;
-  font-weight: 500;
+  min-width: 150px;
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .modbus-msg-code {
@@ -378,19 +594,53 @@
 .modbus-msg-pre {
   margin: 0;
   font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--color-text);
   background: var(--color-base);
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 5px 11px;
+  border-radius: 5px;
   flex: 1;
   white-space: pre-wrap;
   word-break: break-all;
   letter-spacing: 0.5px;
   user-select: text;
   cursor: text;
-  min-height: 20px;
-  line-height: 1.6;
+  min-height: 22px;
+  line-height: 1.55;
+}
+
+.modbus-bottom-dock .serial-config-row {
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-right: 34px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.modbus-bottom-dock .serial-config-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.modbus-bottom-dock .serial-config-row::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--color-surface1);
+}
+
+.modbus-bottom-dock .serial-config-row > .config-group {
+  flex: 0 0 auto;
+}
+
+.modbus-bottom-dock .serial-config-row > .config-group:nth-child(2) {
+  flex: 1 1 280px;
+  min-width: 250px;
+}
+
+.modbus-bottom-dock .config-port-row .config-select {
+  width: auto;
+  min-width: 180px;
 }
 
 .modbus-msg-pre::selection {
@@ -446,6 +696,39 @@
   font-weight: 600;
   color: var(--color-accent);
   margin-bottom: 6px;
+}
+
+.modbus-slave-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.modbus-slave-data-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modbus-slave-data-panel {
+  min-height: 0;
+  max-height: 260px;
+}
+
+.modbus-slave-data-panel .modbus-data-table {
+  table-layout: fixed;
+}
+
+.modbus-slave-data-panel .modbus-data-table th:first-child,
+.modbus-slave-data-panel .modbus-data-table td:first-child {
+  width: 42%;
+  text-align: center;
+}
+
+.modbus-slave-data-panel .modbus-data-table th:last-child,
+.modbus-slave-data-panel .modbus-data-table td:last-child {
+  text-align: center;
 }
 
 .modbus-slave-table-wrap {
@@ -684,4 +967,81 @@
 
 .config-btn-close:hover {
   opacity: 0.85;
+}
+
+/* ─── Responsive data views ─────────────────────────── */
+
+@media (max-width: 1180px), (max-height: 820px) {
+  .modbus-master-workspace {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-gutter: stable;
+  }
+
+  .modbus-master-workspace .modbus-master-middle {
+    flex: 0 0 auto;
+    min-height: 440px;
+    overflow: visible;
+  }
+
+  .modbus-master-workspace .modbus-master-data-panel {
+    height: auto;
+    min-height: 440px;
+    max-height: 62vh;
+  }
+
+  .modbus-bottom-dock {
+    grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .modbus-bottom-dock > .i2c-master-config {
+    height: auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .modbus-master-middle {
+    flex-direction: column;
+  }
+
+  .modbus-def-panel {
+    width: auto;
+    min-width: 0;
+  }
+
+  .modbus-def-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .modbus-master-data-panel {
+    height: auto;
+    min-height: 400px;
+    max-height: 62vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .modbus-data-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .modbus-data-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .modbus-def-grid,
+  .modbus-slave-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modbus-data-summary {
+    white-space: normal;
+  }
 }

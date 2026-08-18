@@ -32,48 +32,64 @@ const AI_PROVIDERS: Array<{
   models: string[];
 }> = [
   {
-    id: 'openai', label: 'OpenAI',
-    apiUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini',
+    id: 'openai',
+    label: 'OpenAI',
+    apiUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o-mini',
     match: ['openai.com'],
     models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo', 'o1-mini', 'o1-preview'],
   },
   {
-    id: 'deepseek', label: 'DeepSeek',
-    apiUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat',
+    id: 'deepseek',
+    label: 'DeepSeek',
+    apiUrl: 'https://api.deepseek.com/v1',
+    model: 'deepseek-chat',
     match: ['deepseek.com'],
     models: ['deepseek-chat', 'deepseek-reasoner', 'deepseek-coder'],
   },
   {
-    id: 'qwen', label: 'Qwen 通义千问',
-    apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus',
+    id: 'qwen',
+    label: 'Qwen 通义千问',
+    apiUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    model: 'qwen-plus',
     match: ['dashscope'],
     models: ['qwen-plus', 'qwen-turbo', 'qwen-max', 'qwen-long', 'qwen2.5-72b-instruct'],
   },
   {
-    id: 'zhipu', label: 'Zhipu 智谱',
-    apiUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash',
+    id: 'zhipu',
+    label: 'Zhipu 智谱',
+    apiUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    model: 'glm-4-flash',
     match: ['bigmodel.cn'],
     models: ['glm-4-flash', 'glm-4', 'glm-4-air', 'glm-4-plus', 'glm-4-long'],
   },
   {
-    id: 'moonshot', label: 'Moonshot 月之暗面',
-    apiUrl: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k',
+    id: 'moonshot',
+    label: 'Moonshot 月之暗面',
+    apiUrl: 'https://api.moonshot.cn/v1',
+    model: 'moonshot-v1-8k',
     match: ['moonshot.cn'],
     models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k', 'kimi-latest'],
   },
   {
-    id: 'doubao', label: 'Doubao 豆包',
-    apiUrl: 'https://ark.cn-beijing.volces.com/api/v3', model: 'doubao-pro-32k',
+    id: 'doubao',
+    label: 'Doubao 豆包',
+    apiUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+    model: 'doubao-pro-32k',
     match: ['volces.com', 'ark.cn-beijing'],
     models: ['doubao-pro-32k', 'doubao-pro-128k', 'doubao-lite-32k', 'doubao-1.5-pro-32k'],
   },
   {
-    id: 'siliconflow', label: 'SiliconFlow 硅基流动',
-    apiUrl: 'https://api.siliconflow.cn/v1', model: 'Qwen/Qwen2.5-7B-Instruct',
+    id: 'siliconflow',
+    label: 'SiliconFlow 硅基流动',
+    apiUrl: 'https://api.siliconflow.cn/v1',
+    model: 'Qwen/Qwen2.5-7B-Instruct',
     match: ['siliconflow'],
     models: [
-      'Qwen/Qwen2.5-7B-Instruct', 'Qwen/Qwen2.5-72B-Instruct',
-      'deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1',
+      'Qwen/Qwen2.5-7B-Instruct',
+      'Qwen/Qwen2.5-72B-Instruct',
+      'deepseek-ai/DeepSeek-V3',
+      'deepseek-ai/DeepSeek-R1',
     ],
   },
 ];
@@ -336,9 +352,7 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
       }
     } catch (error) {
       console.error('Failed to download update:', error);
-      setUpdateInfo((prev) =>
-        prev ? { ...prev, downloading: false, error: true } : null
-      );
+      setUpdateInfo((prev) => (prev ? { ...prev, downloading: false, error: true } : null));
     }
   };
 
@@ -352,8 +366,7 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
   const modelSelectValue =
     modelCustomMode || !currentModelInList ? '__custom__' : settings.ai.model;
   // 何时展开自定义输入框：自定义模式 / 模型不在列表 / 服务商无常见模型列表
-  const showCustomInput =
-    modelCustomMode || !currentModelInList || commonModels.length === 0;
+  const showCustomInput = modelCustomMode || !currentModelInList || commonModels.length === 0;
 
   const overlayVariants = {
     initial: { opacity: 0 },
@@ -551,9 +564,7 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
                           {p.label}
                         </option>
                       ))}
-                      <option value="custom">
-                        {t('settings.ai.providerCustom')}
-                      </option>
+                      <option value="custom">{t('settings.ai.providerCustom')}</option>
                     </select>
                   </div>
                   <div className="settings-item settings-item-vertical">
@@ -674,26 +685,26 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
                   )}
                 </div>
 
-                <div className="settings-section">
-                  <h3>{t('settings.developer.title')}</h3>
-                  <div className="settings-item">
-                    <span className="settings-label">{t('settings.developer.devtools')}</span>
-                    <button
-                      className="settings-btn settings-btn-secondary"
-                      onClick={() => invokeCommand('open_devtools')}
-                    >
-                      {t('settings.developer.openDevtools')}
-                    </button>
+                {import.meta.env.DEV && (
+                  <div className="settings-section">
+                    <h3>{t('settings.developer.title')}</h3>
+                    <div className="settings-item">
+                      <span className="settings-label">{t('settings.developer.devtools')}</span>
+                      <button
+                        className="settings-btn settings-btn-secondary"
+                        onClick={() => invokeCommand('open_devtools')}
+                      >
+                        {t('settings.developer.openDevtools')}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="settings-section">
                   <h3>{t('settings.about.title')}</h3>
                   <div className="settings-item settings-about-item">
                     <span className="settings-label">{t('settings.about.company')}</span>
-                    <span className="settings-about-value">
-                      {t('settings.about.companyName')}
-                    </span>
+                    <span className="settings-about-value">{t('settings.about.companyName')}</span>
                   </div>
                   <div className="settings-item settings-about-item">
                     <span className="settings-label">{t('settings.about.website')}</span>

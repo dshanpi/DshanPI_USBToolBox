@@ -26,7 +26,7 @@ import { SerialMonitor } from './Components/SerialMonitor';
 import { SerialSettings } from './Components/SerialSettings';
 import { SerialFeatureSettings } from './Components/SerialFeatureSettings';
 import { SendPanel } from './Components/SendPanel';
-import { MultiSendPanel } from './Components/MultiSendPanel';
+import { MultiSendPanel, type MultiSendPanelHandle } from './Components/MultiSendPanel';
 import {
   applyChecksum,
   previewChecksum,
@@ -84,6 +84,7 @@ interface SerialSessionProps {
   sessionId: string;
   compact: boolean;
   active: boolean;
+  toolActive: boolean;
   multiSendHost: HTMLDivElement | null;
   settingsHost: HTMLDivElement | null;
   onMetaChange: (sessionId: string, meta: SerialSessionMeta) => void;
@@ -93,6 +94,7 @@ interface SerialSessionProps {
 
 interface SerialSessionHandle {
   disconnect: () => Promise<void>;
+  stopMultiSend: () => void;
 }
 
 /** Extract a human-readable message from any thrown value (Error, IpcError object, or string). */
@@ -188,6 +190,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
       sessionId,
       compact,
       active,
+      toolActive,
       multiSendHost,
       settingsHost,
       onMetaChange,
@@ -248,6 +251,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
     const openPortRef = useRef('');
     const disposedRef = useRef(false);
     const connectionAttemptRef = useRef(0);
+    const multiSendRef = useRef<MultiSendPanelHandle>(null);
     hexDisplayRef.current = hexDisplay;
     ansiDisplayRef.current = ansiDisplay;
     showTimestampRef.current = showTimestamp;
@@ -734,6 +738,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
           if (payload.port !== config.port) return;
           // Empty data signals disconnection
           if (!payload.data || payload.data.length === 0) {
+            multiSendRef.current?.stopScheduledSends();
             flushPendingReceive();
             const portName = config.port;
             openPortRef.current = '';
@@ -922,6 +927,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
     }, [config, isPortInUse, sessionId, startListening, stopListening, t]);
 
     const handleClose = useCallback(async () => {
+      multiSendRef.current?.stopScheduledSends();
       connectionAttemptRef.current += 1;
       const port = openPortRef.current;
       openPortRef.current = '';
@@ -939,15 +945,26 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
       setErrorMsg('');
     }, [flushPendingReceive, stopListening]);
 
-    useImperativeHandle(ref, () => ({ disconnect: handleClose }), [handleClose]);
+    useImperativeHandle(
+      ref,
+      () => ({
+        disconnect: handleClose,
+        stopMultiSend: () => multiSendRef.current?.stopScheduledSends(),
+      }),
+      [handleClose]
+    );
 
     const handleSend = useCallback(
       async (data: number[], skipEcho?: boolean, requestLocalEcho?: boolean) => {
-        if (!connected || !config.port) return;
+        // openPortRef is cleared before a disconnect begins. Using it here
+        // prevents delayed multi-send callbacks from writing to a closed port
+        // or to the same OS port after another session has reopened it.
+        const port = openPortRef.current;
+        if (!port) return;
         try {
           // Apply checksum if enabled
           const finalData = applyChecksum(data, checksumConfig);
-          await invokeCommand('serial_write', { port: config.port, data: finalData });
+          await invokeCommand('serial_write', { port, data: finalData });
           // Always retain TX bytes for filtering/export. Keep the previous
           // terminal behavior by showing them only for timestamp/local echo.
           const displaySentData =
@@ -959,7 +976,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
           setErrorMsg(`Send failed: ${msg}`);
         }
       },
-      [connected, config.port, processReceived, checksumConfig]
+      [processReceived, checksumConfig]
     );
 
     const handleClear = useCallback(() => {
@@ -1171,7 +1188,13 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
 
     const multiSendControls = (
       <div className={`serial-session-multi-controls ${active ? 'active' : ''}`}>
-        <MultiSendPanel onSend={handleSend} connected={connected} />
+        <MultiSendPanel
+          ref={multiSendRef}
+          onSend={handleSend}
+          connected={connected}
+          active={active && toolActive}
+          sessionId={sessionId}
+        />
       </div>
     );
 
@@ -1182,7 +1205,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
             <button
               className="settings-collapse-btn"
               onClick={() => setSettingsCollapsed(false)}
-              title="展开功能区"
+              title={t('serialTool.settings.expand')}
             >
               <FontAwesomeIcon icon={faChevronUp} />
             </button>
@@ -1191,7 +1214,7 @@ const SerialSession = React.forwardRef<SerialSessionHandle, SerialSessionProps>(
               <button
                 className="settings-collapse-btn"
                 onClick={() => setSettingsCollapsed(true)}
-                title="折叠功能区"
+                title={t('serialTool.settings.collapse')}
               >
                 <FontAwesomeIcon icon={faChevronDown} />
               </button>
@@ -1295,6 +1318,13 @@ function getPaneCount(mode: SerialLayoutMode): number {
   return 2;
 }
 
+function getNextSessionDisplayIndex(sessions: SerialSessionDescriptor[]): number {
+  const usedIndices = new Set(sessions.map((session) => session.index));
+  let index = 1;
+  while (usedIndices.has(index)) index += 1;
+  return index;
+}
+
 function buildPaneIds(
   mode: SerialLayoutMode,
   sessions: SerialSessionDescriptor[],
@@ -1321,7 +1351,9 @@ export const SerialTool: React.FC<SerialToolProps> = ({ isActive = true }) => {
   const [unreadSessionIds, setUnreadSessionIds] = useState<Set<string>>(() => new Set());
   const [layoutMode, setLayoutMode] = useState<SerialLayoutMode>('single');
   const [paneIds, setPaneIds] = useState<Array<string | null>>(['serial-session-1']);
-  const nextSessionIndexRef = useRef(2);
+  // Internal IDs are never reused during this mount, while the user-facing
+  // "Serial N" label fills the smallest available number.
+  const nextSessionIdRef = useRef(2);
   const sessionHandlesRef = useRef<Record<string, SerialSessionHandle | null>>({});
   const sessionMetaRef = useRef(sessionMeta);
   const activeSessionIdRef = useRef(activeSessionId);
@@ -1378,18 +1410,24 @@ export const SerialTool: React.FC<SerialToolProps> = ({ isActive = true }) => {
   );
 
   const handleAddSession = useCallback(() => {
-    const index = nextSessionIndexRef.current;
-    nextSessionIndexRef.current += 1;
-    const session = { id: `serial-session-${index}`, index };
+    const previousSessionId = activeSessionIdRef.current;
+    if (previousSessionId) sessionHandlesRef.current[previousSessionId]?.stopMultiSend();
+    const index = getNextSessionDisplayIndex(sessions);
+    const session = { id: `serial-session-${nextSessionIdRef.current}`, index };
+    nextSessionIdRef.current += 1;
     setSessions((previous) => [...previous, session]);
     activeSessionIdRef.current = session.id;
     setActiveSessionId(session.id);
     setLayoutMode('single');
     setPaneIds([session.id]);
-  }, []);
+  }, [sessions]);
 
   const handleSelectSession = useCallback(
     (sessionId: string) => {
+      const previousSessionId = activeSessionIdRef.current;
+      if (previousSessionId && previousSessionId !== sessionId) {
+        sessionHandlesRef.current[previousSessionId]?.stopMultiSend();
+      }
       activeSessionIdRef.current = sessionId;
       clearUnread(sessionId);
       if (layoutMode === 'single') {
@@ -1420,6 +1458,10 @@ export const SerialTool: React.FC<SerialToolProps> = ({ isActive = true }) => {
 
   const handleExpandSession = useCallback(
     (sessionId: string) => {
+      const previousSessionId = activeSessionIdRef.current;
+      if (previousSessionId && previousSessionId !== sessionId) {
+        sessionHandlesRef.current[previousSessionId]?.stopMultiSend();
+      }
       activeSessionIdRef.current = sessionId;
       clearUnread(sessionId);
       setActiveSessionId(sessionId);
@@ -1576,6 +1618,10 @@ export const SerialTool: React.FC<SerialToolProps> = ({ isActive = true }) => {
                   className={`serial-pane ${visible ? '' : 'serial-pane--hidden'} ${activeSessionId === session.id ? 'active' : ''}`}
                   style={visible ? { order: paneIndex } : undefined}
                   onMouseDown={() => {
+                    const previousSessionId = activeSessionIdRef.current;
+                    if (previousSessionId && previousSessionId !== session.id) {
+                      sessionHandlesRef.current[previousSessionId]?.stopMultiSend();
+                    }
                     activeSessionIdRef.current = session.id;
                     clearUnread(session.id);
                     setActiveSessionId(session.id);
@@ -1607,6 +1653,7 @@ export const SerialTool: React.FC<SerialToolProps> = ({ isActive = true }) => {
                     sessionId={session.id}
                     compact={compact}
                     active={activeSessionId === session.id}
+                    toolActive={isActive}
                     multiSendHost={multiSendHost}
                     settingsHost={settingsHost}
                     onMetaChange={handleMetaChange}

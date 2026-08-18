@@ -267,7 +267,10 @@ export const SerialSettings: React.FC<SerialSettingsProps> = ({
               }}
             >
               {(() => {
-                if (!sendText) return <span className="checksum-data-bytes">(空)</span>;
+                if (!sendText)
+                  return (
+                    <span className="checksum-data-bytes">{t('serialTool.settings.empty')}</span>
+                  );
                 let text = sendText;
                 if (!sendHexMode && sendAppendNewline) text += '\n';
                 const rawBytes: number[] = sendHexMode
@@ -277,7 +280,10 @@ export const SerialSettings: React.FC<SerialSettingsProps> = ({
                       ?.map((s) => parseInt(s, 16))
                       .filter((b) => !isNaN(b)) ?? [])
                   : Array.from(new TextEncoder().encode(text));
-                if (rawBytes.length === 0) return <span className="checksum-data-bytes">(空)</span>;
+                if (rawBytes.length === 0)
+                  return (
+                    <span className="checksum-data-bytes">{t('serialTool.settings.empty')}</span>
+                  );
                 const offset = checksumConfig.startOffset;
                 const hex = (bs: number[]) =>
                   bs.map((b) => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');

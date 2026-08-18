@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { faChevronLeft, faChevronRight, faCircleUser, faCog, faUser } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChevronLeft,
+  faChevronRight,
+  faCircleUser,
+  faCog,
+  faUser,
+} from '@fortawesome/free-solid-svg-icons';
 import packageJson from '../../../package.json';
 import './Sidebar.css';
 
@@ -150,6 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
       {controlArea && <div className="sidebar-control-area">{controlArea}</div>}
       <div className="sidebar-footer">
+        <div id="assistant-sidebar-slot" className="assistant-sidebar-slot" />
         {onLoginClick && (
           <motion.button
             className="sidebar-footer-btn"

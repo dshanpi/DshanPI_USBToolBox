@@ -79,6 +79,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .gpio-toolbar-button,
@@ -126,6 +127,17 @@
   border-color: var(--color-success-border);
 }
 
+.gpio-force-button.active,
+.gpio-force-button.active:hover:not(:disabled) {
+  border-color: var(--color-warning-border);
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+}
+
+.gpio-input-button:hover:not(:disabled) {
+  border-color: var(--color-accent-border);
+}
+
 .gpio-pin-list {
   overflow: hidden;
   border: 1px solid var(--color-surface0);
@@ -137,7 +149,7 @@
 .gpio-pin-row {
   display: grid;
   grid-template-columns: minmax(140px, 1.2fr) minmax(100px, 0.8fr) minmax(110px, 0.8fr) minmax(
-      210px,
+      230px,
       1fr
     );
   align-items: center;
@@ -277,6 +289,16 @@
   border-color: var(--color-success-border);
   color: var(--color-success);
   background: var(--color-success-subtle);
+}
+
+.gpio-level-button.input.active {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.gpio-pin-actions .gpio-level-button {
+  min-width: 68px;
 }
 
 .gpio-advanced-rail {
@@ -829,20 +851,6 @@
   border-color: var(--color-error-border);
   color: var(--color-error);
   background: var(--color-error-subtle);
-}
-
-.gpio-hints {
-  padding: 12px 14px;
-  border-left: 3px solid var(--color-warning);
-  border-radius: 0 8px 8px 0;
-  color: var(--color-overlay1);
-  background: var(--color-warning-subtle);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.gpio-hints p {
-  margin: 0;
 }
 
 @media (max-width: 980px) {

@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MasterTab } from './Components/MasterTab';
 import { SlaveTab } from './Components/SlaveTab';
 import { SlaveSimulator } from './lib/SlaveSimulator';
 import './ModbusTool.css';
 
 export const ModbusTool: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'master' | 'slave'>('master');
   const [slaveEnabled, setSlaveEnabled] = useState(true);
   const slaveSimRef = useRef<SlaveSimulator>(new SlaveSimulator());
@@ -15,26 +17,24 @@ export const ModbusTool: React.FC = () => {
   }, [slaveEnabled]);
 
   return (
-    <div className="proto-tool">
-      <div className="proto-top-bar">
+    <div className="proto-tool modbus-workbench">
+      <div className="proto-top-bar modbus-workbench-bar">
         <div className="proto-device-area">
-          <span className="status-led" />
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text)' }}>
-            Modbus Tool
-          </span>
+          <span className="modbus-workbench-mark">M</span>
+          <span className="modbus-workbench-title">{t('modbus.title')}</span>
         </div>
         <div className="proto-tab-bar">
           <button
             className={`proto-tab-btn ${activeTab === 'master' ? 'active' : ''}`}
             onClick={() => setActiveTab('master')}
           >
-            Master (Host)
+            {t('modbus.masterTab')}
           </button>
           <button
             className={`proto-tab-btn ${activeTab === 'slave' ? 'active' : ''}`}
             onClick={() => setActiveTab('slave')}
           >
-            Slave Simulator
+            {t('modbus.slaveTab')}
           </button>
         </div>
       </div>

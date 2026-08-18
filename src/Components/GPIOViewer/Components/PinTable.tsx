@@ -120,9 +120,9 @@ export const PinTable: React.FC<PinTableProps> = ({
                       {editingPins.length > 1 && editValues.pull === -1 && (
                         <option value={-1}>({t('gpioViewer.config.mixed', '混合')})</option>
                       )}
-                      <option value={0}>None</option>
-                      <option value={1}>Pull Up</option>
-                      <option value={2}>Pull Down</option>
+                      <option value={0}>{t('gpioViewer.config.pullNone')}</option>
+                      <option value={1}>{t('gpioViewer.config.pullUp')}</option>
+                      <option value={2}>{t('gpioViewer.config.pullDown')}</option>
                     </select>
                   </td>
                   <td className="gpio-drv-edit">
@@ -156,11 +156,11 @@ export const PinTable: React.FC<PinTableProps> = ({
                         {editingPins.length > 1 && editValues.data === -1 && (
                           <option value={-1}>({t('gpioViewer.config.mixed', '混合')})</option>
                         )}
-                        <option value={0}>LOW</option>
-                        <option value={1}>HIGH</option>
+                        <option value={0}>{t('gpioViewer.config.low')}</option>
+                        <option value={1}>{t('gpioViewer.config.high')}</option>
                       </select>
                     ) : (
-                      <span className="gpio-data-function">FUNCTION</span>
+                      <span className="gpio-data-function">{t('gpioViewer.config.function')}</span>
                     )}
                   </td>
                   <td className="gpio-actions">

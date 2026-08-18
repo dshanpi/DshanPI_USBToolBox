@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPaintBrush,
@@ -43,12 +44,12 @@ interface MiddlePanelProps extends TabContext {
   rowOffset: number;
 }
 
-const TABS: Array<{ key: ContentTab; label: string; icon: typeof faFont }> = [
-  { key: 'text', label: '文本', icon: faFont },
-  { key: 'image', label: '图片', icon: faImage },
-  { key: 'video', label: '视频', icon: faFilm },
-  { key: 'draw', label: '绘制', icon: faPencil },
-  { key: 'test', label: '测试', icon: faFlask },
+const TABS: Array<{ key: ContentTab; labelKey: string; icon: typeof faFont }> = [
+  { key: 'text', labelKey: 'spiDisplay.tabs.text', icon: faFont },
+  { key: 'image', labelKey: 'spiDisplay.tabs.image', icon: faImage },
+  { key: 'video', labelKey: 'spiDisplay.tabs.video', icon: faFilm },
+  { key: 'draw', labelKey: 'spiDisplay.tabs.draw', icon: faPencil },
+  { key: 'test', labelKey: 'spiDisplay.tabs.test', icon: faFlask },
 ];
 
 /**
@@ -77,6 +78,7 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
   initialCanvas,
   onInitialCanvasConsumed,
 }) => {
+  const { t } = useTranslation();
   const supportsPartialRefresh = displayType === 'rgb565';
   const effectiveRefreshMode = supportsPartialRefresh ? refreshMode : 'full';
   const contentSize = getContentCanvasSize(width, height, rotation);
@@ -96,17 +98,17 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
     <div className="sdt-panel">
       <div className="sdt-section-title sdt-content-title">
         <FontAwesomeIcon icon={faPaintBrush} />
-        <span>显示内容</span>
+        <span>{t('spiDisplay.middle.title')}</span>
         <div className="sdt-content-tools">
-          <label className="sdt-rotation-control" title="当前内容顺时针旋转后预览并发送">
+          <label className="sdt-rotation-control" title={t('spiDisplay.middle.rotationHint')}>
             <FontAwesomeIcon icon={faRotateRight} />
-            <span>旋转</span>
+            <span>{t('spiDisplay.middle.rotation')}</span>
             <select
               className="sdt-select"
               value={rotation}
               onChange={(event) => onRotationChange(Number(event.target.value) as DisplayRotation)}
               disabled={busy}
-              aria-label="内容旋转角度"
+              aria-label={t('spiDisplay.middle.rotationAngle')}
             >
               <option value={0}>0°</option>
               <option value={90}>90°</option>
@@ -114,29 +116,29 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
               <option value={270}>270°</option>
             </select>
           </label>
-          <div className="sdt-refresh-toggle" aria-label="内容刷新范围">
+          <div className="sdt-refresh-toggle" aria-label={t('spiDisplay.middle.refreshRange')}>
             <button
               className={`sdt-refresh-btn ${effectiveRefreshMode === 'partial' ? 'active' : ''}`}
               onClick={() => onRefreshModeChange('partial')}
               disabled={!supportsPartialRefresh}
               title={
                 supportsPartialRefresh
-                  ? '只推内容所在的小矩形（快，几KB）'
-                  : '局部刷新仅适用于 RGB565 彩屏；当前单色屏固定全屏刷新'
+                  ? t('spiDisplay.middle.partialHint')
+                  : t('spiDisplay.middle.partialUnavailableHint')
               }
             >
-              局部刷新
+              {t('spiDisplay.middle.partial')}
             </button>
             <button
               className={`sdt-refresh-btn ${effectiveRefreshMode === 'full' ? 'active' : ''}`}
               onClick={() => onRefreshModeChange('full')}
               title={
                 supportsPartialRefresh
-                  ? '推送整个屏幕；大分辨率彩屏耗时较长'
-                  : '单色屏每次发送完整 page 显存'
+                  ? t('spiDisplay.middle.fullHint')
+                  : t('spiDisplay.middle.monoFullHint')
               }
             >
-              全屏刷新
+              {t('spiDisplay.middle.full')}
             </button>
           </div>
         </div>
@@ -145,18 +147,18 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
       {supportsPartialRefresh && effectiveRefreshMode === 'partial' && (
         <div className="sdt-region-editor">
           <div className="sdt-region-mode">
-            <span>刷新区域</span>
+            <span>{t('spiDisplay.middle.refreshRegion')}</span>
             <button
               className={`sdt-refresh-btn ${refreshRegionMode === 'auto' ? 'active' : ''}`}
               onClick={() => onRefreshRegionModeChange('auto')}
             >
-              自动识别
+              {t('spiDisplay.middle.autoRegion')}
             </button>
             <button
               className={`sdt-refresh-btn ${refreshRegionMode === 'manual' ? 'active' : ''}`}
               onClick={() => onRefreshRegionModeChange('manual')}
             >
-              手动区域
+              {t('spiDisplay.middle.manualRegion')}
             </button>
           </div>
           {refreshRegionMode === 'manual' && (
@@ -180,9 +182,9 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
                 </label>
               ))}
               <span className="sdt-region-address mono">
-                CASET {manualRefreshRegion.x + columnOffset}–
-                {manualRefreshRegion.x + columnOffset + manualRefreshRegion.w - 1} · RASET{' '}
-                {manualRefreshRegion.y + rowOffset}–
+                {t('spiDisplay.terms.caset')} {manualRefreshRegion.x + columnOffset}–
+                {manualRefreshRegion.x + columnOffset + manualRefreshRegion.w - 1} ·{' '}
+                {t('spiDisplay.terms.raset')} {manualRefreshRegion.y + rowOffset}–
                 {manualRefreshRegion.y + rowOffset + manualRefreshRegion.h - 1}
               </span>
             </>
@@ -191,13 +193,13 @@ export const MiddlePanel: React.FC<MiddlePanelProps> = ({
       )}
 
       <div className="sdt-tab-bar">
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <button
-            key={t.key}
-            className={`sdt-tab-btn ${activeTab === t.key ? 'active' : ''}`}
-            onClick={() => onTabChange(t.key)}
+            key={tab.key}
+            className={`sdt-tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+            onClick={() => onTabChange(tab.key)}
           >
-            <FontAwesomeIcon icon={t.icon} /> {t.label}
+            <FontAwesomeIcon icon={tab.icon} /> {t(tab.labelKey)}
           </button>
         ))}
       </div>

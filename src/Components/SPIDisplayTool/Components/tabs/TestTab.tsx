@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEraser, faPaperPlane, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import type { ContentRegion, TabContext } from './common';
@@ -18,53 +19,39 @@ type TestPattern =
 
 interface PatternOption {
   key: TestPattern;
-  label: string;
-  description: string;
   swatch: string;
 }
 
 const PATTERN_OPTIONS: PatternOption[] = [
-  { key: 'solid-red', label: '红色', description: '红色纯色', swatch: '#ff0000' },
-  { key: 'solid-green', label: '绿色', description: '绿色纯色', swatch: '#00ff00' },
-  { key: 'solid-blue', label: '蓝色', description: '蓝色纯色', swatch: '#0000ff' },
-  { key: 'solid-white', label: '白色', description: '白色纯色', swatch: '#ffffff' },
-  { key: 'solid-black', label: '黑色', description: '黑色纯色', swatch: '#000000' },
+  { key: 'solid-red', swatch: '#ff0000' },
+  { key: 'solid-green', swatch: '#00ff00' },
+  { key: 'solid-blue', swatch: '#0000ff' },
+  { key: 'solid-white', swatch: '#ffffff' },
+  { key: 'solid-black', swatch: '#000000' },
   {
     key: 'color-bars',
-    label: 'RGB 彩条',
-    description: 'RGB 标准彩条',
     swatch:
       'linear-gradient(90deg, #fff 0 12.5%, #ff0 12.5% 25%, #0ff 25% 37.5%, #0f0 37.5% 50%, #f0f 50% 62.5%, #f00 62.5% 75%, #00f 75% 87.5%, #000 87.5%)',
   },
   {
     key: 'gradient',
-    label: '渐变色',
-    description: '灰阶与色相渐变',
     swatch: 'linear-gradient(90deg, #000, #fff, #f00, #ff0, #0f0, #0ff, #00f, #f0f)',
   },
   {
     key: 'checkerboard',
-    label: '棋盘格',
-    description: '黑白棋盘格',
     swatch: 'conic-gradient(#fff 25%, #111 0 50%, #fff 0 75%, #111 0) 0 0 / 10px 10px',
   },
   {
     key: 'frame-coordinates',
-    label: '边框坐标',
-    description: '边框与四角坐标',
     swatch:
       'linear-gradient(#fff, #fff) center / 1px 100% no-repeat, linear-gradient(90deg, #fff, #fff) center / 100% 1px no-repeat, #111',
   },
   {
     key: 'horizontal-scan',
-    label: '横线扫描',
-    description: '横向扫描线',
     swatch: 'linear-gradient(#111 45%, #fff 45% 55%, #111 55%)',
   },
   {
     key: 'vertical-scan',
-    label: '竖线扫描',
-    description: '纵向扫描线',
     swatch: 'linear-gradient(90deg, #111 45%, #fff 45% 55%, #111 55%)',
   },
 ];
@@ -239,6 +226,7 @@ export const TestTab: React.FC<TabContext> = ({
   busy,
   displayType,
 }) => {
+  const { t } = useTranslation();
   const [pattern, setPattern] = useState<TestPattern>('color-bars');
   const [lineWidth, setLineWidth] = useState(2);
   const [scanColor, setScanColor] = useState('#ffffff');
@@ -251,6 +239,7 @@ export const TestTab: React.FC<TabContext> = ({
   const scanTimerRef = useRef<number | null>(null);
 
   const selectedOption = PATTERN_OPTIONS.find((option) => option.key === pattern)!;
+  const selectedDescription = t(`spiDisplay.test.patterns.${selectedOption.key}.description`);
   const scanPatternSelected = isScanPattern(pattern);
   const controlsDisabled = busy || sending;
 
@@ -277,7 +266,7 @@ export const TestTab: React.FC<TabContext> = ({
           : undefined;
     onPreview({
       canvas,
-      description: `测试图案预览：${selectedOption.description}`,
+      description: t('spiDisplay.test.previewDescription', { pattern: selectedDescription }),
       bgColor: '#000000',
       region,
     });
@@ -288,7 +277,8 @@ export const TestTab: React.FC<TabContext> = ({
     pattern,
     scanColor,
     scanPosition,
-    selectedOption.description,
+    selectedDescription,
+    t,
     width,
   ]);
 
@@ -313,12 +303,12 @@ export const TestTab: React.FC<TabContext> = ({
       );
       await onSend({
         canvas,
-        description: `测试图案：${selectedOption.description}`,
+        description: t('spiDisplay.test.sendDescription', { pattern: selectedDescription }),
         bgColor: '#000000',
         region: { x: 0, y: 0, w: width, h: height },
         metadata: {
           类型: '测试图案',
-          图案: selectedOption.description,
+          图案: selectedDescription,
           分辨率: `${width}×${height}`,
           扫描线宽: scanPatternSelected ? lineWidth : 0,
           扫描颜色: scanPatternSelected ? scanColor : '--',
@@ -380,7 +370,10 @@ export const TestTab: React.FC<TabContext> = ({
       try {
         await onSend({
           canvas,
-          description: `测试图案：${selectedOption.description}，位置 ${position}`,
+          description: t('spiDisplay.test.scanDescription', {
+            pattern: selectedDescription,
+            position,
+          }),
           bgColor: '#000000',
           region,
           silent: previousPosition !== null,
@@ -416,7 +409,11 @@ export const TestTab: React.FC<TabContext> = ({
 
   return (
     <div className="sdt-test-tab">
-      <div className="sdt-test-pattern-grid" role="list" aria-label="屏幕测试图案">
+      <div
+        className="sdt-test-pattern-grid"
+        role="list"
+        aria-label={t('spiDisplay.test.patternsLabel')}
+      >
         {PATTERN_OPTIONS.map((option) => (
           <button
             key={option.key}
@@ -426,11 +423,11 @@ export const TestTab: React.FC<TabContext> = ({
               setScanPosition(0);
             }}
             disabled={controlsDisabled || scanning}
-            title={option.description}
+            title={t(`spiDisplay.test.patterns.${option.key}.description`)}
             role="listitem"
           >
             <span className="sdt-test-swatch" style={{ background: option.swatch }} />
-            <span>{option.label}</span>
+            <span>{t(`spiDisplay.test.patterns.${option.key}.label`)}</span>
           </button>
         ))}
       </div>
@@ -438,7 +435,7 @@ export const TestTab: React.FC<TabContext> = ({
       {scanPatternSelected && (
         <div className="sdt-test-scan-settings">
           <label>
-            扫描颜色
+            {t('spiDisplay.test.scanColor')}
             <input
               type="color"
               className="sdt-color-input"
@@ -448,7 +445,7 @@ export const TestTab: React.FC<TabContext> = ({
             />
           </label>
           <label>
-            线宽
+            {t('spiDisplay.test.lineWidth')}
             <input
               type="range"
               className="sdt-range"
@@ -461,7 +458,7 @@ export const TestTab: React.FC<TabContext> = ({
             <span className="sdt-test-value">{lineWidth}px</span>
           </label>
           <label>
-            帧间隔
+            {t('spiDisplay.test.frameInterval')}
             <input
               type="range"
               className="sdt-range"
@@ -478,15 +475,15 @@ export const TestTab: React.FC<TabContext> = ({
       )}
 
       <div className="sdt-test-actions">
-        <span className="sdt-test-selection">{selectedOption.description}</span>
+        <span className="sdt-test-selection">{selectedDescription}</span>
         <span className="sdt-spacer" />
         <button
           className="sdt-btn sdt-clear-screen-btn"
           onClick={() => void clearDisplay()}
           disabled={controlsDisabled || scanning}
-          title="清除物理屏幕和发送预览"
+          title={t('spiDisplay.test.clearHint')}
         >
-          <FontAwesomeIcon icon={faEraser} /> 清屏
+          <FontAwesomeIcon icon={faEraser} /> {t('spiDisplay.common.clearDisplay')}
         </button>
         {scanPatternSelected ? (
           <>
@@ -494,19 +491,19 @@ export const TestTab: React.FC<TabContext> = ({
               className="sdt-btn"
               onClick={() => void sendPattern()}
               disabled={controlsDisabled || scanning}
-              title="发送当前预览中的静态扫描线"
+              title={t('spiDisplay.test.singleFrameHint')}
             >
-              <FontAwesomeIcon icon={faPaperPlane} /> 单帧
+              <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.test.singleFrame')}
             </button>
             <button
               className="sdt-btn success"
               onClick={() => void startScan()}
               disabled={controlsDisabled || scanning}
             >
-              <FontAwesomeIcon icon={faPlay} /> 开始扫描
+              <FontAwesomeIcon icon={faPlay} /> {t('spiDisplay.test.startScan')}
             </button>
             <button className="sdt-btn danger" onClick={stopScan} disabled={!scanning}>
-              <FontAwesomeIcon icon={faStop} /> 停止
+              <FontAwesomeIcon icon={faStop} /> {t('spiDisplay.common.stop')}
             </button>
           </>
         ) : (
@@ -515,7 +512,7 @@ export const TestTab: React.FC<TabContext> = ({
             onClick={() => void sendPattern()}
             disabled={controlsDisabled}
           >
-            <FontAwesomeIcon icon={faPaperPlane} /> 发送图案
+            <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.test.sendPattern')}
           </button>
         )}
       </div>
@@ -526,10 +523,14 @@ export const TestTab: React.FC<TabContext> = ({
 
       <div className="sdt-test-status">
         <span>
-          画布 {width}×{height}
-          {displayType === 'monochrome-page' ? ' · 当前单色屏将自动转换为黑白图案' : ''}
+          {t('spiDisplay.test.canvas', { width, height })}
+          {displayType === 'monochrome-page' ? t('spiDisplay.test.monoHint') : ''}
         </span>
-        <span>{scanning ? `扫描中 · 位置 ${scanPosition}` : '就绪'}</span>
+        <span>
+          {scanning
+            ? t('spiDisplay.test.scanning', { position: scanPosition })
+            : t('spiDisplay.common.ready')}
+        </span>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEraser,
@@ -23,6 +24,7 @@ export const VideoTab: React.FC<TabContext> = ({
   onClearDisplay,
   busy,
 }) => {
+  const { t } = useTranslation();
   const [fps, setFps] = useState(10);
   const [playing, setPlaying] = useState(false);
   const [videoURL, setVideoURL] = useState<string | null>(null);
@@ -274,7 +276,7 @@ export const VideoTab: React.FC<TabContext> = ({
     <div className="sdt-tab-form">
       <div className="sdt-toolbar-row">
         <label>
-          目标帧率
+          {t('spiDisplay.video.targetFps')}
           <input
             type="range"
             className="sdt-range"
@@ -286,30 +288,30 @@ export const VideoTab: React.FC<TabContext> = ({
         </label>
         <span className="mono">{fps} fps</span>
         <label>
-          布局
+          {t('spiDisplay.common.layout')}
           <select
             className="sdt-select"
             value={scaleMode}
             onChange={(event) => setScaleMode(event.target.value as VideoScaleMode)}
           >
-            <option value="contain">等比完整</option>
-            <option value="cover">填充裁剪</option>
-            <option value="stretch">拉伸</option>
+            <option value="contain">{t('spiDisplay.common.contain')}</option>
+            <option value="cover">{t('spiDisplay.common.cover')}</option>
+            <option value="stretch">{t('spiDisplay.common.stretch')}</option>
           </select>
         </label>
         <span className="sdt-spacer" />
         <button className="sdt-btn" onClick={() => fileInputRef.current?.click()}>
-          <FontAwesomeIcon icon={faFolderOpen} /> 视频
+          <FontAwesomeIcon icon={faFolderOpen} /> {t('spiDisplay.tabs.video')}
         </button>
         <button className="sdt-btn" onClick={handleClear} disabled={!videoURL}>
-          <FontAwesomeIcon icon={faXmark} /> 清空
+          <FontAwesomeIcon icon={faXmark} /> {t('spiDisplay.common.clear')}
         </button>
         <button
           className="sdt-btn sdt-clear-screen-btn"
           onClick={() => void onClearDisplay()}
           disabled={busy}
         >
-          <FontAwesomeIcon icon={faEraser} /> 清屏
+          <FontAwesomeIcon icon={faEraser} /> {t('spiDisplay.common.clearDisplay')}
         </button>
         <input
           ref={fileInputRef}
@@ -324,7 +326,7 @@ export const VideoTab: React.FC<TabContext> = ({
       </div>
 
       <details className="sdt-advanced-panel">
-        <summary>高级视频设置</summary>
+        <summary>{t('spiDisplay.video.advanced')}</summary>
         <div className="sdt-advanced-content">
           <div className="sdt-toolbar-row">
             <label className="sdt-check">
@@ -333,12 +335,12 @@ export const VideoTab: React.FC<TabContext> = ({
                 checked={loop}
                 onChange={(event) => setLoop(event.target.checked)}
               />
-              循环指定片段
+              {t('spiDisplay.video.loopSegment')}
             </label>
           </div>
           <div className="sdt-toolbar-row sdt-parameter-grid">
             <label>
-              片段开始
+              {t('spiDisplay.video.segmentStart')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -350,7 +352,7 @@ export const VideoTab: React.FC<TabContext> = ({
               />
             </label>
             <label>
-              片段结束
+              {t('spiDisplay.video.segmentEnd')}
               <input
                 className="sdt-input mono"
                 type="number"
@@ -361,17 +363,13 @@ export const VideoTab: React.FC<TabContext> = ({
                 onChange={(event) => setSegmentEnd(Number(event.target.value))}
               />
             </label>
+            <span>{t('spiDisplay.video.sentFrames', { count: sentFrames })}</span>
+            <span>{t('spiDisplay.video.droppedFrames', { count: droppedFrames })}</span>
+            <span>{t('spiDisplay.video.frameTime', { time: lastFrameMs.toFixed(0) })}</span>
             <span>
-              已发送 <strong>{sentFrames}</strong> 帧
-            </span>
-            <span>
-              跳过 <strong>{droppedFrames}</strong> 帧
-            </span>
-            <span>
-              单帧 <strong>{lastFrameMs.toFixed(0)} ms</strong>
-            </span>
-            <span>
-              实测 <strong>{lastFrameMs ? (1000 / lastFrameMs).toFixed(1) : '0'} fps</strong>
+              {t('spiDisplay.video.measuredFps', {
+                fps: lastFrameMs ? (1000 / lastFrameMs).toFixed(1) : '0',
+              })}
             </span>
           </div>
         </div>
@@ -397,9 +395,9 @@ export const VideoTab: React.FC<TabContext> = ({
           <button className="sdt-drop-placeholder" onClick={() => fileInputRef.current?.click()}>
             <FontAwesomeIcon icon={faVideo} className="icon" />
             <span>
-              <FontAwesomeIcon icon={faFolderOpen} /> 选择 MP4 / WEBM / MOV 文件
+              <FontAwesomeIcon icon={faFolderOpen} /> {t('spiDisplay.video.selectFile')}
             </span>
-            <small>播放时按 SPI 实际速度自动节流</small>
+            <small>{t('spiDisplay.video.throttleHint')}</small>
           </button>
         )}
         {videoURL && <div className="sub-hint">{videoName}</div>}
@@ -430,17 +428,17 @@ export const VideoTab: React.FC<TabContext> = ({
             onClick={() => void handlePlay()}
             disabled={!videoURL || playing}
           >
-            <FontAwesomeIcon icon={faPlay} /> 播放发送
+            <FontAwesomeIcon icon={faPlay} /> {t('spiDisplay.video.playSend')}
           </button>
           <button className="sdt-btn danger" onClick={handleStop} disabled={!playing}>
-            <FontAwesomeIcon icon={faStop} /> 停止
+            <FontAwesomeIcon icon={faStop} /> {t('spiDisplay.common.stop')}
           </button>
           <button
             className="sdt-btn primary"
             onClick={() => void sendOneFrame()}
             disabled={!videoURL || playing || busy}
           >
-            <FontAwesomeIcon icon={faPaperPlane} /> 发送当前帧
+            <FontAwesomeIcon icon={faPaperPlane} /> {t('spiDisplay.video.sendFrame')}
           </button>
         </div>
       </div>

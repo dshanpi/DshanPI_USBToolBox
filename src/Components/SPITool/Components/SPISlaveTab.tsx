@@ -10,11 +10,21 @@ interface SPISlaveTabProps {
   addLog: (msg: string, isErr?: boolean) => void;
 }
 
-export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onEnabledChange, onCsChange, addLog }) => {
+export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({
+  slaveRef,
+  enabled,
+  onEnabledChange,
+  onCsChange,
+  addLog,
+}) => {
   const { t } = useTranslation();
   const [deviceType, setDeviceType] = useState<SpiSlaveType>('eeprom');
   const [simCs, setSimCs] = useState('0');
-  const [displayData, setDisplayData] = useState<{ type: SpiSlaveType; dump?: string; sensorInfo?: string } | null>(null);
+  const [displayData, setDisplayData] = useState<{
+    type: SpiSlaveType;
+    dump?: string;
+    sensorInfo?: string;
+  } | null>(null);
 
   const refreshUI = useCallback(() => {
     if (slaveRef.current) setDisplayData(slaveRef.current.getDisplayData());
@@ -29,11 +39,17 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
     refreshUI();
   }, [slaveRef, refreshUI]);
 
-  const handleTypeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const t = e.target.value as SpiSlaveType;
-    setDeviceType(t);
-    if (slaveRef.current) { slaveRef.current.setType(t); refreshUI(); }
-  }, [slaveRef, refreshUI]);
+  const handleTypeChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const t = e.target.value as SpiSlaveType;
+      setDeviceType(t);
+      if (slaveRef.current) {
+        slaveRef.current.setType(t);
+        refreshUI();
+      }
+    },
+    [slaveRef, refreshUI]
+  );
 
   const handleCsBlur = useCallback(() => {
     const v = parseInt(simCs, 10);
@@ -50,7 +66,11 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
         <div className="i2c-toggle-row">
           <span>{t('serialTool.spi.slave.enable')}</span>
           <label className="i2c-switch">
-            <input type="checkbox" checked={enabled} onChange={(e) => onEnabledChange(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={enabled}
+              onChange={(e) => onEnabledChange(e.target.checked)}
+            />
             <span className="i2c-slider" />
           </label>
         </div>
@@ -65,7 +85,15 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
           </div>
           <div className="i2c-param-field">
             <label>{t('serialTool.spi.slave.cs')}</label>
-            <input className="i2c-input" type="number" value={simCs} onChange={(e) => setSimCs(e.target.value)} onBlur={handleCsBlur} min={0} max={1} />
+            <input
+              className="i2c-input"
+              type="number"
+              value={simCs}
+              onChange={(e) => setSimCs(e.target.value)}
+              onBlur={handleCsBlur}
+              min={0}
+              max={1}
+            />
           </div>
         </div>
 
@@ -74,7 +102,7 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
             <>
               <div className="i2c-device-header">
                 <span>{t('serialTool.spi.slave.memoryContent')}</span>
-                <span className="i2c-badge">25xx EEPROM</span>
+                <span className="i2c-badge">{t('serialTool.spi.slave.badgeEeprom')}</span>
               </div>
               <pre className="i2c-mem-dump">{displayData.dump}</pre>
             </>
@@ -82,7 +110,7 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
             <>
               <div className="i2c-device-header">
                 <span>{t('serialTool.spi.slave.sensorContent')}</span>
-                <span className="i2c-badge">Sensor</span>
+                <span className="i2c-badge">{t('serialTool.spi.slave.badgeSensor')}</span>
               </div>
               <pre className="i2c-screen-text">{displayData?.sensorInfo || ''}</pre>
             </>
@@ -90,8 +118,30 @@ export const SPISlaveTab: React.FC<SPISlaveTabProps> = ({ slaveRef, enabled, onE
         </div>
 
         <div className="i2c-btn-group" style={{ justifyContent: 'space-between', marginTop: 16 }}>
-          <button className="i2c-btn" onClick={() => { if (slaveRef.current) { slaveRef.current.reset(); refreshUI(); addLog(t('serialTool.spi.logSlaveReset')); } }}>{t('serialTool.spi.slave.reset')}</button>
-          <button className="i2c-btn" onClick={() => { if (slaveRef.current) { slaveRef.current.injectTest(); refreshUI(); addLog(t('serialTool.spi.logSlaveInject')); } }}>{t('serialTool.spi.slave.inject')}</button>
+          <button
+            className="i2c-btn"
+            onClick={() => {
+              if (slaveRef.current) {
+                slaveRef.current.reset();
+                refreshUI();
+                addLog(t('serialTool.spi.logSlaveReset'));
+              }
+            }}
+          >
+            {t('serialTool.spi.slave.reset')}
+          </button>
+          <button
+            className="i2c-btn"
+            onClick={() => {
+              if (slaveRef.current) {
+                slaveRef.current.injectTest();
+                refreshUI();
+                addLog(t('serialTool.spi.logSlaveInject'));
+              }
+            }}
+          >
+            {t('serialTool.spi.slave.inject')}
+          </button>
         </div>
       </div>
     </div>
