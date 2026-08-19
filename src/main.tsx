@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import { config as fontAwesomeConfig } from '@fortawesome/fontawesome-svg-core';
 import { Layout, ToolItem, UserProfileDialog } from './CoreUI';
 import { SerialToolPage } from './Components/SerialTool';
 import { I2CToolPage } from './Components/I2CTool';
@@ -27,9 +28,15 @@ import {
   faToggleOn,
 } from '@fortawesome/free-solid-svg-icons';
 import './i18n';
+import '@fortawesome/fontawesome-svg-core/styles.css';
 import './Themes/themes.css';
 import i18n from './i18n';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+
+// Tauri's production CSP only permits styles bundled at build time. Font Awesome
+// injects its base styles dynamically by default, which leaves icons unscaled in
+// an installed build. Bundle the stylesheet above and disable runtime injection.
+fontAwesomeConfig.autoAddCss = false;
 
 /**
  * Shows the application window.

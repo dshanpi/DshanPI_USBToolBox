@@ -839,27 +839,27 @@
 
 /* ─── Serial-style config row (mirrors SerialTool.css) ─── */
 
-.serial-config-row {
+.modbus-tool-page-root .serial-config-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: flex-end;
 }
 
-.config-group {
+.modbus-tool-page-root .config-group {
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 
-.config-label {
+.modbus-tool-page-root .config-label {
   font-size: 10px;
   color: var(--color-accent);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.config-select {
+.modbus-tool-page-root .config-select {
   padding: 5px 8px;
   background: var(--color-base);
   border: 1px solid var(--color-surface0);
@@ -874,29 +874,29 @@
   min-width: 80px;
 }
 
-.config-select:hover,
-.config-select:focus {
+.modbus-tool-page-root .config-select:hover,
+.modbus-tool-page-root .config-select:focus {
   border-color: var(--color-accent);
 }
 
-.config-select:disabled {
+.modbus-tool-page-root .config-select:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.config-port-row {
+.modbus-tool-page-root .config-port-row {
   display: flex;
   gap: 4px;
   align-items: center;
 }
 
-.config-port-row .config-select {
+.modbus-tool-page-root .config-port-row .config-select {
   flex: 1;
   min-width: 180px;
   width: 180px;
 }
 
-.config-btn-icon {
+.modbus-tool-page-root .config-btn-icon {
   padding: 5px 10px;
   background: var(--color-surface0);
   border: 1px solid var(--color-surface0);
@@ -908,27 +908,27 @@
   font-family: inherit;
 }
 
-.config-btn-icon:hover:not(:disabled) {
+.modbus-tool-page-root .config-btn-icon:hover:not(:disabled) {
   background: var(--color-surface1);
 }
 
-.config-btn-icon:disabled {
+.modbus-tool-page-root .config-btn-icon:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.config-btn-icon.active {
+.modbus-tool-page-root .config-btn-icon.active {
   background: var(--color-accent);
   color: var(--color-accent-text);
   border-color: var(--color-accent);
 }
 
-.config-connect {
+.modbus-tool-page-root .config-connect {
   display: flex;
   align-items: flex-end;
 }
 
-.config-btn-open {
+.modbus-tool-page-root .config-btn-open {
   padding: 6px 20px;
   background: var(--color-success);
   color: var(--color-base);
@@ -942,16 +942,16 @@
   white-space: nowrap;
 }
 
-.config-btn-open:hover:not(:disabled) {
+.modbus-tool-page-root .config-btn-open:hover:not(:disabled) {
   opacity: 0.85;
 }
 
-.config-btn-open:disabled {
+.modbus-tool-page-root .config-btn-open:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.config-btn-close {
+.modbus-tool-page-root .config-btn-close {
   padding: 6px 20px;
   background: var(--color-error);
   color: var(--color-base);
@@ -965,7 +965,7 @@
   white-space: nowrap;
 }
 
-.config-btn-close:hover {
+.modbus-tool-page-root .config-btn-close:hover {
   opacity: 0.85;
 }
 
