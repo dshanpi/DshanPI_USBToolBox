@@ -29,6 +29,8 @@ type Listener = () => void;
 export interface Ch347Device {
   index: number;
   name: string;
+  /** Windows Device Manager FriendlyName for this exact interface instance. */
+  friendlyName?: string | null;
   chipType?: number;
   chipName?: string;
   desc?: string;
@@ -37,6 +39,8 @@ export interface Ch347Device {
   chipMode?: number;
   interfaceNumber?: number;
   firmwareVersion?: number;
+  devicePath?: string;
+  deviceId?: string;
   product?: string;
   manufacturer?: string;
 }

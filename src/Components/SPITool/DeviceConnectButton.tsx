@@ -67,11 +67,10 @@ export const DeviceConnectButton: React.FC = () => {
   };
 
   // 文案：有当前设备就显示设备名；否则有可用设备显示第一个；都没有显示"无设备"。
-  const label = current
-    ? current.name
-    : hasDevice
-      ? deviceState.devices[0].name
-      : t('serialTool.deviceConnect.noDevice');
+  const displayDevice = current ?? deviceState.devices[0] ?? null;
+  const label = displayDevice
+    ? displayDevice.friendlyName?.trim() || displayDevice.name
+    : t('serialTool.deviceConnect.noDevice');
 
   const disabled = !online && !hasDevice;
 

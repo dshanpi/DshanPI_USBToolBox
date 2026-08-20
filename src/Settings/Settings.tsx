@@ -5,7 +5,7 @@ import { AppSettings, loadSettings, saveSettings } from './settingsStore';
 // 烧录设置区块已隐藏（legacy Allwinner 烧录相关），以下导入暂未使用；恢复时取消注释
 // import { POST_FLASH_ACTION_OPTIONS, type PostFlashAction, type FlashMode } from '../Domain/flash';
 // import { FLASH_MODE_LABELS } from '../FlashManager/Types';
-import { efexService, type UsbBackend } from '../Services';
+import { driverService, efexService, type DriverStatus, type UsbBackend } from '../Services';
 import { supportedLanguages } from '../i18n';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
@@ -15,6 +15,7 @@ import { formatSize } from '../Utils';
 import { useTheme, ThemeMode } from '../Themes';
 import { ThemeViewer } from '../Themes/Components';
 import { invokeCommand } from '../Platform/IPC';
+import { useModalDialog } from '../Hooks';
 import './Settings.css';
 
 /**
@@ -143,6 +144,14 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
     contentLength?: number;
   } | null>(null);
   const [themeViewerVisible, setThemeViewerVisible] = useState(false);
+  const [driverStatus, setDriverStatus] = useState<DriverStatus | null>(null);
+  const [driverStatusLoading, setDriverStatusLoading] = useState(false);
+  const [driverOperation, setDriverOperation] = useState<'install' | 'uninstall' | null>(null);
+  const [driverFeedback, setDriverFeedback] = useState<{
+    kind: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+  const { showConfirm, modalNode } = useModalDialog();
   // 模型字段是否处于「自定义输入」模式：true 时下拉选「自定义...」并展开文本框，便于输入列表外的模型名
   const [modelCustomMode, setModelCustomMode] = useState(false);
 
@@ -173,8 +182,23 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
         });
       });
       setUpdateInfo(null);
+      setDriverFeedback(null);
+      if (isWindows) {
+        setDriverStatusLoading(true);
+        driverService
+          .getStatus()
+          .then(setDriverStatus)
+          .catch((error) => {
+            console.error('Failed to query driver status:', error);
+            setDriverFeedback({
+              kind: 'error',
+              message: i18n.t('settings.driver.statusError'),
+            });
+          })
+          .finally(() => setDriverStatusLoading(false));
+      }
     }
-  }, [visible]);
+  }, [i18n, visible]);
 
   const handleClose = () => {
     if (originalUIState) {
@@ -353,6 +377,81 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
     } catch (error) {
       console.error('Failed to download update:', error);
       setUpdateInfo((prev) => (prev ? { ...prev, downloading: false, error: true } : null));
+    }
+  };
+
+  const handleDriverInstall = async () => {
+    setDriverOperation('install');
+    setDriverFeedback({ kind: 'info', message: t('settings.driver.waitingForAdmin') });
+    try {
+      const result = await driverService.install();
+      setDriverStatus(result.status);
+      if (result.cancelled) {
+        setDriverFeedback({ kind: 'info', message: t('settings.driver.cancelled') });
+      } else {
+        const warningSuffix = result.warnings.length > 0 ? ` ${result.warnings.join(' ')}` : '';
+        setDriverFeedback({
+          kind: result.warnings.length > 0 ? 'info' : 'success',
+          message: `${
+            result.restartRequired
+              ? t('settings.driver.installSuccessRestart')
+              : t('settings.driver.installSuccess')
+          }${warningSuffix}`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to install drivers:', error);
+      const detail =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : String(error);
+      setDriverFeedback({
+        kind: 'error',
+        message: `${t('settings.driver.installError')} ${detail}`,
+      });
+    } finally {
+      setDriverOperation(null);
+    }
+  };
+
+  const handleDriverUninstall = async () => {
+    const confirmed = await showConfirm(
+      t('settings.driver.uninstallConfirmTitle'),
+      t('settings.driver.uninstallConfirmMessage'),
+      { okText: t('settings.driver.uninstall'), okDanger: true }
+    );
+    if (!confirmed) return;
+
+    setDriverOperation('uninstall');
+    setDriverFeedback({ kind: 'info', message: t('settings.driver.waitingForAdmin') });
+    try {
+      const result = await driverService.uninstall();
+      setDriverStatus(result.status);
+      if (result.cancelled) {
+        setDriverFeedback({ kind: 'info', message: t('settings.driver.cancelled') });
+      } else {
+        const warningSuffix = result.warnings.length > 0 ? ` ${result.warnings.join(' ')}` : '';
+        setDriverFeedback({
+          kind: result.warnings.length > 0 ? 'info' : 'success',
+          message: `${
+            result.restartRequired
+              ? t('settings.driver.uninstallSuccessRestart')
+              : t('settings.driver.uninstallSuccess')
+          }${warningSuffix}`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to uninstall drivers:', error);
+      const detail =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : String(error);
+      setDriverFeedback({
+        kind: 'error',
+        message: `${t('settings.driver.uninstallError')} ${detail}`,
+      });
+    } finally {
+      setDriverOperation(null);
     }
   };
 
@@ -550,6 +649,71 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
                     </select>
                   </label>
                 </div>
+
+                {isWindows && (
+                  <div className="settings-section">
+                    <h3>{t('settings.driver.title')}</h3>
+                    <div className="settings-driver-card">
+                      <div className="settings-driver-heading">
+                        <span className="settings-label">{t('settings.driver.packageName')}</span>
+                        <span
+                          className={`settings-driver-badge ${
+                            driverStatus?.installed ? 'installed' : 'not-installed'
+                          }`}
+                        >
+                          {driverStatusLoading
+                            ? t('settings.driver.checking')
+                            : driverStatus?.installed
+                              ? t('settings.driver.installed')
+                              : driverStatus &&
+                                  (driverStatus.serialDriverInstalled ||
+                                    driverStatus.interfaceDriverInstalled)
+                                ? t('settings.driver.partial')
+                                : t('settings.driver.notInstalled')}
+                        </span>
+                      </div>
+                      <p className="settings-driver-description">
+                        {t('settings.driver.description')}
+                      </p>
+                      {driverFeedback && (
+                        <div className={`settings-driver-feedback ${driverFeedback.kind}`}>
+                          {driverFeedback.message}
+                        </div>
+                      )}
+                      <div className="settings-driver-actions">
+                        <button
+                          type="button"
+                          className="settings-btn settings-btn-primary"
+                          onClick={handleDriverInstall}
+                          disabled={driverOperation !== null || driverStatusLoading}
+                        >
+                          {driverOperation === 'install'
+                            ? t('settings.driver.installing')
+                            : driverStatus?.installed
+                              ? t('settings.driver.reinstall')
+                              : t('settings.driver.install')}
+                        </button>
+                        <button
+                          type="button"
+                          className="settings-btn settings-btn-danger"
+                          onClick={handleDriverUninstall}
+                          disabled={
+                            driverOperation !== null ||
+                            driverStatusLoading ||
+                            !driverStatus ||
+                            (!driverStatus.serialDriverInstalled &&
+                              !driverStatus.interfaceDriverInstalled &&
+                              !driverStatus.friendlyNameHelperInstalled)
+                          }
+                        >
+                          {driverOperation === 'uninstall'
+                            ? t('settings.driver.uninstalling')
+                            : t('settings.driver.uninstall')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="settings-section">
                   <h3>{t('settings.ai.title')}</h3>
@@ -750,6 +914,7 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
         )}
       </AnimatePresence>
       <ThemeViewer visible={themeViewerVisible} onClose={() => setThemeViewerVisible(false)} />
+      {modalNode}
     </>
   );
 };

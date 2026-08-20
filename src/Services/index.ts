@@ -43,3 +43,11 @@ export {
   type AuthUserInfo,
   type AuthResultCallback,
 } from './AuthService';
+
+/** Re-export Windows driver management service and types */
+export {
+  DriverService,
+  driverService,
+  type DriverStatus,
+  type DriverOperationResult,
+} from './DriverService';

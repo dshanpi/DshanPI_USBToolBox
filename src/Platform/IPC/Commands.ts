@@ -11,6 +11,40 @@ export interface IpcCommandMap {
   /** Open DevTools window for debugging */
   open_devtools: IpcCommandSpec;
   open_python_api_docs: IpcCommandSpec;
+  /** Query the bundled DshanPI Windows driver installation state. */
+  driver_get_status: IpcCommandSpec<
+    undefined,
+    {
+      supported: boolean;
+      installed: boolean;
+      serialDriverInstalled: boolean;
+      interfaceDriverInstalled: boolean;
+      friendlyNameHelperInstalled: boolean;
+      publishedNames: string[];
+    }
+  >;
+  /** Install or repair the bundled drivers through a Windows UAC prompt. */
+  driver_install: IpcCommandSpec<
+    undefined,
+    {
+      success: boolean;
+      cancelled: boolean;
+      restartRequired: boolean;
+      warnings: string[];
+      status: IpcCommandMap['driver_get_status']['result'];
+    }
+  >;
+  /** Uninstall the bundled drivers through a Windows UAC prompt. */
+  driver_uninstall: IpcCommandSpec<
+    undefined,
+    {
+      success: boolean;
+      cancelled: boolean;
+      restartRequired: boolean;
+      warnings: string[];
+      status: IpcCommandMap['driver_get_status']['result'];
+    }
+  >;
   /** Get system proxy settings as string */
   get_system_proxy: IpcCommandSpec<undefined, string>;
   /** Get proxy configuration as string */
@@ -792,6 +826,7 @@ export interface IpcCommandMap {
     Array<{
       index: number;
       name: string;
+      friendlyName?: string | null;
       chipType?: number;
       chipName?: string;
       desc?: string;
@@ -800,6 +835,8 @@ export interface IpcCommandMap {
       chipMode?: number;
       interfaceNumber?: number;
       firmwareVersion?: number;
+      devicePath?: string;
+      deviceId?: string;
       product?: string;
       manufacturer?: string;
     }>

@@ -256,6 +256,90 @@
   background-color: var(--color-surface1);
 }
 
+.settings-btn-danger {
+  color: #fff;
+  background-color: var(--color-error);
+}
+
+.settings-btn-danger:hover {
+  filter: brightness(1.08);
+}
+
+.settings-btn-danger:disabled,
+.settings-btn-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.settings-driver-card {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background-color: var(--color-mantle);
+}
+
+.settings-driver-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-driver-badge {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: var(--color-subtext1);
+  background-color: var(--color-surface0);
+  font-size: 11px;
+}
+
+.settings-driver-badge.installed {
+  color: var(--color-success);
+}
+
+.settings-driver-badge.not-installed {
+  color: var(--color-warning);
+}
+
+.settings-driver-description {
+  margin: 10px 0;
+  color: var(--color-subtext0);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-driver-feedback {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: var(--color-surface0);
+  color: var(--color-subtext1);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.settings-driver-feedback.success {
+  color: var(--color-success);
+}
+
+.settings-driver-feedback.error {
+  color: var(--color-error);
+}
+
+.settings-driver-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.settings-driver-actions .settings-btn {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
 .settings-update-item {
   flex-wrap: wrap;
   gap: 8px;

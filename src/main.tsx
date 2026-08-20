@@ -12,9 +12,10 @@ import { GPIOToolPage } from './Components/GPIOTool';
 import { ModbusToolPage } from './Components/ModbusTool';
 import { PythonTestToolPage } from './Components/PythonTestTool';
 import { AIAssistant, type AssistantToolId } from './Components/AIAssistant';
+import { DriverSetupDialog } from './Components/DriverSetupDialog';
 import { DeviceConnectButton } from './Components/SPITool';
-import { Settings, AppSettings, loadSettings } from './Settings';
-import { authService, AuthUserInfo } from './Services';
+import { Settings, AppSettings, loadSettings, saveSettings } from './Settings';
+import { authService, driverService, AuthUserInfo } from './Services';
 import { flashManager } from './FlashManager';
 import { efexService } from './Services';
 import { ThemeProvider, useTheme, ThemeMode } from './Themes';
@@ -69,6 +70,7 @@ const AppContent: React.FC = () => {
   const [activeTool, setActiveTool] = useState<AssistantToolId>('serial-tool');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [driverSetupVisible, setDriverSetupVisible] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
   // 当前登录用户（null 表示未登录）。登录结果经 auth-login-result 事件回传。
   const [authUser, setAuthUser] = useState<AuthUserInfo | null>(null);
@@ -152,6 +154,37 @@ const AppContent: React.FC = () => {
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Show the corrected driver prompt once when either bundled package is
+  // missing. A revision intentionally invalidates the marker written by the
+  // previous implementation before its dialog was actually rendered. Delay
+  // the check until after the first paint so startup remains interactive.
+  useEffect(() => {
+    const promptRevision = 2;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void loadSettings()
+        .then(async (loadedSettings) => {
+          if (loadedSettings.driverPromptRevision >= promptRevision) {
+            return;
+          }
+
+          const status = await driverService.getStatus();
+          if (cancelled || !status.supported || status.installed) {
+            return;
+          }
+
+          setDriverSetupVisible(true);
+          await saveSettings({ ...loadedSettings, driverPromptRevision: promptRevision });
+        })
+        .catch((error) => console.error('Failed to initialize the driver prompt:', error));
+    }, 750);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, []);
 
   // Hide loading screen after React hydrates
@@ -384,6 +417,10 @@ const AppContent: React.FC = () => {
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
         onSettingsChange={handleSettingsChange}
+      />
+      <DriverSetupDialog
+        visible={driverSetupVisible}
+        onClose={() => setDriverSetupVisible(false)}
       />
       <UserProfileDialog
         visible={profileVisible}

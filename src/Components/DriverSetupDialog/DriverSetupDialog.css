@@ -1,0 +1,107 @@
+.driver-setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--color-modal-overlay);
+}
+
+.driver-setup-dialog {
+  width: min(460px, 92vw);
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-base);
+  box-shadow: 0 12px 40px var(--color-shadow-md);
+}
+
+.driver-setup-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  color: var(--color-accent-text);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.driver-setup-body h2 {
+  margin: 0 0 10px;
+  color: var(--color-text);
+  font-size: 20px;
+}
+
+.driver-setup-body p {
+  margin: 0 0 10px;
+  color: var(--color-subtext1);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.driver-setup-body .driver-setup-note {
+  color: var(--color-subtext0);
+  font-size: 12px;
+}
+
+.driver-setup-feedback {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: var(--color-subtext1);
+  background: var(--color-surface0);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.driver-setup-feedback.success {
+  color: var(--color-success);
+}
+
+.driver-setup-feedback.error {
+  color: var(--color-error);
+}
+
+.driver-setup-feedback.warning {
+  color: var(--color-warning);
+}
+
+.driver-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.driver-setup-btn {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.driver-setup-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.driver-setup-btn.secondary {
+  color: var(--color-text);
+  background: var(--color-surface0);
+}
+
+.driver-setup-btn.primary {
+  color: var(--color-accent-text);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+}

@@ -11,6 +11,8 @@ import { ThemeMode } from '../Themes';
  * including flash options, UI preferences, and theme settings.
  */
 export interface AppSettings {
+  /** Revision of the one-time Windows driver prompt that has been displayed. */
+  driverPromptRevision: number;
   /** Whether sidebar is collapsed */
   sidebarCollapsed: boolean;
   /** Default flash operation mode */
@@ -66,6 +68,7 @@ const DEFAULT_USB_BACKEND: UsbBackend = isWindows ? 'winusb' : 'libusb';
  */
 function getDefaultSettings(): AppSettings {
   return {
+    driverPromptRevision: 0,
     sidebarCollapsed: false,
     defaultFlashMode: 'keep_data',
     autoScanDevices: true,
@@ -135,6 +138,10 @@ async function ensureSettingsDir(): Promise<void> {
  * @returns Migrated AppSettings structure
  */
 function migrateSettings(parsed: Record<string, unknown>): AppSettings {
+  // The first implementation wrote this flag before the dialog was actually
+  // displayed. Drop it and use a revision so affected installations receive
+  // the corrected prompt once.
+  delete parsed.driverPromptShown;
   if (parsed.themeId && !parsed.themeIdDark && !parsed.themeIdLight) {
     const themeId = parsed.themeId as string;
     if (themeId === 'catppuccin-dark') {
