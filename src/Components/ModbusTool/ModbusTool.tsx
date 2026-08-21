@@ -20,7 +20,6 @@ export const ModbusTool: React.FC = () => {
     <div className="proto-tool modbus-workbench">
       <div className="proto-top-bar modbus-workbench-bar">
         <div className="proto-device-area">
-          <span className="modbus-workbench-mark">M</span>
           <span className="modbus-workbench-title">{t('modbus.title')}</span>
         </div>
         <div className="proto-tab-bar">

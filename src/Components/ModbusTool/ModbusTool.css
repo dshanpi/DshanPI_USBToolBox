@@ -47,19 +47,6 @@
   border-radius: 12px;
 }
 
-.modbus-workbench-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface0));
-  color: var(--color-accent);
-  font-size: 14px;
-  font-weight: 800;
-}
-
 .modbus-workbench-title {
   color: var(--color-text);
   font-size: 15px;

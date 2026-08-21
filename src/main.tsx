@@ -171,11 +171,13 @@ const AppContent: React.FC = () => {
           }
 
           const status = await driverService.getStatus();
-          if (cancelled || !status.supported || status.installed) {
+          if (cancelled) {
             return;
           }
 
-          setDriverSetupVisible(true);
+          if (status.supported && !status.installed) {
+            setDriverSetupVisible(true);
+          }
           await saveSettings({ ...loadedSettings, driverPromptRevision: promptRevision });
         })
         .catch((error) => console.error('Failed to initialize the driver prompt:', error));
