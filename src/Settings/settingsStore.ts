@@ -80,8 +80,8 @@ function getDefaultSettings(): AppSettings {
     usbBackend: DEFAULT_USB_BACKEND,
     language: getSystemLanguage(),
     themeMode: 'light',
-    themeIdDark: 'openix-dark',
-    themeIdLight: 'openix-light',
+    themeIdDark: 'dshanpi-classic-dark',
+    themeIdLight: 'dshanpi-classic-light',
     ai: {
       apiUrl: 'https://api.openai.com/v1',
       apiKey: '',

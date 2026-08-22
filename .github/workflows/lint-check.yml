@@ -1,0 +1,52 @@
+name: 'Lint Check'
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'src-tauri/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+jobs:
+  lint:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: install frontend dependencies
+        run: yarn install
+
+      - name: TypeScript type check
+        run: yarn tsc --noEmit
+
+      - name: Rust format check
+        run: cargo fmt --all -- --check
+        working-directory: src-tauri
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libusb-1.0-0-dev libudev-dev pkg-config
+
+      - name: Rust clippy check
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: src-tauri

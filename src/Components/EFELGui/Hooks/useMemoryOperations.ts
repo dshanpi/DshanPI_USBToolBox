@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readFile, writeFile } from '@tauri-apps/plugin-fs';
-import { OpenixPacker, getFes } from '../../../Library/OpenixIMG';
+import { DshanPIPacker, getFes } from '../../../Library/DshanPIIMG';
 import { formatHex, parseAddress } from '../Utils';
 import { efexService, type EfexContext } from '../../../Services';
 import type { DisasmArch } from '../Types';
@@ -206,7 +206,7 @@ export const useMemoryOperations = (
     setLoading(true);
     addLog('INFO', t('efelGui.logMessages.initMemory', '正在初始化内存...'));
     try {
-      const packer = new OpenixPacker();
+      const packer = new DshanPIPacker();
       const success = await packer.loadImageFromPath(initFilePath);
       if (!success) {
         addLog('ERRO', t('efelGui.logMessages.loadImageFailed', '加载镜像文件失败'));

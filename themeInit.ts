@@ -3,7 +3,8 @@ import draculaConfig from './src/Themes/configs/dracula.json';
 import githubConfig from './src/Themes/configs/github.json';
 import atomOneConfig from './src/Themes/configs/atom-one.json';
 import arduinoConfig from './src/Themes/configs/arduino.json';
-import yuzukiConfig from './src/Themes/configs/yuzuki.json';
+import dshanpiConfig from './src/Themes/configs/dshanpi.json';
+import dshanpiClassicConfig from './src/Themes/configs/dshanpi-classic.json';
 
 interface ThemeColors {
   base: string;
@@ -47,7 +48,8 @@ const themeConfigs: ThemeConfigFile[] = [
   githubConfig as ThemeConfigFile,
   atomOneConfig as ThemeConfigFile,
   arduinoConfig as ThemeConfigFile,
-  yuzukiConfig as ThemeConfigFile,
+  dshanpiConfig as ThemeConfigFile,
+  dshanpiClassicConfig as ThemeConfigFile,
 ];
 
 function toKebabCase(str: string): string {

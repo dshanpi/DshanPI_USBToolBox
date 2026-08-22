@@ -1,0 +1,81 @@
+# This starter workflow is for a CMake project running on multiple platforms.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+name: CMake on multiple platforms
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      matrix:
+        include:
+          # Windows x64
+          - os: windows-latest
+            arch: x64
+            c_compiler: cl
+            cpp_compiler: cl
+          # Windows ARM64
+          - os: windows-latest
+            arch: arm64
+            c_compiler: cl
+            cpp_compiler: cl
+          # Linux x64 GCC
+          - os: ubuntu-latest
+            arch: x64
+            c_compiler: gcc
+            cpp_compiler: g++
+          # Linux x64 Clang
+          - os: ubuntu-latest
+            arch: x64
+            c_compiler: clang
+            cpp_compiler: clang++
+          # Linux ARM64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            c_compiler: gcc
+            cpp_compiler: g++
+          # macOS ARM64
+          - os: macos-latest
+            arch: arm64
+            c_compiler: clang
+            cpp_compiler: clang++
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Install dependencies on Ubuntu
+      if: startsWith(matrix.os, 'ubuntu')
+      run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=Release
+        ${{ matrix.arch == 'arm64' && matrix.os == 'windows-latest' && '-A ARM64' || '' }}
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ctest --build-config Release

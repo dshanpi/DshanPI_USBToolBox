@@ -2,13 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import {
-  OpenixPacker,
+  DshanPIPacker,
   Partition,
   getPartitionData,
-  OpenixPartition,
+  DshanPIPartition,
   getDtb,
   getUboot,
-} from '../../../Library/OpenixIMG';
+} from '../../../Library/DshanPIIMG';
 import { getFlashMap, extractDtbFromUboot, FlashMapInfo } from '../../../Library/FDT';
 import { LogEntry } from '../Types';
 import { formatSize } from '../Utils';
@@ -93,7 +93,7 @@ export const SPINorConverter: React.FC<SPINorConverterProps> = ({ addLog }) => {
         t('firmwarePacker.spinor.firmwareSelected', '已选择固件: {{path}}', { path: selected })
       );
 
-      const newPacker = new OpenixPacker();
+      const newPacker = new DshanPIPacker();
       const success = await newPacker.loadImageFromPath(selected as string);
       if (!success) {
         addLog('ERRO', t('firmwarePacker.spinor.loadFailed', '加载固件失败'));
@@ -126,9 +126,9 @@ export const SPINorConverter: React.FC<SPINorConverterProps> = ({ addLog }) => {
 
       const partitionData = await getPartitionData(newPacker);
       if (partitionData) {
-        const openixPartition = new OpenixPartition();
-        await openixPartition.parseFromData(partitionData);
-        const parsedPartitions = openixPartition.getPartitions();
+        const dshanpiPartition = new DshanPIPartition();
+        await dshanpiPartition.parseFromData(partitionData);
+        const parsedPartitions = dshanpiPartition.getPartitions();
         setPartitions(parsedPartitions);
         addLog(
           'INFO',

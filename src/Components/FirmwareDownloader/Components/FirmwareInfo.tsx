@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageInfo, OpenixPacker, checkSecureFirmware } from '../../../Library/OpenixIMG';
+import { ImageInfo, DshanPIPacker, checkSecureFirmware } from '../../../Library/DshanPIIMG';
 import { SysConfig } from '../../../FlashConfig';
 import { SunxiSysConfigParser } from '../../../FlashConfig';
 import { formatSize } from '../../../Utils';
@@ -9,7 +9,7 @@ interface FirmwareInfoProps {
   imagePath: string | null;
   imageInfo: ImageInfo | null;
   sysConfig: SysConfig | null;
-  packer: OpenixPacker | null;
+  packer: DshanPIPacker | null;
   loading: boolean;
   isFlashing: boolean;
   onOpenFile: () => void;

@@ -172,11 +172,11 @@ export function getMonacoThemeForVariant(isDark: boolean): editor.IStandaloneThe
 }
 
 export function getMonacoThemeName(isDark: boolean): string {
-  return isDark ? 'openix-dark' : 'openix-light';
+  return isDark ? 'dshanpi-dark' : 'dshanpi-light';
 }
 
 export function getMonacoThemeNameForId(themeId: string): string {
-  return `openix-${themeId}`;
+  return `dshanpi-${themeId}`;
 }
 
 export function registerMonacoTheme(monaco: typeof import('monaco-editor'), themeId: string): void {

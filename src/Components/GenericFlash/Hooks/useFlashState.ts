@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { FlashDevice, LogEntry } from '../../../FlashManager';
 import { PopupType } from '../../../CoreUI';
-import { OpenixPacker } from '../../../Library/OpenixIMG';
+import { DshanPIPacker } from '../../../Library/DshanPIIMG';
 import { LogicOffsetConfig, GenericFlashMode } from '../../../Library/FDT';
 import { useCommandModeFlash, CommandModeFlashParams } from './useCommandModeFlash';
 import { useLogicOffsetModeFlash, LogicOffsetModeFlashParams } from './useLogicOffsetModeFlash';
@@ -10,7 +10,7 @@ export interface UseFlashStateParams {
   addLog: (level: LogEntry['level'], message: string) => void;
   selectedDevice: FlashDevice | null;
   bootImagePath: string | null;
-  bootPacker: React.RefObject<OpenixPacker>;
+  bootPacker: React.RefObject<DshanPIPacker>;
   genericImagePath: string | null;
   genericImageSize: number | null;
   logicOffsetConfig: LogicOffsetConfig;

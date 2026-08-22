@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageInfo, Partition } from '../../../Library/OpenixIMG';
+import { ImageInfo, Partition } from '../../../Library/DshanPIIMG';
 import { formatSize } from '../../../Utils';
 
 interface ImageInfoSectionProps {

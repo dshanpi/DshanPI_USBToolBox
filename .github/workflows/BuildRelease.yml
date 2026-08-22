@@ -1,0 +1,99 @@
+name: Build Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-15
+            args: --target aarch64-apple-darwin
+          - platform: ubuntu-22.04
+            args: ''
+          - platform: ubuntu-24.04-arm
+            args: ''
+          - platform: windows-latest
+            args: ''
+          - platform: windows-latest
+            args: --target aarch64-pc-windows-msvc
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Verify release tag matches package version
+        run: node -e "const version=require('./package.json').version; const tag=(process.env.GITHUB_REF_NAME || '').replace(/^v/, ''); if (process.env.GITHUB_REF_TYPE === 'tag' && tag !== version) { console.error('Release tag v' + tag + ' does not match package version ' + version); process.exit(1); }"
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ startsWith(matrix.platform, 'macos') && 'aarch64-apple-darwin' || contains(matrix.args, 'aarch64-pc-windows-msvc') && 'aarch64-pc-windows-msvc' || '' }}
+
+      - name: Install Linux dependencies
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libusb-1.0-0-dev libudev-dev pkg-config xdg-utils
+
+      - name: Configure Linux pkg-config path
+        if: startsWith(matrix.platform, 'ubuntu')
+        shell: bash
+        run: |
+          libudev_pc="$(dpkg -L libudev-dev | grep '/libudev\.pc$' | head -n 1)"
+          test -n "$libudev_pc"
+          echo "PKG_CONFIG_PATH=$(dirname "$libudev_pc")${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+
+      - name: Install macOS dependencies
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          brew install cmake libusb pkg-config
+
+      - name: Verify native build dependencies
+        if: startsWith(matrix.platform, 'ubuntu') || startsWith(matrix.platform, 'macos')
+        shell: bash
+        run: |
+          rustc -vV
+          pkg-config --modversion libusb-1.0
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            pkg-config --modversion libudev
+          fi
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Sync application version
+        run: npm run sync-version
+
+      - name: Build, sign, and upload release assets
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          owner: dshanpi
+          repo: DshanPI_USBToolBox
+          releaseCommitish: main
+          tagName: v__VERSION__
+          releaseName: DshanPI USBToolBox v__VERSION__
+          releaseBody: Download the installer for your platform from the assets below.
+          releaseDraft: false
+          prerelease: false
+          generateReleaseNotes: true
+          args: ${{ matrix.args }}

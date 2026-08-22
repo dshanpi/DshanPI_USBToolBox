@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { exists } from '@tauri-apps/plugin-fs';
 import {
-  OpenixPacker,
-  OpenixPartition,
+  DshanPIPacker,
+  DshanPIPartition,
   ImageInfo,
   Partition,
   getFes,
@@ -14,7 +14,7 @@ import {
   getPartitionData,
   getDtb,
   getBootPackageData,
-} from '../../../Library/OpenixIMG';
+} from '../../../Library/DshanPIIMG';
 import {
   Boot0Header,
   UBootHeaderParser,
@@ -60,8 +60,8 @@ export function useFirmwareLoader(onImageLoaded?: (info: ImageInfo) => void) {
   const [bootPackageData, setBootPackageData] = useState<Uint8Array | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
 
-  const packer = useRef(new OpenixPacker());
-  const partitionParser = useRef(new OpenixPartition());
+  const packer = useRef(new DshanPIPacker());
+  const partitionParser = useRef(new DshanPIPartition());
   const hasAutoLoaded = useRef(false);
   const onImageLoadedRef = useRef(onImageLoaded);
   const tRef = useRef(t);

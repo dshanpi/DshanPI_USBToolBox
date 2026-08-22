@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { exists } from '@tauri-apps/plugin-fs';
 import {
-  OpenixPacker,
+  DshanPIPacker,
   ImageInfo,
   Partition,
   getPartitionData,
   getSysConfig,
-} from '../../../Library/OpenixIMG';
-import { OpenixPartition } from '../../../Library/OpenixIMG';
+} from '../../../Library/DshanPIIMG';
+import { DshanPIPartition } from '../../../Library/DshanPIIMG';
 import { SunxiSysConfigParser, SysConfig } from '../../../FlashConfig';
 import { LogEntry } from '../../../FlashManager';
 import { AppSettings, saveSettings } from '../../../Settings/settingsStore';
@@ -25,7 +25,7 @@ export function useImageLoader(
   const [partitions, setPartitions] = useState<Partition[]>([]);
   const [loading, setLoading] = useState(false);
   const [sysConfig, setSysConfig] = useState<SysConfig | null>(null);
-  const packer = useRef(new OpenixPacker());
+  const packer = useRef(new DshanPIPacker());
   const hasAutoLoaded = useRef(false);
 
   const loadImage = useCallback(
@@ -58,7 +58,7 @@ export function useImageLoader(
         const partitionData = await getPartitionData(packer.current);
 
         if (partitionData) {
-          const parser = new OpenixPartition();
+          const parser = new DshanPIPartition();
           await parser.parseFromData(partitionData);
           setPartitions(parser.getPartitions());
         } else {

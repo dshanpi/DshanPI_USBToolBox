@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FirmwareLoader } from '../FirmwareLoader';
 import { PageContainer } from '../../CoreUI';
-import { ImageInfo } from '../../Library/OpenixIMG';
+import { ImageInfo } from '../../Library/DshanPIIMG';
 
 interface FirmwareLoaderPageProps {
   onImageLoaded?: (info: ImageInfo) => void;

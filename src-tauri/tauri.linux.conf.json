@@ -1,0 +1,16 @@
+{
+  "bundle": {
+    "linux": {
+      "deb": {
+        "depends": [
+          "libusb-1.0-0"
+        ]
+      },
+      "rpm": {
+        "depends": [
+          "libusb1"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+[package]
+name = "libefex"
+version = "0.1.0"
+authors = ["DshanPI"]
+description = "Rust bindings for libefex"
+license = "MIT"
+edition = "2021"
+
+[dependencies]
+libefex-sys = { path = "../libefex-sys" }
+thiserror = "1.0"
+libc = "0.2"

@@ -1,0 +1,23 @@
+# USBToolBox 产测配置示例（YAML 子集，零依赖解析）
+# 用法：python production_line.py config.example.yaml
+
+baseUrl: http://127.0.0.1:8765
+timeout: 5
+
+# 串口默认
+serialPort: COM3
+baudRate: 115200
+parity: none
+
+# CH347 / 总线默认
+ch347Index: 0
+spiMode: 0
+spiSpeedMhz: 8
+spiCs: 0
+i2cSpeedKhz: 100
+
+# 工站名与自定义限值（未识别项进入 cfg.extra）
+station: ST-LINE-01
+limits:
+  vmin: 3.2
+  vmax: 3.4

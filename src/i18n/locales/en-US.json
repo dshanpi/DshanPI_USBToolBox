@@ -1020,7 +1020,7 @@
     "about": {
       "title": "About",
       "company": "Company",
-      "companyName": "Shenzhen Baiwen Technology Co., Ltd.",
+      "companyName": "DshanPI",
       "website": "Website"
     },
     "usbBackend": "USB Driver",
@@ -1046,7 +1046,7 @@
     "settings": "Settings",
     "login": "Login",
     "subtitle": "UART/I2C/SPI Multi-Protocol Debug Toolkit",
-    "title": "USBToolBox"
+    "title": "DshanPI USBToolBox"
   },
   "themes": {
     "dark": "Dark",

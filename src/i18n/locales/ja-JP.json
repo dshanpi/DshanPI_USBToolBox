@@ -993,7 +993,7 @@
     "about": {
       "title": "について",
       "company": "会社",
-      "companyName": "深圳百問科技有限公司",
+      "companyName": "DshanPI",
       "website": "ウェブサイト"
     },
     "usbBackend": "USB ドライバ",
@@ -1019,7 +1019,7 @@
     "settings": "設定",
     "login": "ログイン",
     "subtitle": "UART/I2C/SPIマルチプロトコルデバッグツールキット",
-    "title": "USBToolBox"
+    "title": "DshanPI USBToolBox"
   },
   "themes": {
     "dark": "ダーク",

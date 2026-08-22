@@ -16,7 +16,7 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { save, message } from '@tauri-apps/plugin-dialog';
-import { Partition, FileInfo, ImageInfo } from '../../Library/OpenixIMG';
+import { Partition, FileInfo, ImageInfo } from '../../Library/DshanPIIMG';
 import {
   ImageInfoSection,
   SysConfigSection,

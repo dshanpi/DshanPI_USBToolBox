@@ -7,7 +7,7 @@ import {
   extractDtbFromUboot,
   GenericFlashMode,
 } from '../../../Library/FDT';
-import { OpenixPacker, getDtb, getUboot } from '../../../Library/OpenixIMG';
+import { DshanPIPacker, getDtb, getUboot } from '../../../Library/DshanPIIMG';
 import { LogEntry } from '../../../FlashManager';
 import { formatErrorMessage } from '../../../Utils/Error';
 
@@ -23,7 +23,7 @@ export interface UseLogicOffsetResult {
   setMode: (mode: GenericFlashMode) => void;
   setStorageType: (type: StorageType) => void;
   setManualOffset: (offset: number) => void;
-  autoDetect: (packer: OpenixPacker) => Promise<boolean>;
+  autoDetect: (packer: DshanPIPacker) => Promise<boolean>;
   reset: () => void;
 }
 
@@ -72,7 +72,7 @@ export function useLogicOffset(
   });
   const [flashMap, setFlashMap] = useState<FlashMapInfo | null>(null);
   const [loading, setLoading] = useState(false);
-  const lastPackerRef = useRef<OpenixPacker | null>(null);
+  const lastPackerRef = useRef<DshanPIPacker | null>(null);
 
   const updateLogicOffset = useCallback((map: FlashMapInfo | null, storageType: StorageType) => {
     if (!map) {
@@ -122,7 +122,7 @@ export function useLogicOffset(
   }, []);
 
   const autoDetect = useCallback(
-    async (packer: OpenixPacker): Promise<boolean> => {
+    async (packer: DshanPIPacker): Promise<boolean> => {
       if (lastPackerRef.current === packer && flashMap) {
         return true;
       }

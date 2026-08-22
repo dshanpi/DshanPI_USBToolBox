@@ -993,7 +993,7 @@
     "about": {
       "title": "정보",
       "company": "회사",
-      "companyName": "심천 백문과학기술유한공사",
+      "companyName": "DshanPI",
       "website": "웹사이트"
     },
     "usbBackend": "USB 드라이버",
@@ -1019,7 +1019,7 @@
     "settings": "설정",
     "login": "로그인",
     "subtitle": "UART/I2C/SPI 멀티 프로토콜 디버그 툴킷",
-    "title": "USBToolBox"
+    "title": "DshanPI USBToolBox"
   },
   "themes": {
     "dark": "다크",

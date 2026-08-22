@@ -1,6 +1,6 @@
 import { DeviceMode } from '../Library/libEFEX';
 import type { FlashMode, PostFlashAction } from '../Domain/flash';
-import { Partition } from '../Library/OpenixIMG';
+import { Partition } from '../Library/DshanPIIMG';
 
 /**
  * Represents a device available for flash operations.

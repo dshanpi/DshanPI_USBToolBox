@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MbrBuilder } from '../../../FlashConfig';
 import { LogEntry, FlashDevice, formatErrorForLog } from '../../../FlashManager';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 import { flashManager } from '../../../FlashManager';
 import { hotPlugService } from '../../../Services';
 

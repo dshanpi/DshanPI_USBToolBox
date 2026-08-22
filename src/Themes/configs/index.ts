@@ -25,8 +25,8 @@ import draculaConfig from './dracula.json';
 import githubConfig from './github.json';
 import atomOneConfig from './atom-one.json';
 import arduinoConfig from './arduino.json';
-import yuzukiConfig from './yuzuki.json';
-import openixConfig from './openix.json';
+import dshanpiConfig from './dshanpi.json';
+import dshanpiClassicConfig from './dshanpi-classic.json';
 
 const themeConfigs: ThemeConfigFile[] = [
   catppuccinConfig as ThemeConfigFile,
@@ -34,8 +34,8 @@ const themeConfigs: ThemeConfigFile[] = [
   githubConfig as ThemeConfigFile,
   atomOneConfig as ThemeConfigFile,
   arduinoConfig as ThemeConfigFile,
-  yuzukiConfig as ThemeConfigFile,
-  openixConfig as ThemeConfigFile,
+  dshanpiConfig as ThemeConfigFile,
+  dshanpiClassicConfig as ThemeConfigFile,
 ];
 
 function toKebabCase(str: string): string {

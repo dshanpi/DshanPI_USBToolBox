@@ -5,8 +5,8 @@ export { READY_MODES } from '../../FlashManager';
 /** Re-export flash domain types */
 export type { FlashMode, PostFlashAction } from '../../Domain/flash';
 /** Re-export firmware image parser */
-export { OpenixPacker } from '../../Library/OpenixIMG';
+export { DshanPIPacker } from '../../Library/DshanPIIMG';
 /** Re-export image info type */
-export type { ImageInfo } from '../../Library/OpenixIMG';
+export type { ImageInfo } from '../../Library/DshanPIIMG';
 /** Re-export generic image loader type */
 export type { GenericImageInfo } from './Hooks/useGenericImageLoader';

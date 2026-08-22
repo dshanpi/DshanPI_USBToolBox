@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
 import { MbrBuilder, isValidMbr } from '../../../FlashConfig';
 import { LogEntry } from '../../../FlashManager';
-import { OpenixPacker, ImageInfo, getMbr, Partition } from '../../../Library/OpenixIMG';
+import { DshanPIPacker, ImageInfo, getMbr, Partition } from '../../../Library/DshanPIIMG';
 import { formatSize } from '../../../Utils';
 import { formatErrorForLog } from '../../../FlashManager';
-import { OpenixPartition } from '../../../Library/OpenixIMG/OpenixPartition';
+import { DshanPIPartition } from '../../../Library/DshanPIIMG/DshanPIPartition';
 
 export interface ImageLoaderState {
   imagePath: string | null;
@@ -35,8 +35,8 @@ export function useImageLoader({
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
   const [mbrBuilder, setMbrBuilder] = useState<MbrBuilder | null>(null);
   const [loading, setLoading] = useState(false);
-  const packer = useRef(new OpenixPacker());
-  const partitionParser = useRef(new OpenixPartition());
+  const packer = useRef(new DshanPIPacker());
+  const partitionParser = useRef(new DshanPIPartition());
 
   const loadImage = useCallback(
     async (path: string): Promise<boolean> => {

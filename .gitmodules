@@ -1,0 +1,6 @@
+[submodule "src-tauri/libs/adb_client"]
+	path = src-tauri/libs/adb_client
+	url = https://github.com/cocool97/adb_client.git
+[submodule "ReferenceCode/COMTool"]
+	path = ReferenceCode/COMTool
+	url = https://github.com/Neutree/COMTool.git

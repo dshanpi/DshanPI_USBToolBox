@@ -2,7 +2,7 @@
 
 ## Overview
 
-SerialTool is a full-featured serial port debugging tool integrated into OpenixSuit. It provides terminal-style direct input, timestamp tagging, HEX display, multi-text batch sending, and customizable presets — comparable to professional tools like MobaXterm and COMTool.
+SerialTool is a full-featured serial port debugging tool integrated into DshanPI USBToolBox. It provides terminal-style direct input, timestamp tagging, HEX display, multi-text batch sending, and customizable presets — comparable to professional tools like MobaXterm and COMTool.
 
 ## Architecture
 

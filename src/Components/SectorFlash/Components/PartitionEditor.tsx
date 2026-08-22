@@ -21,7 +21,7 @@ import { MBR_MAX_PART_CNT } from '../../../FlashConfig/Constants';
 import { formatHex } from '../../../Utils';
 import { LogEntry } from '../../../FlashManager';
 import { formatErrorForLog } from '../../../FlashManager';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 import { SortableRow, PartitionProgress } from './SortableRow';
 import {
   AlignMode,

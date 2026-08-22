@@ -1,0 +1,15 @@
+WCH CH347 Windows runtime
+========================
+
+File: CH347DLLA64.dll
+Vendor: Nanjing Qinheng Microelectronics Co., Ltd. (WCH.CN)
+File version: 1.50
+Architecture: Windows x86-64 (PE machine 0x8664)
+SHA-256: 0A0B757F774A2C456D33985957C26BE41229DA84FA7882CF661073E96E215A54
+Signature: Microsoft Windows Hardware Compatibility Publisher
+Source: Official WCH CH341/CH347 Windows driver installation
+
+This binary remains the property of its vendor and is included only as the
+runtime interface required to use CH347 hardware. Confirm the applicable WCH
+redistribution terms before publishing the installer. Obtain driver and
+runtime updates from the official WCH support channels.

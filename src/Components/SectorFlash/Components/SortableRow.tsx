@@ -4,7 +4,7 @@ import { faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-ic
 import { useSortable } from '@dnd-kit/sortable';
 import { PartitionInfo } from '../../../FlashConfig';
 import { formatHex } from '../../../Utils';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 
 export interface PartitionProgress {
   percent: number;

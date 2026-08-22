@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { open } from '@tauri-apps/plugin-dialog';
-import { OpenixPacker, ImageInfo, hasImageData, getMbr } from '../../../Library/OpenixIMG';
+import { DshanPIPacker, ImageInfo, hasImageData, getMbr } from '../../../Library/DshanPIIMG';
 import { LogEntry } from '../../../FlashManager';
 import { isValidMbr, MbrBuilder } from '../../../FlashConfig';
 import { AppSettings, saveSettings } from '../../../Settings/settingsStore';
@@ -16,7 +16,7 @@ export function useBootImageLoader(
   const [bootImageInfo, setBootImageInfo] = useState<ImageInfo | null>(null);
   const [mbrCopy, setMbrCopy] = useState<number>(1);
   const [loading, setLoading] = useState(false);
-  const packer = useRef(new OpenixPacker());
+  const packer = useRef(new DshanPIPacker());
 
   useEffect(() => {
     if (settings?.rememberLastImage && settings.lastImagePath) {

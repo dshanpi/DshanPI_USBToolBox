@@ -1,0 +1,10 @@
+{
+  "bundle": {
+    "resources": {
+      "target/tauri-resources/libusb-1.0.dll": "libusb-1.0.dll",
+      "resources/ch347/CH347DLLA64.dll": "ch347/CH347DLLA64.dll",
+      "resources/ch347/THIRD_PARTY_NOTICES.txt": "ch347/THIRD_PARTY_NOTICES.txt",
+      "../ReferenceCode/DshanPI_USBToolboxDriver-fixed": "drivers/dshanpi"
+    }
+  }
+}

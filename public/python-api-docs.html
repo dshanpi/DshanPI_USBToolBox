@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USBToolBox Python 产测 API 参考手册</title>
+    <style>
+      :root {
+        --base: #1e1e2e;
+        --mantle: #181825;
+        --crust: #11111b;
+        --surface0: #313244;
+        --surface1: #45475a;
+        --text: #cdd6f4;
+        --subtext: #a6adc8;
+        --overlay: #6c7086;
+        --accent: #89b4fa;
+        --accent2: #f9e2af;
+        --green: #a6e3a1;
+        --red: #f38ba8;
+        --mauve: #cba6f7;
+        --code-bg: #11111b;
+        --border: #313244;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--base);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', sans-serif;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* 顶栏 */
+      header.topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(135deg, var(--mantle) 0%, var(--crust) 100%);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      header.topbar h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      header.topbar .ver {
+        font-size: 12px;
+        color: var(--overlay);
+        background: var(--surface0);
+        padding: 3px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      header.topbar .spacer {
+        flex: 1;
+      }
+      header.topbar .hint {
+        font-size: 12px;
+        color: var(--overlay);
+      }
+
+      /* 布局：左 TOC + 右内容 */
+      .layout {
+        display: flex;
+        align-items: flex-start;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      nav.toc {
+        position: sticky;
+        top: 64px;
+        width: 220px;
+        flex-shrink: 0;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        padding: 24px 16px 24px 0;
+        font-size: 13px;
+      }
+      nav.toc a {
+        display: block;
+        color: var(--subtext);
+        padding: 4px 10px;
+        border-radius: 6px;
+        line-height: 1.4;
+      }
+      nav.toc a:hover {
+        background: var(--surface0);
+        color: var(--text);
+        text-decoration: none;
+      }
+      nav.toc .grp {
+        color: var(--overlay);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 14px 10px 4px;
+      }
+
+      main {
+        flex: 1;
+        min-width: 0;
+        padding: 28px 0 80px 32px;
+      }
+
+      h2 {
+        font-size: 22px;
+        color: var(--accent);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+        margin: 40px 0 16px;
+        scroll-margin-top: 80px;
+      }
+      h2:first-of-type {
+        margin-top: 0;
+      }
+      h3 {
+        font-size: 17px;
+        color: var(--accent2);
+        margin: 26px 0 10px;
+        scroll-margin-top: 80px;
+      }
+      h4 {
+        font-size: 15px;
+        color: var(--mauve);
+        margin: 18px 0 8px;
+      }
+      p {
+        margin: 10px 0;
+        color: var(--text);
+      }
+      ul,
+      ol {
+        padding-left: 22px;
+      }
+      li {
+        margin: 4px 0;
+      }
+      code {
+        font-family: 'Consolas', 'Cascadia Code', 'JetBrains Mono', monospace;
+        background: var(--surface0);
+        color: var(--green);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        margin: 12px 0;
+      }
+      pre code {
+        background: transparent;
+        color: var(--text);
+        padding: 0;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      /* 表格 */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 14px 0;
+        font-size: 13.5px;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 8px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--surface0);
+        color: var(--accent2);
+        font-weight: 600;
+      }
+      tr:nth-child(even) td {
+        background: var(--mantle);
+      }
+      td code {
+        white-space: nowrap;
+      }
+
+      blockquote {
+        border-left: 3px solid var(--accent);
+        background: var(--mantle);
+        margin: 12px 0;
+        padding: 8px 14px;
+        color: var(--subtext);
+        border-radius: 0 6px 6px 0;
+      }
+      blockquote code {
+        color: var(--green);
+      }
+
+      .lead {
+        background: var(--mantle);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 8px;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-right: 6px;
+      }
+      .pill.get {
+        background: rgba(166, 227, 161, 0.15);
+        color: var(--green);
+      }
+      .pill.post {
+        background: rgba(137, 180, 250, 0.15);
+        color: var(--accent);
+      }
+
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--surface1);
+        border-radius: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <h1>📘 USBToolBox Python 产测 API 参考手册</h1>
+      <span class="ver">v1.0.0+ · Python ≥ 3.8 · 零外部依赖</span>
+      <span class="spacer"></span>
+      <span class="hint">由「Python 产测工具」页「API 参考手册」按钮打开</span>
+    </header>
+
+    <div class="layout">
+      <nav class="toc">
+        <div class="grp">入门</div>
+        <a href="#overview">概述</a>
+        <a href="#run">1. 运行方式</a>
+        <a href="#quickstart">2. 快速开始</a>
+        <div class="grp">封装 API</div>
+        <a href="#client">3. UsbToolBoxClient</a>
+        <a href="#serial">4. SerialTester</a>
+        <a href="#i2c">5. I2CTester</a>
+        <a href="#spi">6. SpiTester</a>
+        <a href="#modbus">7. ModbusTester</a>
+        <div class="grp">框架与工具</div>
+        <a href="#testplan">8. TestPlan / TestReport</a>
+        <a href="#parallel">9. ParallelRunner</a>
+        <a href="#config">10. TesterConfig</a>
+        <a href="#sn">11. SN 条码 read_sn</a>
+        <a href="#report">12. 报告格式</a>
+        <div class="grp">扩展</div>
+        <a href="#rest">13. REST 端点参考</a>
+        <a href="#driver">14. 编写自己的驱动</a>
+        <a href="#examples">15. 完整示例</a>
+      </nav>
+
+      <main>
+        <section id="overview">
+          <div class="lead">
+            <p style="margin: 0">
+              本手册是 <code>usbtoolbox.tester</code> 包的参考文档。该包把 USBToolBox 桌面应用内嵌的
+              本地 HTTP REST 服务封装为 Python
+              API，供产测工程师编写自动化测试。<strong>所有总线访问都经主进程</strong>，
+              与桌面工具<strong>共享同一 CH347 / 串口设备单例</strong>（不绕过主进程直接操作硬件）。
+            </p>
+          </div>
+        </section>
+
+        <h2 id="run">1. 运行方式</h2>
+        <h3>方式 A：软件内运行（推荐，零安装）</h3>
+        <ol>
+          <li>
+            打开 USBToolBox →「<strong>Python 产测工具</strong>」页 →
+            顶栏「<strong>开启</strong>」HTTP 服务（默认端口 8765）。
+          </li>
+          <li>
+            在脚本编辑器中编写/打开脚本 →「<strong>运行</strong>」。输出实时显示在下方控制台。
+          </li>
+        </ol>
+        <blockquote>
+          软件优先使用<strong>内置可嵌入 Python 运行时</strong>，用户无需安装 Python，也无需
+          <code>pip install</code>（本包仅用标准库）。未检测到内置运行时时回退到系统
+          Python；开发者可运行
+          <code>scripts/fetch-python-runtime.ps1</code> 下载内置运行时实现零安装。
+        </blockquote>
+        <h3>方式 B：独立运行（开发 / CI）</h3>
+        <p>
+          把仓库 <code>python/</code> 目录加入 <code>PYTHONPATH</code>，用任意 Python ≥ 3.8 运行：
+        </p>
+        <pre><code>cd python
+python -c "from usbtoolbox.tester import UsbToolBoxClient; print(UsbToolBoxClient().health())"</code></pre>
+
+        <h2 id="quickstart">2. 快速开始</h2>
+        <pre><code>from usbtoolbox.tester import UsbToolBoxClient, SpiTester, TestPlan
+
+client = UsbToolBoxClient("http://127.0.0.1:8765")
+print(client.health())        # {'status': 'ok', 'ch347Available': True}
+print(client.list_devices())  # CH347 设备列表</code></pre>
+
+        <blockquote>
+          💡 下面各节的代码片段均为<strong>片段</strong>，均假设已执行
+          <code>from usbtoolbox.tester import UsbToolBoxClient</code> 与
+          <code>client = UsbToolBoxClient("http://127.0.0.1:8765")</code
+          >（如上）。软件内运行脚本时是<strong>原样执行</strong>，不会自动注入
+          <code>client</code>——直接复制片段运行会报
+          <code>NameError: name 'client' is not defined</code>。需要可直接运行的完整脚本，见
+          <a href="#examples">第 15 节 完整示例</a>。
+        </blockquote>
+
+        <h2 id="client">3. UsbToolBoxClient</h2>
+        <p>
+          <code>UsbToolBoxClient(base_url="http://127.0.0.1:8765", timeout=5.0)</code> — HTTP
+          薄客户端（标准库 urllib）。错误统一抛 <code>UsbToolBoxError</code>。字节参数/返回均为
+          <code>bytes</code>，内部按 hex 字符串与服务交换。
+        </p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>说明</th>
+          </tr>
+          <tr>
+            <td><code>health()</code></td>
+            <td>{status, ch347Available}</td>
+          </tr>
+          <tr>
+            <td><code>list_devices()</code></td>
+            <td>CH347 设备列表</td>
+          </tr>
+          <tr>
+            <td><code>ch347_open(index)</code> / <code>ch347_close(index)</code></td>
+            <td>打开/关闭设备</td>
+          </tr>
+          <tr>
+            <td><code>spi_init(index, *, mode, speed_mhz, cs, data_bits, byte_order)</code></td>
+            <td>SPI 初始化</td>
+          </tr>
+          <tr>
+            <td><code>spi_transfer(index, tx: bytes, cs=None) -&gt; bytes</code></td>
+            <td>全双工</td>
+          </tr>
+          <tr>
+            <td><code>spi_write(index, tx: bytes, cs=None)</code></td>
+            <td>只写</td>
+          </tr>
+          <tr>
+            <td><code>spi_read(index, read_len, cs=None) -&gt; bytes</code></td>
+            <td>只读</td>
+          </tr>
+          <tr>
+            <td>
+              <code
+                >i2c_transfer(index, write_data, read_len=0, *, speed_khz, ...) -&gt; bytes</code
+              >
+            </td>
+            <td>I2C 读写</td>
+          </tr>
+          <tr>
+            <td><code>i2c_scan(index, *, speed_khz, ...) -&gt; list[int]</code></td>
+            <td>扫描 1–127</td>
+          </tr>
+          <tr>
+            <td><code>gpio_set(index, enable, dir_out, data_out)</code></td>
+            <td>GPIO 位掩码设置</td>
+          </tr>
+          <tr>
+            <td><code>serial_ports()</code></td>
+            <td>串口列表</td>
+          </tr>
+          <tr>
+            <td>
+              <code
+                >serial_open(port, baud_rate, *, data_bits=8, stop_bits=1, parity="none",
+                flow_control="none")</code
+              >
+            </td>
+            <td>打开串口</td>
+          </tr>
+          <tr>
+            <td><code>serial_close(port)</code> / <code>serial_write(port, data)</code></td>
+            <td>关闭 / 写</td>
+          </tr>
+          <tr>
+            <td><code>serial_read(port, max_bytes=4096) -&gt; bytes</code></td>
+            <td>drain 读缓冲（非阻塞）</td>
+          </tr>
+        </table>
+
+        <h2 id="serial">4. SerialTester</h2>
+        <p>
+          <code>SerialTester(client, port)</code> — 产测友好的串口能力。支持
+          <code>with</code> 上下文管理（自动 close）。匹配模式<strong>自动推断</strong>，无需导入
+          <code>MatchMode</code>：
+        </p>
+        <table>
+          <tr>
+            <th>expect 形式</th>
+            <th>推断模式</th>
+            <th>示例</th>
+          </tr>
+          <tr>
+            <td>普通文本 / bytes</td>
+            <td>精确包含</td>
+            <td><code>"OK"</code>、<code>"AT\r\n"</code></td>
+          </tr>
+          <tr>
+            <td><code>/.../</code> 包裹</td>
+            <td>正则</td>
+            <td><code>r"/\d+\.\d+/"</code></td>
+          </tr>
+          <tr>
+            <td>含 <code>??</code> 或纯 hex</td>
+            <td>hex 通配</td>
+            <td><code>"A5 ?? 5A"</code></td>
+          </tr>
+        </table>
+        <pre><code>from usbtoolbox.tester import SerialTester, SerialStep
+
+with SerialTester(client, "COM3").open(115200) as ser:
+    r = ser.send_expect("AT\r\n", "OK", timeout=1.0)        # 普通文本 → 精确包含
+    print(r.passed, r.received)
+
+    steps = [
+        SerialStep("版本", "AT+GMR\r\n", r"/\d+\.\d+/", timeout=1, retries=1),  # /.../ → 正则
+        SerialStep("自定义帧", "A5 01 5A", "A5 ?? 5A", timeout=1.0),             # 含 ?? → hex 通配
+    ]
+    for res in ser.run_sequence(steps):
+        print(res.label, res.passed, res.received)
+# with 退出自动关闭串口</code></pre>
+        <blockquote>
+          <code>send</code> 也支持灵活输入：str 按文本编码（AT 命令等）；要发原始 hex 字节用
+          <code>"A5 01"</code> / <code>[0xA5,0x01]</code> / <code>bytes</code>。<br />
+          <code>SerialStepResult</code> 字段：<code
+            >label, passed, sent, received, elapsed, timestamp, attempts, error</code
+          >。
+        </blockquote>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>说明</th>
+          </tr>
+          <tr>
+            <td>
+              <code
+                >open(baud_rate, *, data_bits=8, stop_bits=1, parity="none", flow_control="none")
+                -&gt; self</code
+              >
+            </td>
+            <td>打开串口（baud 必填），返回 self 支持链式</td>
+          </tr>
+          <tr>
+            <td><code>close()</code></td>
+            <td>关闭串口（<code>with</code> 退出自动调）</td>
+          </tr>
+          <tr>
+            <td><code>flush_input() -&gt; bytes</code></td>
+            <td>清空并返回读缓冲里的残留数据</td>
+          </tr>
+          <tr>
+            <td>
+              <code
+                >send_expect(send, expect=None, *, timeout=1.0, ...) -&gt; SerialStepResult</code
+              >
+            </td>
+            <td>发送并轮询读缓冲直到匹配期望或超时</td>
+          </tr>
+          <tr>
+            <td><code>run_sequence(steps) -&gt; list[SerialStepResult]</code></td>
+            <td>批量执行步骤序列（含重试 / 间隔 / 标签）</td>
+          </tr>
+        </table>
+
+        <h2 id="i2c">5. I2CTester</h2>
+        <p><code>I2CTester(client, index=0, *, speed_khz=None)</code>。</p>
+        <pre><code>i2c = I2CTester(client, index=0, speed_khz=100).open()
+print([hex(a) for a in i2c.scan()])
+val = i2c.read_reg(0x50, 0x00, 16)               # 8 位寄存器地址
+i2c.write_reg(0x50, 0x10, b"\x12\x34", verify=True)
+big = i2c.read_reg(0x68, 0x1234, 4, reg_width=16)  # 16 位寄存器地址
+i2c.close()</code></pre>
+        <p>
+          <code>read_reg / write_reg / read_block / write_block</code>，均支持
+          <code>reg_width=8|16</code>。写支持 <code>verify=True</code> 回读校验、<code
+            >page_size=</code
+          >
+          分页写、<code>write_delay_ms=</code> 页写延时；读支持 <code>chunk=</code> 分块读（某些
+          EEPROM 高速率下一次读多字节会 NACK，分块可显著提升稳定性）。
+        </p>
+        <h4>什么时候填 page_size？</h4>
+        <p>
+          判断依据：访问的是「带内部存储阵列的器件（EEPROM）」还是「寄存器器件（传感器/RTC/ADC）」。EEPROM
+          有页阵列，一次写超过页大小会<strong>地址回绕覆盖</strong>——这就是要填
+          <code>page_size</code> 的原因；寄存器器件不填。
+        </p>
+        <table>
+          <tr>
+            <th>型号</th>
+            <th>容量</th>
+            <th>页大小(字节)</th>
+          </tr>
+          <tr>
+            <td>24C01 / 24C02</td>
+            <td>1K/2K bit</td>
+            <td>8</td>
+          </tr>
+          <tr>
+            <td>24C04 / 24C08 / 24C16</td>
+            <td>4K/8K/16K bit</td>
+            <td>16</td>
+          </tr>
+          <tr>
+            <td>24C32 / 24C64</td>
+            <td>32K/64K bit</td>
+            <td>32</td>
+          </tr>
+          <tr>
+            <td>24C128 / 24C256</td>
+            <td>128K/256K bit</td>
+            <td>64</td>
+          </tr>
+          <tr>
+            <td>24C512 / 24C1024</td>
+            <td>512K/1024K bit</td>
+            <td>128</td>
+          </tr>
+        </table>
+        <pre><code>i2c.write_reg(0x50, 0x00, large_payload, page_size=8, write_delay_ms=5, verify=True)</code></pre>
+
+        <h2 id="spi">6. SpiTester</h2>
+        <p><code>SpiTester(client, index=0)</code>。支持 <code>with</code>（自动 open/close）。</p>
+        <pre><code>with SpiTester(client, index=0) as spi:   # 打开设备（自动 open/close）
+    spi.init()                              # 初始化 SPI 传输层（默认 Mode0/8MHz/CS0）
+    jedec = spi.transfer([0x9F, 0, 0, 0])    # 全双工
+    spi.write([0x01, 0x02])                  # 只写
+    rx = spi.read(4)                          # 只读
+    spi.set_dc(True); spi.set_rst(False)     # DC=GPIO4, RST=GPIO5
+# 退出 with 自动 close()</code></pre>
+        <h4>灵活输入（无需手写 b"\x.."）</h4>
+        <pre><code>spi.write(0xAE)            # 单个整数
+spi.write([0xA1, 0xC8])    # 列表
+spi.write("A1 C8")         # hex 串（空格/逗号/0x 都可）
+spi.write(b"\xAF")         # bytes（也兼容）</code></pre>
+        <h4>命令 / 数据便捷发送（自动切 DC）</h4>
+        <pre><code>spi.cmd(0xAE, 0xA1, 0xC8)            # DC=0 命令模式
+spi.cmd([0xA8, 0x3F], [0x81, 0xCF])   # 多字节命令
+spi.data([0x01, 0x02, 0x03])          # DC=1 数据模式：发显存/参数</code></pre>
+        <h4>SSD1306 OLED 文字显示（usbtoolbox.tester.oled）</h4>
+        <p>包内自带 8x8 ASCII 点阵字体，可把文字渲染成 SSD1306 帧缓冲并通过 SPI 显示。</p>
+        <pre><code>from usbtoolbox.tester import UsbToolBoxClient
+from usbtoolbox.tester.oled import SSD1306Spi, render_text, preview_ascii
+
+client = UsbToolBoxClient()
+with SSD1306Spi(client, index=0) as oled:         # open() 打开设备 + 初始化 SPI 传输层
+    oled.init()                                     # 芯片复位 + SSD1306 命令 + 清屏
+    oled.show_text("Hello, SPI LCD!", y=24)         # 居中显示（DC=GPIO4）
+
+# 无硬件时可先预览渲染（ASCII art）
+print(preview_ascii(render_text("Hello, SPI LCD!", 128, 64), 128, 64))</code></pre>
+
+        <h2 id="modbus">7. ModbusTester</h2>
+        <p>
+          <code>ModbusTester(client, port, unit=1, *, response_timeout=1.0)</code> — 纯 Python
+          RTU（走串口端点）。支持 <code>with</code>（自动 close）。
+        </p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>功能码</th>
+            <th>说明</th>
+          </tr>
+          <tr>
+            <td><code>read_coils(start, count) -&gt; list[bool]</code></td>
+            <td>01</td>
+            <td>读线圈</td>
+          </tr>
+          <tr>
+            <td><code>read_discrete_inputs(start, count) -&gt; list[bool]</code></td>
+            <td>02</td>
+            <td>读离散输入</td>
+          </tr>
+          <tr>
+            <td><code>read_holding_registers(start, count) -&gt; list[int]</code></td>
+            <td>03</td>
+            <td>读保持寄存器</td>
+          </tr>
+          <tr>
+            <td><code>read_input_registers(start, count) -&gt; list[int]</code></td>
+            <td>04</td>
+            <td>读输入寄存器</td>
+          </tr>
+          <tr>
+            <td><code>write_coil(addr, value, *, verify=False)</code></td>
+            <td>05</td>
+            <td>写单线圈</td>
+          </tr>
+          <tr>
+            <td><code>write_register(addr, value, *, verify=False)</code></td>
+            <td>06</td>
+            <td>写单寄存器</td>
+          </tr>
+          <tr>
+            <td><code>write_coils(start, values, *, verify=False)</code></td>
+            <td>15</td>
+            <td>写多线圈</td>
+          </tr>
+          <tr>
+            <td><code>write_registers(start, values, *, verify=False)</code></td>
+            <td>16</td>
+            <td>写多寄存器</td>
+          </tr>
+          <tr>
+            <td>
+              <code>open(baud_rate=9600, *, data_bits=8, stop_bits=1, parity, flow_control)</code> /
+              <code>close()</code>
+            </td>
+            <td>—</td>
+            <td>打开 / 关闭串口</td>
+          </tr>
+        </table>
+        <pre><code>mb = ModbusTester(client, "COM4", unit=1).open(9600)
+regs = mb.read_holding_registers(0, 4)     # 功能码 03
+mb.write_register(0x10, 1234, verify=True)  # 06 + 回读校验
+mb.write_registers(0, [10, 20, 30], verify=True)  # 16
+coils = mb.read_coils(0, 8)                 # 01
+mb.write_coil(2, True, verify=True)         # 05
+mb.close()</code></pre>
+        <blockquote>
+          异常响应抛 <code>ModbusError</code>。辅助：<code>crc16(data)</code>、<code
+            >build_rtu_frame(unit, pdu)</code
+          >、<code>build_tcp_frame(unit, pdu, transaction_id)</code>。<code>verify=True</code>
+          表示写后自动回读比对。
+        </blockquote>
+
+        <h2 id="testplan">8. 统一框架 TestPlan / TestReport</h2>
+        <pre><code>from usbtoolbox.tester import TestPlan
+
+plan = TestPlan("出厂检测", station="ST-01")
+plan.add_step("打开", lambda: spi.open() or True, stop_on_fail=True)
+plan.add_step("ID 校验", lambda: (spi.transfer(b"\x9f\0\0\0")[1:4] != b"\xff\xff\xff", "check id"), retries=1)
+
+report = plan.run("SN-0001")
+print("PASS" if report.passed else "FAIL")
+report.save_json("r.json"); report.save_csv("r.csv"); report.save_html("r.html")</code></pre>
+        <blockquote>
+          步骤函数约定：返回真值 / <code>(True, detail)</code> → 通过；假值 /
+          <code>(False, detail)</code> → 失败；抛异常 → 失败（记入 <code>error</code>）。<br />
+          <code>add_step(name, fn, *, retries=0, stop_on_fail=False)</code>，<code
+            >run(sn) -&gt; TestReport</code
+          >。
+        </blockquote>
+
+        <h2 id="parallel">9. 并行 ParallelRunner</h2>
+        <pre><code>from usbtoolbox.tester import ParallelRunner, all_ok
+
+runner = ParallelRunner(max_workers=4)
+runner.add("串口模组", lambda: SerialTester(client, "COM3").open(115200).send_expect("AT\r\n", "OK").passed)
+runner.add("I2C 传感器", lambda: 0x68 in I2CTester(client, 0).open().scan())
+results = runner.run()         # {name: ParallelResult(name, ok, value, error, elapsed)}
+print("全部通过" if all_ok(results) else "有失败")</code></pre>
+        <blockquote>
+          并行任务应操作<strong>不同设备/端口</strong>，避免对同一物理设备并发下发命令。
+        </blockquote>
+
+        <h2 id="config">10. 配置 TesterConfig（YAML/JSON）</h2>
+        <p>无需 PyYAML，内置 YAML 子集解析（也兼容 JSON）。</p>
+        <pre><code># config.yaml
+baseUrl: http://127.0.0.1:8765
+baudRate: 115200
+spiMode: 0
+spiSpeedMhz: 8
+station: ST-01
+limits:        # 未识别项进入 cfg.extra
+  vmin: 3.2
+  vmax: 3.4</code></pre>
+        <pre><code>from usbtoolbox.tester import TesterConfig
+
+cfg = TesterConfig.from_file("config.yaml")
+client = cfg.make_client()
+print(cfg.base_url, cfg.baud_rate, cfg.extra["limits"])</code></pre>
+
+        <h2 id="sn">11. SN 条码 read_sn / BarcodeScanner</h2>
+        <p>USB 条码枪多为"键盘楔入"设备，扫码即按行输出到标准输入。</p>
+        <pre><code>from usbtoolbox.tester import read_sn, BarcodeScanner
+
+sn = read_sn("请扫码/输入 SN：", validate=r"^SN\d{8}$", retries=2)
+# 或显式：scanner = BarcodeScanner(validate=r"^SN\d+$"); sn = scanner.read()</code></pre>
+        <blockquote>
+          若设置环境变量 <code>USBTOOLBOX_SN</code>（默认）则优先取它，便于自动化 / CI。
+        </blockquote>
+
+        <h2 id="report">12. 报告格式</h2>
+        <p><code>TestReport</code> 支持三种输出：</p>
+        <ul>
+          <li>
+            <strong>JSON</strong>：<code>to_json()</code> / <code>save_json(path)</code> —
+            机器解析（含 sn / 工站 / 每步结果 / overall）。
+          </li>
+          <li>
+            <strong>CSV</strong>：<code>to_csv()</code> / <code>save_csv(path)</code> — 表格查看。
+          </li>
+          <li>
+            <strong>HTML</strong>：<code>to_html()</code> / <code>save_html(path)</code> —
+            自包含可视化报告，浏览器直接打开。
+          </li>
+        </ul>
+
+        <h2 id="rest">13. REST 端点参考</h2>
+        <p>
+          服务仅监听 <code>127.0.0.1</code>。字节字段统一 <strong>hex 字符串</strong>；错误统一
+          <code>{"error": "..."}</code>（输入/设备错误 400）。
+        </p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>路径</th>
+            <th>Body / Query</th>
+            <th>返回</th>
+          </tr>
+          <tr>
+            <td><span class="pill get">GET</span></td>
+            <td><code>/health</code></td>
+            <td>—</td>
+            <td>{status, ch347Available}</td>
+          </tr>
+          <tr>
+            <td><span class="pill get">GET</span></td>
+            <td><code>/devices</code></td>
+            <td>—</td>
+            <td>[{index, name, ...}]</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/open</code> · <code>/close</code></td>
+            <td>{index}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/spi/init</code></td>
+            <td>{index, mode?, speedMhz?, cs?, ...}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/spi/transfer</code></td>
+            <td>{index, txData, cs?}</td>
+            <td>{data}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/spi/write</code></td>
+            <td>{index, txData, cs?}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/spi/read</code></td>
+            <td>{index, readLen, cs?}</td>
+            <td>{data}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/i2c/transfer</code></td>
+            <td>{index, writeData, readLen, ...}</td>
+            <td>{data}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/i2c/scan</code></td>
+            <td>{index, speedKhz?, ...}</td>
+            <td>{addresses}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/ch347/gpio/set</code></td>
+            <td>{index, enable, dirOut, dataOut}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill get">GET</span></td>
+            <td><code>/serial/ports</code></td>
+            <td>—</td>
+            <td>[{name, vid, pid, ...}]</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/serial/open</code></td>
+            <td>{port, baudRate, dataBits?, ...}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/serial/close</code></td>
+            <td>{port}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill post">POST</span></td>
+            <td><code>/serial/write</code></td>
+            <td>{port, data}</td>
+            <td>{ok}</td>
+          </tr>
+          <tr>
+            <td><span class="pill get">GET</span></td>
+            <td><code>/serial/read</code></td>
+            <td>?port=&amp;max=</td>
+            <td>{data}</td>
+          </tr>
+        </table>
+
+        <h2 id="driver">14. 编写自己的驱动（扩展）</h2>
+        <p>
+          你不需要改包源码。软件提供了一个<strong>用户工作区目录</strong>（「Python
+          产测工具」页左下角可看到路径，位于 app-data 下，可写、持久化），该目录在脚本运行时<strong
+            >自动加入 <code>sys.path</code></strong
+          >，你在里面写的任何 <code>.py</code> 模块都能被脚本 <code>import</code> 复用。
+        </p>
+        <h4>三层模型</h4>
+        <ol>
+          <li>
+            <strong>基础层</strong>（包内置）：<code>UsbToolBoxClient</code> +
+            <code>SpiTester</code
+            >/<code>I2CTester</code>/<code>SerialTester</code>/<code>ModbusTester</code>。底层 API
+            很通用，直接用就能驱动任何器件。
+          </li>
+          <li>
+            <strong>驱动层</strong>（你写，可选）：把某芯片的命令序列封装成函数/类复用。可继承
+            <code>SpiDriver</code>/<code>I2CDriver</code> 自动获得 open/close 生命周期。
+          </li>
+          <li><strong>脚本层</strong>（你写）：import 基础层 + 你的驱动，跑产测流程。</li>
+        </ol>
+        <h4>驱动基类参考（usbtoolbox.tester.drivers）</h4>
+        <table>
+          <tr>
+            <th>类</th>
+            <th>说明</th>
+          </tr>
+          <tr>
+            <td><code>Driver(client)</code></td>
+            <td>
+              可选基类：<code>open()</code>/<code>close()</code> + 上下文管理（<code>with</code>）。
+            </td>
+          </tr>
+          <tr>
+            <td><code>SpiDriver(client, *, index, spi_mode, spi_speed_mhz, spi_cs)</code></td>
+            <td>
+              <code>open()</code> 打开设备 + <code>self.spi</code> 初始化好 SPI 传输层；子类填
+              <code>init()</code>。
+            </td>
+          </tr>
+          <tr>
+            <td><code>I2CDriver(client, *, index, i2c_speed_khz)</code></td>
+            <td><code>open()</code> 打开设备 + <code>self.i2c</code> 就绪。子类填芯片初始化。</td>
+          </tr>
+        </table>
+        <h4>封装成驱动类（复用）</h4>
+        <pre><code># my_lcd.py —— 放在用户工作区目录
+from usbtoolbox.tester.drivers import SpiDriver
+from usbtoolbox.tester.oled import render_text
+
+class MyCustomLcd(SpiDriver):
+    spi_mode = 0; spi_speed_mhz = 8; spi_cs = 0
+    width = 128; height = 64
+    INIT_CMDS = bytes([0xAE, 0xA1, 0xC8, 0xAF])   # ← 换成你屏幕的初始化序列
+
+    def init(self):
+        self.spi.set_rst(False); import time; time.sleep(0.01)
+        self.spi.set_rst(True); time.sleep(0.05)
+        self.spi.set_dc(False); self.spi.write(self.INIT_CMDS); return self
+
+    def display(self, buf):
+        for p in range(self.height // 8):
+            self.spi.set_dc(False); self.spi.write(bytes([0xB0|p, 0x00, 0x10]))
+            self.spi.set_dc(True)
+            row = buf[p*self.width:(p+1)*self.width]
+            for off in range(0, len(row), 64): self.spi.write(bytes(row[off:off+64]))
+
+    def show_text(self, t, y=24): self.display(render_text(t, self.width, self.height, y0=y))</code></pre>
+        <pre><code># 脚本里直接 import 使用
+from usbtoolbox.tester import UsbToolBoxClient
+from my_lcd import MyCustomLcd   # ← 来自你的用户工作区
+
+with MyCustomLcd(UsbToolBoxClient(), index=0) as lcd:
+    lcd.init(); lcd.show_text("Hi")</code></pre>
+        <blockquote>
+          内置示例：<code>oled_ssd1306_hello.py</code>、<code>eeprom_24c02_test.py</code>、<code>serial_at_module_test.py</code>、<code>modbus_rtu_test.py</code>、<code>custom_spi_lcd.py</code>，均可在「Python
+          产测工具」页「示例…」下拉里直接加载到编辑器。
+        </blockquote>
+
+        <h2 id="examples">15. 完整示例</h2>
+        <p>
+          以下完整示例都在 <code>python/usbtoolbox/tester/examples/</code> 目录，也可在「Python
+          产测工具」页「示例…」下拉里直接加载到编辑器运行。
+        </p>
+
+        <h3>15.1 SPI Flash 读取 JEDEC ID（最小产测流程）</h3>
+        <p>
+          组合 <code>SpiTester</code> + <code>TestPlan</code>：打开设备 → 发 0x9F 读 JEDEC ID → 校验
+          → 关闭，产出 JSON/CSV 报告。
+        </p>
+        <pre><code data-src="/examples/spi_flash_check.py"></code></pre>
+
+        <h3>15.2 24C02 EEPROM 读写测试</h3>
+        <p>
+          扫描 → 读初始数据 → 分页写（<code>page_size=8</code>）+ 回读校验 → 复原。演示
+          <code>read_reg(chunk=)</code> 分块读与 <code>write_reg(page_size=)</code> 分页写。
+        </p>
+        <pre><code data-src="/examples/eeprom_24c02_test.py"></code></pre>
+
+        <h3>15.3 串口 AT 模组测试</h3>
+        <p>
+          握手 → 查版本 → 批量步骤序列（精确 / 正则 / hex 通配三种匹配）→ JSON 报告。演示
+          <code>SerialStep</code> 与 <code>run_sequence</code>。
+        </p>
+        <pre><code data-src="/examples/serial_at_module_test.py"></code></pre>
+
+        <h3>15.4 Modbus RTU 从机测试</h3>
+        <p>
+          读保持寄存器 → 写单 / 多寄存器 + 回读校验 → 读 / 写线圈 → 异常码捕获 → 复原。覆盖功能码
+          01/03/05/06/15/16。
+        </p>
+        <pre><code data-src="/examples/modbus_rtu_test.py"></code></pre>
+
+        <h3>15.5 综合产测流程（配置 + SN + 并行 + 报告）</h3>
+        <p>
+          读 YAML 配置 → 扫码 / 环境变量取 SN → 多工具并行预检 → <code>TestPlan</code> 正式测试 →
+          JSON/CSV/HTML 三种报告。是各特性的综合示范。
+        </p>
+        <pre><code data-src="/examples/production_line.py"></code></pre>
+        <p>配套配置文件 <code>config.example.yaml</code>：</p>
+        <pre><code data-src="/examples/config.example.yaml"></code></pre>
+
+        <script src="/python-api-docs.js"></script>
+      </main>
+    </div>
+  </body>
+</html>

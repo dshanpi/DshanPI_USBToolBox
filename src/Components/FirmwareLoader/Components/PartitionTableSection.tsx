@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 import { formatSize, formatHex } from '../../../Utils';
 
 interface PartitionTableSectionProps {

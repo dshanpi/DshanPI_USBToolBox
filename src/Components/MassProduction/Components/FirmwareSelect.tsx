@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageInfo, checkSecureFirmware, OpenixPacker } from '../../../Library/OpenixIMG';
+import { ImageInfo, checkSecureFirmware, DshanPIPacker } from '../../../Library/DshanPIIMG';
 import { SysConfig, SunxiSysConfigParser } from '../../../FlashConfig';
 import { formatSize } from '../../../Utils';
 
@@ -8,7 +8,7 @@ interface FirmwareSelectProps {
   imagePath: string | null;
   imageInfo: ImageInfo | null;
   sysConfig: SysConfig | null;
-  packer: React.RefObject<OpenixPacker>;
+  packer: React.RefObject<DshanPIPacker>;
   loading: boolean;
   isRunning: boolean;
   onOpenFile: () => void;

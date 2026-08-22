@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 import type { FlashMode } from '../../../Domain/flash';
 import { formatSize } from '../../../Utils';
 import { getModeLabel } from '../Utils';

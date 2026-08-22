@@ -874,15 +874,15 @@ export const Settings: React.FC<SettingsProps> = ({ visible, onClose, onSettings
                     <span className="settings-label">{t('settings.about.website')}</span>
                     <a
                       className="settings-about-link"
-                      href="https://www.100ask.net/"
+                      href="https://github.com/dshanpi"
                       onClick={(e) => {
                         e.preventDefault();
-                        openUrl('https://www.100ask.net/').catch((err) =>
+                        openUrl('https://github.com/dshanpi').catch((err) =>
                           console.error('Failed to open URL:', err)
                         );
                       }}
                     >
-                      https://www.100ask.net/
+                      https://github.com/dshanpi
                     </a>
                   </div>
                 </div>

@@ -1,0 +1,74 @@
+[package]
+name = "usbtoolbox-app"
+version = "1.0.7"
+description = "DshanPI USBToolBox for serial, Modbus, and CH347 hardware debugging."
+authors = ["DshanPI"]
+license = "Apache-2.0"
+homepage = "https://github.com/dshanpi/DshanPI_USBToolBox"
+repository = "https://github.com/dshanpi/DshanPI_USBToolBox"
+edition = "2021"
+
+[lib]
+name = "usbtoolbox_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+libefex-sys = { path = "libs/libefex/rust/libefex-sys" }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+tauri-plugin-log = "2"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.51.1", features = ["full"] }
+anyhow = "1"
+thiserror = "2"
+lazy_static = "1.4"
+libefex = { path = "libs/libefex/rust/libefex" }
+capstone = "0.14"
+adb_client = { path = "libs/adb_client/adb_client" }
+mbrman = "0.6"
+gptman = "3.0.0"
+crc32fast = "1.4"
+serialport = "4"
+fdt = "0.1"
+android-sparse = "0.6"
+# 内嵌 Python 产测 HTTP 服务（httpd 模块）：axum 复用现有 tokio "full" 运行时，
+# hex 用于 REST 请求/响应中字节数组的 hex 字符串编解码。
+axum = "0.8"
+hex = "0.4"
+# AI 聊天代理（ai 模块）：reqwest 调用大模型 OpenAI 兼容接口并流式回传，
+# futures-util 处理 SSE 流。default-features=false 关掉默认特性（用 rustls 不依赖 OpenSSL）。
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+futures-util = "0.3"
+# AI 助手本地资料导入：提取文本型 PDF，扫描版 PDF 会返回“未提取到文本”。
+pdf-extract = "0.12"
+encoding_rs = "0.8"
+# 100ask.net OAuth2 登录（auth 模块）：rand 生成 OAuth state 与 PKCE code_verifier，
+# url 构造授权地址，sha2+base64 算 PKCE code_challenge（S256），open 调起系统浏览器。
+rand = "0.8"
+url = "2"
+open = "5"
+sha2 = "0.10"
+base64 = "0.22"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.56"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_LibraryLoader",
+    "Win32_Devices_DeviceAndDriverInstallation",
+    "Win32_Devices_Usb",
+    "Win32_Graphics_Gdi",
+] }
+raw-window-handle = "0.6"

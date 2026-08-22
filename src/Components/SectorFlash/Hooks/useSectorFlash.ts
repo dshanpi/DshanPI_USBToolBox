@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { exists } from '@tauri-apps/plugin-fs';
 import { MbrBuilder } from '../../../FlashConfig';
-import { Partition } from '../../../Library/OpenixIMG';
+import { Partition } from '../../../Library/DshanPIIMG';
 import { loadSettings, saveSettings, AppSettings } from '../../../Settings';
 import { useImageLoader } from './useImageLoader';
 import { usePartitionEditor } from './usePartitionEditor';

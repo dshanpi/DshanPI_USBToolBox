@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileInfo } from '../../../Library/OpenixIMG';
+import { FileInfo } from '../../../Library/DshanPIIMG';
 import { formatSize } from '../../../Utils';
 
 interface FileListSectionProps {

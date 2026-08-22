@@ -1009,7 +1009,7 @@
     "about": {
       "title": "关于",
       "company": "公司",
-      "companyName": "深圳百问科技有限公司",
+      "companyName": "DshanPI",
       "website": "公司网址"
     },
     "usbBackend": "USB 驱动",
@@ -1035,7 +1035,7 @@
     "settings": "设置",
     "login": "登录",
     "subtitle": "UART/I2C/SPI多协议调试工具",
-    "title": "USBToolBox"
+    "title": "DshanPI USBToolBox"
   },
   "themes": {
     "dark": "深色",
